@@ -62,8 +62,8 @@ class graphFinder:
         return True
 
     def creategraph(self, startPoint, endPoint):
-        self.distance = 10 #distance for each vector
-        self.alpha = 10 #the amount of degrees to rotate in each direction
+        self.distance = 15 #distance for each vector
+        self.alpha = 11 #the amount of degrees to rotate in each direction
         #10, 6 inresting case
 
         #calculate the first vector
@@ -71,14 +71,13 @@ class graphFinder:
         mag = firstV.magnitude()
         nFirstV = tuple( comp/mag for comp in firstV.values )
         (newx,newy) = tuple(comp*self.distance for comp in nFirstV) #the vector from startPoint towards firstV
-        toPoint = pf.vectorToPoint(Vector(newx,newy), startPoint) # new strait point
+        toPoint = self.vectorToPoint(Vector(newx,newy), startPoint) # new strait point
 
         #initiate fields
         self.graph = {(toPoint.x, toPoint.y) : []} #the graph of all the points
         self.visited = set([]) #the points we have visited
         self.fromPoints ={(toPoint.x, toPoint.y) : (startPoint.x , startPoint.y)} #a Map which hold the frompoints given a toPoint
         self.toVisit = [(toPoint.x,toPoint.y)] #a stack of points to visit,
-        self.path= [] #the path we are taking TODO: might not be the correct path.
         prevFromPoint = 0 #the previous point
         prevToPoint = startPoint
         count =0 #for debugging
@@ -91,20 +90,25 @@ class graphFinder:
                 (x,y) = self.toVisit.pop()
                 if (x,y) not in self.visited:
                     break
-                else:
-                    #pass
-                    self.path.pop() #TODO: Crashes sometimes
-            self.path.append((x,y))
             (a,b) = self.fromPoints[x, y]
             prevFromPoint = Point(a,b)
             prevToPoint = Point(x, y) # get the toPoint
             dist = math.sqrt( (200 - x)**2 + (75 - y)**2 )
-            if dist <20:
-                #reached end
-                print prevToPoint.x, prevToPoint.y
+            if dist <10:
+                #reached end, gather the path
+                path = []
+                preX = prevToPoint.x
+                preY = prevToPoint.y
+                while preX!= startPoint.x and preY != startPoint.y:
+                    path.append((preX,preY))
+                    (nX,nY) = self.fromPoints[preX,preY]
+                    preX=nX
+                    preY=nY
+                path.append((startPoint.x,startPoint.y))
+                print prevToPoint.x, prevToPoint.y #point found
                 print count
-                print self.path
-                return self.visited
+                print path
+                return path
 
             #looking for adjacent vectors
 
@@ -128,7 +132,6 @@ class graphFinder:
             goRightOrLeft = ((prevToPoint.x - prevFromPoint.x)*(endPoint.y - prevFromPoint.y) -
                 (prevToPoint.y - prevFromPoint.y)*(endPoint.x - prevFromPoint.x))
             #TODO: Never goes strait
-
 
             if goRightOrLeft==0:
                 #Go strait
@@ -164,7 +167,7 @@ class graphFinder:
             self.visited.add((prevToPoint.x, prevToPoint.y))
 
         print "reached End, no solution found"
-        return self.path
+        return []
 
     def addVector(self, vectorVal, prevToPoint):
         #add the vector as an adjacent vector to the previous vector in the graph
@@ -175,10 +178,10 @@ class graphFinder:
         self.fromPoints[vectorVal] = (prevToPoint.x, prevToPoint.y)
         self.toVisit.append(vectorVal)
 
-if __name__ == '__main__':
+#if __name__ == '__main__':
 
-    pf = graphFinder()
-    pf.creategraph(Point(75,200), Point(200,75))
+    #pf = graphFinder()
+    #pf.creategraph(Point(75,200), Point(200,75))
 
 #    **************************Tests****************************
 
