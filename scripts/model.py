@@ -1,4 +1,6 @@
 from math import *
+import matplotlib.pyplot as plt
+
 
 
 class Point:
@@ -23,6 +25,8 @@ class Vector:
         (x, y) = dc*x - ds*y, ds*x + dc*y
         return Vector(x, y)
 
+point = Point(0,0)
+point1 = Point(0,0)
 
 class rectangle:
 
@@ -52,22 +56,23 @@ class rectangle:
         #return rightTopCorner
 
 class truck:
-    def calculateCorners(self, pointFront, th1, th2):
+
+    def __init__(self):
         self.header_length = 27;
         self.trailer_length = 62;
 
         self.header_width = 18;
         self.trailer_width = 18;
 
-        px = pointFront.x + cos(th2) * self.trailer_length
-        py = pointFront.y - sin(th2) * self.trailer_length
-        point = Point(px,py)
+    def calculateCorners(self, pointFront, th1, th2):
 
-        #point = pointFront
+        point = self.back_middle_trailer(pointFront, th1, th2)
 
         # hitch joint
-        x2 = point.x + self.header_length*cos(th2);
-        y2 = point.y - self.header_length*sin(th2);
+        x2 = point.x + self.trailer_length*cos(th2);
+        y2 = point.y - self.trailer_length*sin(th2);
+
+        #print x2, y2
 
         #middle of front of header
         x3 = x2 + self.header_length*cos(th1);
@@ -99,12 +104,58 @@ class truck:
 
         return((x8,y8), (x9,y9), (x6,y6), (x7,y7), (x4,y4), (x5,y5))
 
+    def rightbackWheel(self):
+
+        point = self.back_middle_trailer()
+
+        x5 = point.x + cos(pi/2-th2)*self.trailer_width/2;
+        y5 = point.y + sin(pi/2-th2)*self.trailer_width/2;
+
+    def back_middle_trailer(self, pointFront, th1, th2):
+        jpx = pointFront.x - cos(th1) * self.header_length
+        jpy = pointFront.y + sin(th1) * self.header_length
+
+        px = jpx - cos(th2) * self.trailer_length
+        py = jpy + sin(th2) * self.trailer_length
+        return Point(px,py)
 
 
 #if __name__ == '__main__':
-#    rect = rectangle()
-#    print rect.calculateCorners(Point(75,200),Point(75,190))
+#    truck = truck()
+#    lista1 =truck.calculateCorners(Point(0,0),1.57, 1.57)
+#
+#    plt.plot([point.x],[point.y], 'bo')
+#    plt.plot([point1.x],[point1.y], 'go')
+#
+#    lista2 =truck.calculateCorners(Point(0,0),1.57, 0.785398)
+#
+#    print lista1
+#
+#    lx= []
+#    ly=[]
 
+#    for (x,y) in lista1:
+#        lx.append(x)
+#        ly.append(y)
+
+#    plt.plot(lx, ly, 'go')
+
+
+#    lx2= []
+#    ly2=[]
+
+#    for (x,y) in lista2:
+#        lx2.append(x)
+#        ly2.append(y)
+
+#    plt.plot(lx, ly, 'go')
+#    plt.plot(lx2, ly2, 'ro')
+#    plt.plot([0],[0], 'bo')
+#    plt.plot([point.x],[point.y], 'bo')
+#    plt.plot([point1.x],[point1.y], 'go')
+#
+#    plt.axis([-100, 150, 150, -100])
+#    plt.show()
 
 
 
