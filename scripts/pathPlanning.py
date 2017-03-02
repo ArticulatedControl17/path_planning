@@ -2,6 +2,7 @@
 import math
 import sys
 import decimal
+import model
 
 class Point:
     def __init__(self, x , y):
@@ -28,6 +29,10 @@ class Vector:
 
 class graphFinder:
 
+    def __init__(self):
+        self.model = model.rectangle()
+
+
     def vectorToPoint(self, vector , prevToPoint ):
         (x,y) = vector.values
         toPoint = Point(prevToPoint.x + x, prevToPoint.y + y)
@@ -35,36 +40,30 @@ class graphFinder:
 
     def checkIfInTrack(self, (fromPoint, toPoint)):
         p0 = Point(100,100) #corner position
-        if fromPoint.x <=0 or toPoint.x <=0 :
-            #truck to the left of track
-            return False
-        if fromPoint.y <=0 or toPoint.y <=0 :
-            #truck above track
-            return False
-        if fromPoint.y >= 250 or toPoint.y >= 250:
-            #truck is belove the track
-            return False
-        if fromPoint.x >=250 or toPoint.x >=250 :
-            #truck to the right of track
-            return False
+
+        points = self.model.calculateCorners(fromPoint,toPoint)
+        for (x,y) in points:
+            if x <=0 or y <=0 or y >= 250 or x >=250 :
+                #truck to the left of track
+                return False
+            if x>100 and y>100:
+                return False
+
         #check if p0 is to the left of the line, that means that the line enter forbidden area
-        isLeft = ((toPoint.x - fromPoint.x)*(p0.y - fromPoint.y) - (toPoint.y - fromPoint.y)*(p0.x - fromPoint.x)) <=0
-        dist = math.sqrt( (100 - toPoint.x)**2 + (100 - toPoint.y)**2 )
+        isLeft = ((points[0][0] - points[2][0])*(p0.y - points[2][1]) - (points[0][1] - points[2][1])*(p0.x - points[2][0])) <=0
+        dist = math.sqrt( (100 - points[0][0])**2 + (100 - points[0][1])**2 )
         if isLeft and dist <10:
             return False
         if fromPoint.y<100 and toPoint.y>100:
             #going back down again
             return False
-        if fromPoint.x>100 and fromPoint.y>100:
-            return False
-        if toPoint.x>100 and toPoint.y>100:
-            return False
         return True
 
     def creategraph(self, startPoint, endPoint):
-        self.distance = 15 #distance for each vector
-        self.alpha = 11 #the amount of degrees to rotate in each direction
-        #10, 6 inresting case
+        self.distance = 13 #distance for each vector
+        self.alpha = 10 #the amount of degrees to rotate in each direction
+
+        self.model = model.rectangle()
 
         #calculate the first vector
         firstV = Vector(75 - 75 , -self.distance) #first vector, the direction is the important part
@@ -86,7 +85,11 @@ class graphFinder:
         while len(self.toVisit)>0:
             #loop until all vectors have been checked for adjacent vectors
             count= count+1
+            print count
             while True:
+                if len(self.toVisit)==0:
+                    print "reached End, no solution found"
+                    return []
                 (x,y) = self.toVisit.pop()
                 if (x,y) not in self.visited:
                     break
@@ -124,9 +127,10 @@ class graphFinder:
             vectorLeft = (prevToPoint, self.vectorToPoint(Vector(x,y).rotate(-self.alpha), prevToPoint))
 
             #Values of the vectors
-            vectorStraitVal = (round(vectorStrait[1].x, 1), round(vectorStrait[1].y, 1))
-            vectorRightVal = (round(vectorRight[1].x, 1), round(vectorRight[1].y, 1))
-            vectorLeftVal = (round(vectorLeft[1].x, 1), round(vectorLeft[1].y, 1))
+            #TODO: round values for real scenario later
+            vectorStraitVal = (round(vectorStrait[1].x, 0), round(vectorStrait[1].y, 0))
+            vectorRightVal = (round(vectorRight[1].x, 0), round(vectorRight[1].y, 0))
+            vectorLeftVal = (round(vectorLeft[1].x, 0), round(vectorLeft[1].y, 0))
 
             #see if the endpoint is to the right/left/strait and go correct direction from there
             goRightOrLeft = ((prevToPoint.x - prevFromPoint.x)*(endPoint.y - prevFromPoint.y) -
