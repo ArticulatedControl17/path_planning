@@ -1,4 +1,4 @@
-import math
+from math import *
 
 
 class Point:
@@ -32,8 +32,8 @@ class rectangle:
         return (prevToPoint.x + x, prevToPoint.y + y)
 
     def calculateCorners(self, fromPoint, toPoint):
-        self.width = 30
-        self.length =  50
+        self.width = 18
+        self.length =  27
         self.theta = 90- math.degrees(math.atan((self.length)/(self.width)))
 
         distance = math.sqrt((self.length/2)*(self.length/2) + (self.width/2)*(self.width/2))
@@ -51,7 +51,54 @@ class rectangle:
         return (rightTopCorner, leftTopCorner, rightBottomCorner, leftBottomCorner)
         #return rightTopCorner
 
-class rectangle:
+class truck:
+    def calculateCorners(self, pointFront, th1, th2):
+        self.header_length = 27;
+        self.trailer_length = 62;
+
+        self.header_width = 18;
+        self.trailer_width = 18;
+
+        px = pointFront.x + cos(th2) * self.trailer_length
+        py = pointFront.y - sin(th2) * self.trailer_length
+        point = Point(px,py)
+
+        #point = pointFront
+
+        # hitch joint
+        x2 = point.x + self.header_length*cos(th2);
+        y2 = point.y - self.header_length*sin(th2);
+
+        #middle of front of header
+        x3 = x2 + self.header_length*cos(th1);
+        y3 = y2 - self.header_length*sin(th1);
+
+        #left back wheel
+        x4 = point.x - cos(pi/2-th2)*self.trailer_width/2;
+        y4 = point.y - sin(pi/2-th2)*self.trailer_width/2;
+
+        #right back wheel
+        x5 = point.x + cos(pi/2-th2)*self.trailer_width/2;
+        y5 = point.y + sin(pi/2-th2)*self.trailer_width/2;
+
+        #left joint wheel
+        x6 = x2 - cos(pi/2-th1)*self.header_width/2;
+        y6 = y2 - sin(pi/2-th1)*self.header_width/2;
+
+        #right joint wheel
+        x7 = x2 + cos(pi/2-th1)*self.header_width/2;
+        y7 = y2 + sin(pi/2-th1)*self.header_width/2;
+
+        #left front wheel
+        x8 = x6 + self.header_length*cos(th1);
+        y8 = y6 - self.header_length*sin(th1);
+
+        #right front wheel
+        x9 = x7 + self.header_length*cos(th1);
+        y9 = y7 - self.header_length*sin(th1);
+
+        return((x8,y8), (x9,y9), (x6,y6), (x7,y7), (x4,y4), (x5,y5))
+
 
 
 #if __name__ == '__main__':
