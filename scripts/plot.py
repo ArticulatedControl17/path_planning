@@ -7,7 +7,7 @@ pf = graphFinder()
 startPoint = Point(75,400)
 endPoint = Point(400,75)
 
-path = pf.creategraph(startPoint, endPoint)
+path = pf.creategraph(startPoint, endPoint, 200)
 model = truck()
 
 lx= []
@@ -16,8 +16,10 @@ lt1= []
 lt2=[]
 
 
+#for ((xa,ya),ta1, ta2) in reversed(path[1]):
+#    print xa,ya
 
-for ((x,y),t1,t2) in path:
+for ((x,y),t1,t2) in path[1]:
     lx.append(x)
     ly.append(y)
     lt1.append(t1)
@@ -44,8 +46,12 @@ trailerBackLefty = []
 
 trailerBackRightx = []
 trailerBackRighty = []
+count =0
 
-for ((x1,y1),(x2,y2),(x3,y3),(x4,y4),(x5,y5),(x6,y6)) in li:
+for ((x1,y1),(x2,y2),(x3,y3),(x4,y4),(x5,y5),(x6,y6)) in reversed(li):
+    #if count >4:
+    #    break
+    #count= count+1
     headerFrontLeftx.append(x1)
     headerFrontLefty.append(y1)
     headerFrontRightx.append(x2)
@@ -64,7 +70,7 @@ wallx1 = [100,100,400]
 wally1 = [400,100,100]
 
 wallx2 = [0,0,400]
-wally2 = [400,20,20]
+wally2 = [400,0,0]
 
 plt.plot(headerFrontLeftx, headerFrontLefty, 'blue')
 plt.plot(headerFrontRightx, headerFrontRighty, 'blue')

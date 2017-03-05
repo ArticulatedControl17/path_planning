@@ -86,5 +86,5 @@ class errorCalc:
         posL = [s.split(' ', 1 ) for s in lines]
         queue = Queue()
         for l in posL:
-            queue.put(Point(int(l[0]),int(l[1])))
+            queue.put(Point(float(l[0]),float(l[1])))
         return queue
