@@ -5,6 +5,8 @@ import decimal
 import model
 import error_calc
 import os
+import numpy as np
+import cv2
 
 class Point:
     def __init__(self, x , y):
@@ -18,41 +20,49 @@ class graphFinder:
         self.length_header = 27
         self.length_trailer = 62
         self.findOptimalPath = True
-        self.solutions = 100
+        self.solutions = 1000
 
         self.all_paths = []
         self.model = model.truck()
-        dirpath = os.path.dirname(os.path.abspath(__file__))
-        f = open(dirpath+ '/optimal_path.txt', 'w')
-        f.write('75 400\n400 75')
-        f.close()
         self.ec = error_calc.errorCalc("optimal_path.txt")
+        self.map = np.asarray(cv2.imread('map2.png', 0), dtype=np.bool).tolist()
 
 
     def checkIfInTrack(self, toPoint, th1, th2):
 
-        p0 = Point(100,100) #corner position
+        #p0 = Point(100,100) #corner position
+        print toPoint.x, toPoint.y
+        if toPoint.x <0 or toPoint.y <0 or toPoint.x >500 or toPoint.y >1000:
+            return False
 
         points = self.model.calculateCorners(toPoint, th1, th2)
-        for (x,y) in points:
-            if x <0 or y <0 or y >= 600 or x >=600 :
-                #truck to the left of track
-                return False
-            if x>100 and y>100:
-                return False
+
+        if not self.map[int(toPoint.y)][int(toPoint.x)]:
+            return False
+
+        #for (x,y) in points:
+        #    if x <0 or y <0 or y >= 600 or x >=600 :
+        #        #truck to the left of track
+        #        return False
+        #    if x>100 and y>100:
+        #        return False
 
         right_wheel = Point(points[5][0], points[5][1])
+        left_wheel = Point(points[4][0], points[4][1])
 
         prev_points = self.model.calculateCorners(self.pos, self.theta1, self.theta2)
         prev_right_wheel = Point(prev_points[5][0], prev_points[5][1])
+        prev_left_wheel = Point(prev_points[4][0], prev_points[4][1])
 
         #isLeft = ((right_wheel.x - self.prev_right_wheel.x)*(p0.y - self.prev_right_wheel.y) - (right_wheel.y - self.prev_right_wheel.y)*(p0.x - self.prev_right_wheel.x)) >=0
 
-        #TODO: Really slow, optimize
+        #TODO: Could be really slow, optimize
         between = self.getPointsInBetween((right_wheel.x, right_wheel.y), (prev_right_wheel.x, prev_right_wheel.y), self.dt)
 
         for (x,y) in between:
-            if x>100 and y>100:
+            if x <0 or y <0 or x >500 or y >1000:
+                return False
+            if not self.map[y][x]:
                 return False
         return True
 
@@ -79,132 +89,150 @@ class graphFinder:
             while True:
                 if len(self.toVisit)==0:
                     print "reached End, no solution found"
-                    return self.visited
+                    return self.creategraph(startPoint, endPoint, self.dt-1)
                 ((x,y),t1, t2) = self.toVisit.pop()
                 if ((x,y),t1, t2) not in self.visited:
                     break
             self.pos = Point(x, y) # get the toPoint
             self.theta1= t1
             self.theta2= t2
-            dist = sqrt( (endPoint.x - x)**2 + (endPoint.y - y)**2 )
-            if dist < self.dt:
+            #dist = sqrt( (endPoint.x - x)**2 + (endPoint.y - y)**2 )
+            if self.ec.isAboveEnd(Point(480,520),Point(480,100), self.pos): #is above a line the two last points make
                 #reached end, gather the path
                 path = self.gatherPath(startPoint, endPoint)
-                if self.findOptimalPath:
-                    self.paths = self.paths + [path]
-                else:
-                    self.paths = self.paths + [path]
-
-
-            #goin straight
-            dd = self.speed * self.dt
-            steering_angle_rad = radians(0)
-
-            (to_point_strait, strait_theta1, strait_theta2) = self.calculateNextState(dd, steering_angle_rad)
-
-            #going right
-            steering_angle_rad = radians(16) #max right angle
-
-            (to_point_right,right_theta1,right_theta2) = self.calculateNextState(dd, steering_angle_rad)
-
-            steering_angle_rad = radians(8) #middle right angle
-
-            (to_point_right_narrow,right_theta_narrow1,right_theta_narrow2) = self.calculateNextState(dd, steering_angle_rad)
-
-            #going left
-            steering_angle_rad = radians(-21) #max left angle
-
-            (to_point_left,left_theta1, left_theta2) = self.calculateNextState(dd, steering_angle_rad)
-
-            steering_angle_rad = radians(-10) #middle left angle
-
-            (to_point_left_narrow,left_theta_narrow1,left_theta_narrow2) = self.calculateNextState(dd, steering_angle_rad)
-
-            #see if the endpoint is to the right/left/strait and go correct direction from there
-
-            goRightOrLeft = self.ec.calculateError(Point(self.pos.x,self.pos.y))
-            #TODO: Never goes strait, change to following a line, and add stearing angle according to distance from line
-
-            if goRightOrLeft<=5 and goRightOrLeft>=-5:
-                #Go strait
-                #check if the vectors are within the allowed track
-                if self.checkIfInTrack(to_point_left,left_theta1, left_theta2):
-                    self.addState(to_point_left, left_theta1, left_theta2)
-                #if self.checkIfInTrack(to_point_left_narrow, left_theta_narrow1, left_theta_narrow2):
-                #    self.addState(to_point_left_narrow, left_theta_narrow1, left_theta_narrow2)
-                if self.checkIfInTrack(to_point_right, right_theta1, right_theta2):
-                    self.addState(to_point_right, right_theta1, right_theta2)
-                #if self.checkIfInTrack(to_point_right_narrow, right_theta_narrow1, right_theta_narrow2):
-                #    self.addState(to_point_right_narrow, right_theta_narrow1, right_theta_narrow2)
-                if self.checkIfInTrack(to_point_strait, strait_theta1, strait_theta2):
-                    self.addState(to_point_strait, strait_theta1, strait_theta2)
-
-            elif goRightOrLeft<-5:
-                #Go right
-                #check if the vectors are within the allowed track
-                #if self.checkIfInTrack(to_point_left_narrow, left_theta_narrow1, left_theta_narrow2):
-                #    self.addState(to_point_left_narrow, left_theta_narrow1, left_theta_narrow2)
-                if self.checkIfInTrack(to_point_left, left_theta1, left_theta2):
-                    self.addState(to_point_left, left_theta1, left_theta2)
-                if self.checkIfInTrack(to_point_strait, strait_theta1, strait_theta2):
-                    self.addState(to_point_strait, strait_theta1, strait_theta2)
-                #if self.checkIfInTrack(to_point_right_narrow, right_theta_narrow1, right_theta_narrow2):
-                #    self.addState(to_point_right_narrow, right_theta_narrow1, right_theta_narrow2)
-                if self.checkIfInTrack(to_point_right, right_theta1, right_theta2):
-                    self.addState(to_point_right, right_theta1, right_theta2)
-
+                self.paths = self.paths + [path]
             else:
-                #Go left
-                #check if the vectors are within the allowed track
-                #if self.checkIfInTrack(to_point_right_narrow, right_theta_narrow1, right_theta_narrow2):
-                #    self.addState(to_point_right_narrow, right_theta_narrow1, right_theta_narrow2)
-                if self.checkIfInTrack(to_point_right, right_theta1, right_theta2):
-                    self.addState(to_point_right, right_theta1, right_theta2)
-                if self.checkIfInTrack(to_point_strait, strait_theta1, strait_theta2):
-                    self.addState(to_point_strait, strait_theta1, strait_theta2)
-                #if self.checkIfInTrack(to_point_left_narrow, left_theta_narrow1, left_theta_narrow2):
-                #    self.addState(to_point_left_narrow, left_theta_narrow1, left_theta_narrow2)
-                if self.checkIfInTrack(to_point_left, left_theta1, left_theta2):
-                    self.addState(to_point_left, left_theta1, left_theta2)
+                goRightOrLeft = self.ec.calculateError(Point(self.pos.x,self.pos.y))
+                #goin straight
+                dd = self.speed * self.dt
 
-            #mark the previous vector as visited
-            self.visited.add(((self.pos.x, self.pos.y),self.theta1, self.theta2))
+                steering_angle_rad = radians(0)
+                findPath = False
 
-            if len(self.paths)>100 and not self.findOptimalPath:
-                shortest = self.getShortest_area(self.paths)
-                sorted_list = sorted(shortest, cmp=lambda (a,l1),(b,l2): cmp(a,b))
-                for (x,path) in sorted_list:
-                    print x
-                return sorted_list[0][1]
+                (to_point_strait, strait_theta1, strait_theta2) = self.calculateNextState(dd, steering_angle_rad)
+                next_err = self.ec.calculateError(to_point_strait)
+                if (next_err <0 and goRightOrLeft>0) or (next_err >0 and goRightOrLeft<0):
+                    #steering angle passing over optimal pass
+                    findPath = True
+
+
+                #going right
+                steering_angle_rad = radians(16) #max right angle
+
+                (to_point_right,right_theta1,right_theta2) = self.calculateNextState(dd, steering_angle_rad)
+                next_err = self.ec.calculateError(to_point_right)
+                if (next_err <0 and goRightOrLeft>0) or (next_err >0 and goRightOrLeft<0):
+                    #steering angle passing over optimal pass
+                    findPath = True
+
+                steering_angle_rad = radians(8) #middle right angle
+
+                (to_point_right_narrow,right_theta_narrow1,right_theta_narrow2) = self.calculateNextState(dd, steering_angle_rad)
+
+                #going left
+                steering_angle_rad = radians(-21) #max left angle
+
+                (to_point_left,left_theta1, left_theta2) = self.calculateNextState(dd, steering_angle_rad)
+                next_err = self.ec.calculateError(to_point_left)
+                if (next_err <0 and goRightOrLeft>0) or (next_err >0 and goRightOrLeft<0):
+                    #steering angle passing over optimal pass
+                    findPath = True
+
+
+                steering_angle_rad = radians(-10) #middle left angle
+
+                (to_point_left_narrow,left_theta_narrow1,left_theta_narrow2) = self.calculateNextState(dd, steering_angle_rad)
+
+                #see if the endpoint is to the right/left/strait and go correct direction from there
+
+                #if goRightOrLeft<=5 and goRightOrLeft>=-5:
+                if findPath:
+                    #Go strait
+                    #check if the vectors are within the allowed track
+                    if self.checkIfInTrack(to_point_left,left_theta1, left_theta2):
+                        self.addState(to_point_left, left_theta1, left_theta2)
+                    #if self.checkIfInTrack(to_point_left_narrow, left_theta_narrow1, left_theta_narrow2):
+                    #    self.addState(to_point_left_narrow, left_theta_narrow1, left_theta_narrow2)
+                    if self.checkIfInTrack(to_point_right, right_theta1, right_theta2):
+                        self.addState(to_point_right, right_theta1, right_theta2)
+                    #if self.checkIfInTrack(to_point_right_narrow, right_theta_narrow1, right_theta_narrow2):
+                    #    self.addState(to_point_right_narrow, right_theta_narrow1, right_theta_narrow2)
+                    if self.checkIfInTrack(to_point_strait, strait_theta1, strait_theta2):
+                        self.addState(to_point_strait, strait_theta1, strait_theta2)
+                    (tp,tt1,tt2) = self.calculate_steering(radians(-21), radians(16.0), dd, 10)
+                    if self.checkIfInTrack(tp, tt1, tt2):
+                        self.addState(tp, tt1, tt2)
+
+                elif goRightOrLeft<0:
+                    #Go right
+                    #check if the vectors are within the allowed track
+                    #if self.checkIfInTrack(to_point_left_narrow, left_theta_narrow1, left_theta_narrow2):
+                    #    self.addState(to_point_left_narrow, left_theta_narrow1, left_theta_narrow2)
+                    if self.checkIfInTrack(to_point_left, left_theta1, left_theta2):
+                        self.addState(to_point_left, left_theta1, left_theta2)
+                    if self.checkIfInTrack(to_point_strait, strait_theta1, strait_theta2):
+                        self.addState(to_point_strait, strait_theta1, strait_theta2)
+                    #if self.checkIfInTrack(to_point_right_narrow, right_theta_narrow1, right_theta_narrow2):
+                    #    self.addState(to_point_right_narrow, right_theta_narrow1, right_theta_narrow2)
+                    if self.checkIfInTrack(to_point_right, right_theta1, right_theta2):
+                        self.addState(to_point_right, right_theta1, right_theta2)
+                    #(tp,tt1,tt2) = self.calculate_steering(radians(-21), radians(16.0), dd, 10)
+                    #if self.checkIfInTrack(tp, tt1, tt2):
+                    #    self.addState(tp, tt1, tt2)
+
+
+                else:
+                    #Go left
+                    #check if the vectors are within the allowed track
+                    #if self.checkIfInTrack(to_point_right_narrow, right_theta_narrow1, right_theta_narrow2):
+                    #    self.addState(to_point_right_narrow, right_theta_narrow1, right_theta_narrow2)
+                    if self.checkIfInTrack(to_point_right, right_theta1, right_theta2):
+                        self.addState(to_point_right, right_theta1, right_theta2)
+                    if self.checkIfInTrack(to_point_strait, strait_theta1, strait_theta2):
+                        self.addState(to_point_strait, strait_theta1, strait_theta2)
+                    #if self.checkIfInTrack(to_point_left_narrow, left_theta_narrow1, left_theta_narrow2):
+                    #    self.addState(to_point_left_narrow, left_theta_narrow1, left_theta_narrow2)
+                    if self.checkIfInTrack(to_point_left, left_theta1, left_theta2):
+                        self.addState(to_point_left, left_theta1, left_theta2)
+                    #(tp,tt1,tt2) = self.calculate_steering(radians(-21), radians(16), dd, 10)
+                    #if self.checkIfInTrack(tp, tt1, tt2):
+                    #    self.addState(tp, tt1, tt2)
+
+
+                #mark the previous vector as visited
+                self.visited.add(((self.pos.x, self.pos.y),self.theta1, self.theta2))
 
         if len(self.all_paths)>self.solutions:
             sorted_list = sorted(self.all_paths, cmp=lambda (a,l1),(b,l2): cmp(a,b))
             for (x,path) in sorted_list:
                 print x
-            self.findOptimalPath = False
-            dirpath = os.path.dirname(os.path.abspath(__file__))
-            f = open(dirpath+ '/optimal_path.txt', 'w')
-            f.write(str(startPoint.x)+ ' ' +str(startPoint.y)+'\n')
-
+            print sorted_list[0]
             return sorted_list[0]
-
-
-            for ((xa,ya),ta1, ta2) in reversed(sorted_list[0][1]):
-                f.write(str(xa)+ ' ' +str(ya)+'\n')
-            f.close()
-            self.ec = error_calc.errorCalc("optimal_path.txt")
-            return self.creategraph(startPoint, endPoint, 35)
-            #return sorted_list[1]
 
         if len(self.paths)>0:
             #found solution
             print "dt: ", self.dt
-            shortest = self.getShortest_area(self.paths)
+            shortest = self.get_avarege_error(self.paths)
             self.all_paths = self.all_paths + shortest
-            return self.creategraph(startPoint, endPoint, self.dt-1)
+            return self.creategraph(startPoint, endPoint, self.dt-2)
         else:
             print "dt: ", self.dt
-            return self.creategraph(startPoint, endPoint, self.dt-1)
+            return self.creategraph(startPoint, endPoint, self.dt-2)
+
+    def calculate_steering(self, steering_min, steering_max, dd, iters):
+        #TODO: still doesnt work,
+        steering_new = (steering_min + steering_max)/2
+        (new_point, t1, t2) = self.calculateNextState(dd, steering_new)
+        error = self.ec.calculateError(new_point)
+        #print "error:", error
+        if abs(error)<1 or iters==0:
+            return (new_point, t1,t2)
+        elif error<0:
+            #search right
+            return self.calculate_steering(steering_new, steering_max, dd, iters-1)
+        else:
+            return self.calculate_steering(steering_min, steering_new, dd, iters-1)
+
     def gatherPath(self, startPoint, endPoint):
         path = []
         #TODO: add correct theta's (if needed)
@@ -238,7 +266,6 @@ class graphFinder:
         self.toVisit.append(((point.x,point.y), th1, th2))
 
     def getShortest(self, paths):
-        #TODO: make new getShortest that doesn't compare distance, maybe area?
         distPath= []
         for path in paths:
             path.pop() #remove last item (start point)
@@ -269,6 +296,22 @@ class graphFinder:
                 ySum = ySum + (y*nx)
             areaPath.append(((ySum-xSum)/2,path))
         return sorted(areaPath,  cmp=lambda (a,l1),(b,l2): cmp(a,b))
+
+    def get_avarege_error(self, paths):
+        error_path= []
+        for path in paths:
+            totDist = 0
+            for ((x,y),th1,th2) in path:
+                ec = error_calc.errorCalc("optimal_path.txt") #TODO: slow to read from file all the time?
+                error = ec.calculateError(Point(x,y))
+                if error>0:
+                    totDist = totDist+abs(error)
+                else:
+                    totDist = totDist+abs(error)
+            error_path.append((totDist/len(path),path))
+        return sorted(error_path,  cmp=lambda (a,l1),(b,l2): cmp(a,b))
+
+
 
     def getPointsInBetween(self, p1, p2, n):
         p1x, p1y = p1

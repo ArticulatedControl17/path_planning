@@ -4,8 +4,8 @@ from model import *
 
 pf = graphFinder()
 
-startPoint = Point(75,400)
-endPoint = Point(400,75)
+startPoint = Point(60,800)
+endPoint = Point(480,100)
 
 path = pf.creategraph(startPoint, endPoint, 200)
 model = truck()
@@ -16,8 +16,8 @@ lt1= []
 lt2=[]
 
 
-#for ((xa,ya),ta1, ta2) in reversed(path[1]):
-#    print xa,ya
+for ((xa,ya),ta1, ta2) in reversed(path[1]):
+    print xa,ya
 
 for ((x,y),t1,t2) in path[1]:
     lx.append(x)
@@ -66,8 +66,8 @@ for ((x1,y1),(x2,y2),(x3,y3),(x4,y4),(x5,y5),(x6,y6)) in reversed(li):
     trailerBackRighty.append(y6)
 
 #wall,
-wallx1 = [100,100,400]
-wally1 = [400,100,100]
+wallx1 = [80,80,400]
+wally1 = [400,80,80]
 
 wallx2 = [0,0,400]
 wally2 = [400,0,0]
@@ -90,5 +90,5 @@ plt.plot(lx, ly, 'go')
 
 
 
-plt.axis([-10, 500, 500, -10])
+plt.axis([-10, 1000, 1000, -10])
 plt.show()
