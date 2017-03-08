@@ -7,7 +7,7 @@ pf = graphFinder()
 startPoint = Point(60,800)
 endPoint = Point(480,100)
 
-path = pf.creategraph(startPoint, endPoint, 200)
+path = pf.creategraph(startPoint, endPoint, 40)
 model = truck()
 
 lx= []
@@ -66,11 +66,11 @@ for ((x1,y1),(x2,y2),(x3,y3),(x4,y4),(x5,y5),(x6,y6)) in reversed(li):
     trailerBackRighty.append(y6)
 
 #wall,
-wallx1 = [80,80,400]
-wally1 = [400,80,80]
+wallx1 = [80,80,500,500]
+wally1 = [1000,540,540,0]
 
-wallx2 = [0,0,400]
-wally2 = [400,0,0]
+wallx2 = [0,0,420,420]
+wally2 = [1000,460,460,0]
 
 plt.plot(headerFrontLeftx, headerFrontLefty, 'blue')
 plt.plot(headerFrontRightx, headerFrontRighty, 'blue')

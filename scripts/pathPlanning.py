@@ -15,12 +15,14 @@ class Point:
 
 class graphFinder:
 
+    #TODO: try with sampling 10 solutions from each dt and then decrease dt by a certain margin, also try roundabout before
+
     def __init__(self):
         self.speed = 1
         self.length_header = 27
         self.length_trailer = 62
         self.findOptimalPath = True
-        self.solutions = 1000
+        self.solutions = 10
 
         self.all_paths = []
         self.model = model.truck()
@@ -31,7 +33,6 @@ class graphFinder:
     def checkIfInTrack(self, toPoint, th1, th2):
 
         #p0 = Point(100,100) #corner position
-        print toPoint.x, toPoint.y
         if toPoint.x <0 or toPoint.y <0 or toPoint.x >500 or toPoint.y >1000:
             return False
 
@@ -40,24 +41,32 @@ class graphFinder:
         if not self.map[int(toPoint.y)][int(toPoint.x)]:
             return False
 
-        #for (x,y) in points:
-        #    if x <0 or y <0 or y >= 600 or x >=600 :
-        #        #truck to the left of track
-        #        return False
-        #    if x>100 and y>100:
-        #        return False
 
-        right_wheel = Point(points[5][0], points[5][1])
-        left_wheel = Point(points[4][0], points[4][1])
+        right_back_wheel = Point(points[5][0], points[5][1])
+        left_back_wheel = Point(points[4][0], points[4][1])
+        right_front_wheel = Point(points[1][0], points[1][1])
+        left_front_wheel = Point(points[0][0], points[0][1])
+
+        if right_front_wheel.x <0 or right_front_wheel.y <0 or right_front_wheel.x >500 or right_front_wheel.y >1000:
+            return False
+        if not self.map[int(right_front_wheel.y)][int(right_front_wheel.x)]:
+            return False
+
+        if left_front_wheel.x <0 or left_front_wheel.y <0 or left_front_wheel.x >500 or left_front_wheel.y >1000:
+            return False
+        if not self.map[int(left_front_wheel.y)][int(left_front_wheel.x)]:
+            return False
 
         prev_points = self.model.calculateCorners(self.pos, self.theta1, self.theta2)
-        prev_right_wheel = Point(prev_points[5][0], prev_points[5][1])
-        prev_left_wheel = Point(prev_points[4][0], prev_points[4][1])
+        prev_right_back_wheel = Point(prev_points[5][0], prev_points[5][1])
+        prev_left_back_wheel = Point(prev_points[4][0], prev_points[4][1])
+        #prev_right_front_wheel = Point(points[1][0], points[1][1])
+        #prev_left_front_wheel = Point(points[0][0], points[0][1])
 
         #isLeft = ((right_wheel.x - self.prev_right_wheel.x)*(p0.y - self.prev_right_wheel.y) - (right_wheel.y - self.prev_right_wheel.y)*(p0.x - self.prev_right_wheel.x)) >=0
 
         #TODO: Could be really slow, optimize
-        between = self.getPointsInBetween((right_wheel.x, right_wheel.y), (prev_right_wheel.x, prev_right_wheel.y), self.dt)
+        between = self.getPointsInBetween((right_back_wheel.x, right_back_wheel.y), (prev_right_back_wheel.x, prev_right_back_wheel.y), self.dt)
 
         for (x,y) in between:
             if x <0 or y <0 or x >500 or y >1000:
@@ -176,9 +185,9 @@ class graphFinder:
                     #    self.addState(to_point_right_narrow, right_theta_narrow1, right_theta_narrow2)
                     if self.checkIfInTrack(to_point_right, right_theta1, right_theta2):
                         self.addState(to_point_right, right_theta1, right_theta2)
-                    #(tp,tt1,tt2) = self.calculate_steering(radians(-21), radians(16.0), dd, 10)
-                    #if self.checkIfInTrack(tp, tt1, tt2):
-                    #    self.addState(tp, tt1, tt2)
+                    (tp,tt1,tt2) = self.calculate_steering(radians(-21), radians(16.0), dd, 10)
+                    if self.checkIfInTrack(tp, tt1, tt2):
+                        self.addState(tp, tt1, tt2)
 
 
                 else:
@@ -194,13 +203,20 @@ class graphFinder:
                     #    self.addState(to_point_left_narrow, left_theta_narrow1, left_theta_narrow2)
                     if self.checkIfInTrack(to_point_left, left_theta1, left_theta2):
                         self.addState(to_point_left, left_theta1, left_theta2)
-                    #(tp,tt1,tt2) = self.calculate_steering(radians(-21), radians(16), dd, 10)
-                    #if self.checkIfInTrack(tp, tt1, tt2):
-                    #    self.addState(tp, tt1, tt2)
+                    (tp,tt1,tt2) = self.calculate_steering(radians(-21), radians(16), dd, 10)
+                    if self.checkIfInTrack(tp, tt1, tt2):
+                        self.addState(tp, tt1, tt2)
 
 
                 #mark the previous vector as visited
                 self.visited.add(((self.pos.x, self.pos.y),self.theta1, self.theta2))
+                print len(self.paths)
+                if len(self.paths)> self.solutions:
+                    shortest = self.get_avarege_error(self.paths)
+                    for (x,path) in shortest:
+                        print x
+                    print shortest[0]
+                    return shortest[0]
 
         if len(self.all_paths)>self.solutions:
             sorted_list = sorted(self.all_paths, cmp=lambda (a,l1),(b,l2): cmp(a,b))
@@ -214,10 +230,10 @@ class graphFinder:
             print "dt: ", self.dt
             shortest = self.get_avarege_error(self.paths)
             self.all_paths = self.all_paths + shortest
-            return self.creategraph(startPoint, endPoint, self.dt-2)
+            return self.creategraph(startPoint, endPoint, self.dt-1)
         else:
             print "dt: ", self.dt
-            return self.creategraph(startPoint, endPoint, self.dt-2)
+            return self.creategraph(startPoint, endPoint, self.dt-1)
 
     def calculate_steering(self, steering_min, steering_max, dd, iters):
         #TODO: still doesnt work,
@@ -300,6 +316,7 @@ class graphFinder:
     def get_avarege_error(self, paths):
         error_path= []
         for path in paths:
+            print "Len **********************", len(path)
             totDist = 0
             for ((x,y),th1,th2) in path:
                 ec = error_calc.errorCalc("optimal_path.txt") #TODO: slow to read from file all the time?
