@@ -7,7 +7,7 @@ pf = graphFinder()
 startPoint = Point(60,800)
 endPoint = Point(480,100)
 
-path = pf.creategraph(startPoint, endPoint, 40)
+path = pf.creategraph(startPoint, endPoint, 50)
 model = truck()
 
 lx= []

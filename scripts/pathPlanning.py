@@ -22,11 +22,11 @@ class graphFinder:
         self.length_header = 27
         self.length_trailer = 62
         self.findOptimalPath = True
-        self.solutions = 10
+        self.solutions = 100
+        self.steps = 10
 
         self.all_paths = []
         self.model = model.truck()
-        self.ec = error_calc.errorCalc("optimal_path.txt")
         self.map = np.asarray(cv2.imread('map2.png', 0), dtype=np.bool).tolist()
 
 
@@ -81,6 +81,7 @@ class graphFinder:
         self.theta2 = radians(90)
         self.dt = dt
         self.paths = []
+        self.ec = error_calc.errorCalc("optimal_path.txt") #make new error calc every time to reset it and look from the beginning
         dd = self.speed * self.dt
         steering_angle_rad = radians(0)
 
@@ -210,13 +211,19 @@ class graphFinder:
 
                 #mark the previous vector as visited
                 self.visited.add(((self.pos.x, self.pos.y),self.theta1, self.theta2))
-                print len(self.paths)
-                if len(self.paths)> self.solutions:
-                    shortest = self.get_avarege_error(self.paths)
-                    for (x,path) in shortest:
+
+                if len(self.all_paths)>self.solutions:
+                    sorted_list = sorted(self.all_paths, cmp=lambda (a,l1),(b,l2): cmp(a,b))
+                    for (x,path) in sorted_list:
                         print x
-                    print shortest[0]
-                    return shortest[0]
+                    print sorted_list[0]
+                    return sorted_list[0]
+
+                elif len(self.paths)> self.steps:
+                    print "dt in steps: ", self.dt
+                    shortest = self.get_avarege_error(self.paths)
+                    self.all_paths = self.all_paths + shortest
+                    return self.creategraph(startPoint, endPoint, self.dt-1)
 
         if len(self.all_paths)>self.solutions:
             sorted_list = sorted(self.all_paths, cmp=lambda (a,l1),(b,l2): cmp(a,b))
@@ -316,7 +323,6 @@ class graphFinder:
     def get_avarege_error(self, paths):
         error_path= []
         for path in paths:
-            print "Len **********************", len(path)
             totDist = 0
             for ((x,y),th1,th2) in path:
                 ec = error_calc.errorCalc("optimal_path.txt") #TODO: slow to read from file all the time?
