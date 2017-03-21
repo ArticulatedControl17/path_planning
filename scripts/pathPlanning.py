@@ -17,21 +17,24 @@ class Point:
 class graphFinder:
     #TODO: make variables in start for "magic numbers" and extract to methods for better structure
 
-    def __init__(self):
+    def __init__(self, mapName, optimalPath):
         self.speed = 1
         self.length_header = 27
         self.length_trailer = 62
-        self.solutions = 5
+        self.solutions = 1
         self.steps = 1
         self.max_time = 0.05
 
         self.all_paths = []
         self.model = model.truck() #model used to calculate error
-        self.map = np.asarray(cv2.imread('rondell_3.png', 0), dtype=np.bool).tolist() #picture used to create a map with valid positions
+        self.map_name = mapName
+        self.optimal_path = optimalPath
+        self.map = np.asarray(cv2.imread(self.map_name, 0), dtype=np.bool).tolist() #picture used to create a map with valid positions
 
 
     def checkIfInTrack(self, toPoint, th1, th2):
         #TODO: Make new class for this
+        #TODO: Make between points for front and back header wheels
         #check if point and key wheels are in the track
 
         #check the range of the matrix with the allowed positions, to avoid index error
@@ -67,27 +70,34 @@ class graphFinder:
         #prev_left_front_wheel = Point(points[0][0], points[0][1])
 
         #TODO: affects performance quite a lot with dt amount of points
-        between = self.getPointsInBetween((right_back_wheel.x, right_back_wheel.y), (prev_right_back_wheel.x, prev_right_back_wheel.y), self.dt)
+        between_right = self.getPointsInBetween((right_back_wheel.x, right_back_wheel.y), (prev_right_back_wheel.x, prev_right_back_wheel.y), self.dt/2)
+        between_left = self.getPointsInBetween((left_back_wheel.x, left_back_wheel.y), (prev_left_back_wheel.x, prev_left_back_wheel.y), self.dt/2)
 
 
         #check right back wheel
         #TODO: Check left back wheel
-        for (x,y) in between:
+        for (x,y) in between_right:
+            if x <0 or y <0 or x >1000 or y >1000:
+                return False
+            if not self.map[y][x]:
+                return False
+        return True
+        for (x,y) in between_left:
             if x <0 or y <0 or x >1000 or y >1000:
                 return False
             if not self.map[y][x]:
                 return False
         return True
 
-    def creategraph(self, startPoint, endPoint, dt):
+    def creategraph(self, startPoint, endPoint, dt, theta1, theta2):
 
         start_time = time.time() #start a timer, to stop the really slow searches, some dt's are reallly slow, other are quick
 
-        self.theta1 = radians(0) #start angle for header
-        self.theta2 = radians(0) #start angle for trailer
+        self.theta1 = theta1 #start angle for header
+        self.theta2 = theta2 #start angle for trailer
         self.dt = dt #the delta time used for kinematic model, basicly the path step size
         self.paths = [] #list of solutions for current delta t
-        self.ec = error_calc.errorCalc("optimal_path_rondell3.txt") #make new error calc every time to reset it and look from the beginning
+        self.ec = error_calc.errorCalc(self.optimal_path) #make new error calc every time to reset it and look from the beginning
 
         #initiate fields
         dd = self.speed * self.dt
@@ -105,7 +115,7 @@ class graphFinder:
             while True:
                 if len(self.toVisit)==0:
                     print "reached End, no solution found"
-                    return self.creategraph(startPoint, endPoint, self.dt-1)
+                    return self.creategraph(startPoint, endPoint, self.dt+1, theta1, theta2)
                 ((x,y),t1, t2) = self.toVisit.pop()
                 if ((x,y),t1, t2) not in self.visited:
                     break
@@ -115,6 +125,7 @@ class graphFinder:
             self.theta2= t2
             #check if we have reached the end
             dist = sqrt( (endPoint.x - x)**2 + (endPoint.y - y)**2 )
+            #TODO: Add so that we can get the second to last point from error calc
             if self.ec.isAboveEnd(Point(523, 377),Point(endPoint.x,endPoint.y), self.pos) and dist <5*self.dt: #checks if we are above a line of the two last points
                 #reached end, gather the path
                 path = self.gatherPath(startPoint, endPoint)
@@ -147,7 +158,11 @@ class graphFinder:
                     if self.checkIfInTrack(to_point_strait, strait_theta1, strait_theta2):
                         self.addState(to_point_strait, strait_theta1, strait_theta2)
                     #find the optimal path, return max steering angle if we cant reach the optimal path
-                    (tp,tt1,tt2) = self.calculate_steering(radians(-21), radians(16), dd, 10)
+                    (tp,tt1,tt2,err) = self.calculate_steering(radians(-21), radians(16), dd, 10)
+                    if abs(err) <= 0.1 and abs(goRightOrLeft)<= 0.1:
+                        print "ON LINE, FOUND IT", tp.x, tp.y
+                    if abs(err) > 0.1:
+                        print "leaving safe space"
                     if self.checkIfInTrack(tp, tt1, tt2):
                         self.addState(tp, tt1, tt2)
 
@@ -160,43 +175,51 @@ class graphFinder:
                     if self.checkIfInTrack(to_point_strait, strait_theta1, strait_theta2):
                         self.addState(to_point_strait, strait_theta1, strait_theta2)
                     #find the optimal path, return max steering angle if we cant reach the optimal path
-                    (tp,tt1,tt2) = self.calculate_steering(radians(-21), radians(16), dd, 10)
+                    (tp,tt1,tt2,err) = self.calculate_steering(radians(-21), radians(16), dd, 10)
+                    if abs(err) <= 0.1 and abs(goRightOrLeft)<= 0.1:
+                        print "ON LINE, FOUND IT", tp.x, tp.y
+                    if abs(err) > 0.1:
+                        print "leaving safe space"
                     if self.checkIfInTrack(tp, tt1, tt2):
                         self.addState(tp, tt1, tt2)
 
                 #mark the previous node/state as visited
                 self.visited.add(((self.pos.x, self.pos.y),self.theta1, self.theta2))
 
-                if time.time() - start_time > self.max_time:
-                    #cancel the current search and go to next dt
-                    return self.creategraph(startPoint, endPoint, self.dt-1)
+            if time.time() - start_time > self.max_time:
+                #cancel the current search and go to next dt
+                return self.creategraph(startPoint, endPoint, self.dt+1, theta1, theta2)
 
-                elif len(self.paths)>= self.steps:
-                    #steps are amount of solution for every dt, when we have found correct solutions for the current dt, go to next
-                    print "dt in steps: ", self.dt
-                    shortest = self.get_avarege_error(self.paths)
-                    self.all_paths = self.all_paths + shortest
-                    if len(self.all_paths)>=self.solutions:
-                        #found enugh solutions, sort the results and return the one with the smallest error
-                        sorted_list = sorted(self.all_paths, cmp=lambda (a,l1),(b,l2): cmp(a,b))
-                        for (x,path) in sorted_list:
-                            print x
-                        print sorted_list[0]
-                        return sorted_list[0]
-                    #look for more solutions with lower dt
-                    return self.creategraph(startPoint, endPoint, self.dt-1)
+            elif len(self.paths)>= self.steps:
+                #steps are amount of solution for every dt, when we have found correct solutions for the current dt, go to next
+                print "dt in steps: ", self.dt, len(self.paths)
+                shortest = self.get_avarege_error(self.paths)
+                self.all_paths = self.all_paths + shortest
+                if len(self.all_paths)>=self.solutions:
+                    #found enugh solutions, sort the results and return the one with the smallest error
+                    sorted_list = sorted(self.all_paths, cmp=lambda (a,l1),(b,l2): cmp(a,b))
+                    for (x,path) in sorted_list:
+                        print x
+                    print sorted_list[0]
+                    return sorted_list[0]
+                #look for more solutions with lower dt
+                return self.creategraph(startPoint, endPoint, self.dt+1, theta1, theta2)
 
 
         print "dt: ", self.dt
-        return self.creategraph(startPoint, endPoint, self.dt-1)
+        if self.dt>=50:
+            print "no solution found"
+            return []
+        return self.creategraph(startPoint, endPoint, self.dt+1, theta1, theta2)
 
     def calculate_steering(self, steering_min, steering_max, dd, iters):
         #Calculates a point within 1 unit of the optimal path, return the closest possibility if we cant find the optimal path
         steering_new = (steering_min + steering_max)/2
         (new_point, t1, t2) = self.calculateNextState(dd, steering_new)
         error = self.ec.calculateError(new_point)
-        if abs(error)<1 or iters==0:
-            return (new_point, t1,t2)
+        if abs(error)<0.1 or iters==0:
+            print iters, error
+            return (new_point, t1, t2, error)
         elif error<0:
             #search right
             return self.calculate_steering(steering_new, steering_max, dd, iters-1)
@@ -241,7 +264,7 @@ class graphFinder:
         for path in paths:
             totDist = 0
             for ((x,y),th1,th2) in path:
-                ec = error_calc.errorCalc("optimal_path_rondell3.txt") #TODO: slow to read from file all the time?
+                ec = error_calc.errorCalc(self.optimal_path) #TODO: slow to read from file all the time?
                 error = ec.calculateError(Point(x,y))
                 if error>0:
                     totDist = totDist+abs(error)
