@@ -2,23 +2,36 @@ import matplotlib.pyplot as plt
 from pathPlanning import *
 from model import *
 import time
+import numpy as np
+import cv2
+from vehicleState import vehicleState
 
-#optimalPath = "optimal_path3.txt"
-#mapName = 'map3.png'
-optimalPath = "optimal_path_rondell3.txt"
-mapName = 'rondell_3.png'
+optimalFile = "optimal_path3.txt"
+mapName = 'map3.png'
+mapp = np.asarray(cv2.imread(mapName, 0), dtype=np.bool).tolist()
+#optimalFile = "optimal_path_rondell3.txt"
+#mapName = 'rondell_4.png'
 
+dirpath = os.path.dirname(os.path.abspath(__file__))
+f = open(dirpath+'/'+optimalFile, 'r')
+lines = [line.rstrip('\n') for line in f.readlines()]
+posL = [s.split(' ', 1 ) for s in lines]
+optimalPath = []
+for l in posL:
+    optimalPath.append(Point(float(l[0]),float(l[1])))
 
-pf = graphFinder(mapName, optimalPath)
+pf = graphFinder(mapp)
+pf.setOptimalpath(optimalPath)
 
-startPoint = Point(100, 530) # for rondell
-endPoint = Point(523, 60) #for rondell
-#startPoint = Point(400, 900) #for map3
-#endPoint = Point(60,130) #for map3
+#startPoint = Point(100, 530) # for rondell
+#endPoint = Point(523, 60) #for rondell
+startPoint = Point(400, 900) #for map3
+endPoint = Point(90,130) #for map3
 
 start_time = time.time()
-path = pf.creategraph(startPoint, endPoint, 21, radians(0), radians(0))
-#path = pf.creategraph(startPoint, endPoint, 20, radians(180), radians(180))
+vehicleState = vehicleState(startPoint.x, startPoint.y, radians(180), radians(180))
+#path = pf.creategraph(startPoint, endPoint, 30, radians(0), radians(0))
+path = pf.getPath(vehicleState, endPoint)
 #37 does many laps
 
 run_time = ("--- %s seconds ---" % (time.time() - start_time))
@@ -30,15 +43,16 @@ lt1= []
 lt2=[]
 
 
-for ((xa,ya),ta1, ta2) in reversed(path[1]):
-    print "angle", ta1
-    print xa,ya
+#for ((xa,ya),ta1, ta2) in reversed(path):
+#    print "angle", ta1
+#    print xa,ya
 
-for ((x,y),t1,t2) in path[1]:
-    lx.append(x)
-    ly.append(y)
-    lt1.append(t1)
-    lt2.append(t2)
+for vs in path:
+    print "x, y: ", vs.x, vs.y
+    lx.append(vs.x)
+    ly.append(vs.y)
+    lt1.append(vs.theta1)
+    lt2.append(vs.theta2)
 
 li= []
 for i in range(len(lx)-1):
@@ -106,13 +120,9 @@ plt.plot(lx, ly, 'go')
 
 optimal_x =  []
 optimal_y =  []
-dirpath = os.path.dirname(os.path.abspath(__file__))
-f = open(dirpath+'/'+optimalPath, 'r')
-lines = [line.rstrip('\n') for line in f.readlines()]
-posL = [s.split(' ', 1 ) for s in lines]
-for l in posL:
-    optimal_x.append(l[0])
-    optimal_y.append(l[1])
+for l in optimalPath:
+    optimal_x.append(l.x)
+    optimal_y.append(l.y)
 
 plt.plot(optimal_x, optimal_y, 'yellow')
 
