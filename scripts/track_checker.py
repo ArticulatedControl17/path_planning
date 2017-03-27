@@ -8,7 +8,52 @@ class trackChecker:
     def __init__(self, mapp):
         self.model = model.truck() #model used to calculate error
         self.map = mapp #map with allowed/not allowed areas
+    
+    def checkIfInTrack(self, toPoint, th1, th2)
 
+        #check the range of the matrix with the allowed positions, to avoid index error
+        if toPoint.x <0 or toPoint.y <0 or toPoint.x >540 or toPoint.y >950:
+            return False
+
+        points = self.model.calculateCorners(toPoint, th1, th2)
+
+        if self.map[int(toPoint.y)][int(toPoint.x)]==0:
+            return False
+
+
+        right_back_wheel = Point(points[5][0], points[5][1])
+        left_back_wheel = Point(points[4][0], points[4][1])
+        right_front_wheel = Point(points[1][0], points[1][1])
+        left_front_wheel = Point(points[0][0], points[0][1])
+
+        #check right front wheels
+        if right_front_wheel.x <0 or right_front_wheel.y <0 or right_front_wheel.x >540 or right_front_wheel.y >950:
+            return False
+        if self.map[int(right_front_wheel.y)][int(right_front_wheel.x)] ==0:
+            return False
+        #check left front wheels
+        if left_front_wheel.x <0 or left_front_wheel.y <0 or left_front_wheel.x >540 or left_front_wheel.y >950:
+            return False
+        if self.map[int(left_front_wheel.y)][int(left_front_wheel.x)] ==0:
+            return False
+        
+        
+        #check right front wheels
+        if right_back_wheel.x <0 or right_back_wheel.y <0 or right_back_wheel.x >540 or right_back_wheel.y >950:
+            return False
+        if self.map[int(right_back_wheel.y)][int(right_back_wheel.x)] ==0:
+            return False
+        #check left front wheels
+        if left_back_wheel.x <0 or left_back_wheel.y <0 or left_back_wheel.x >540 or left_back_wheel.y >950:
+            return False
+        if self.map[int(left_back_wheel.y)][int(left_back_wheel.x)] ==0:
+            return False
+            
+        return True
+            
+                
+            
+    
 
     def checkIfInTrack(self, prevPoint, prevth1, prevth2, toPoint, th1, th2, dt, error):
         #TODO: Make between points for front and back header wheels

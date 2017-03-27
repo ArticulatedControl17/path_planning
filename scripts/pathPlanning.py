@@ -7,9 +7,9 @@ import time
 import track_checker
 import recalculatePath
 from Point import Point
-from vehicleState import vehicleState
+from vehicleState import VehicleState
 
-class graphFinder:
+class PathPlanner:
     #TODO: add second to last point for error_calc
     #TODO: The absolute last point is not towrad the optimal path, could be maximum turn. FIX
     #TODO: fix "other-lane-padding"
@@ -26,8 +26,13 @@ class graphFinder:
 
         self.trackChecker = track_checker.trackChecker(mapp)
 
-    def getPath(self, vs, endPoint):
+    def getPath(self, vs, endPoint, secondEndPoint):
+        
+        print "endpoints", endPoint, secondEndPoint
 
+        endPoint = Point(*endPoint)
+        secondEndPoint = Point(*secondEndPoint)
+        
         self.recalculate_path = recalculatePath.recalculatePath(self.speed, self.length_header, self.length_trailer, self.trackChecker, self.padding_weight)
         self.on_optimal_path = True
         self.left_track_at = (-1,-1)
@@ -64,7 +69,7 @@ class graphFinder:
             #check if we have reached the end
             dist = sqrt( (endPoint.x - x)**2 + (endPoint.y - y)**2 )
             #TODO: Add so that we can get the second to last point from error calc
-            if self.ec.isAboveEnd(Point(330, 497),Point(endPoint.x,endPoint.y), self.pos) and dist <5*self.dt: #checks if we are above a line of the two last points
+            if self.ec.isAboveEnd(secondEndPoint,endPoint, self.pos) and dist <5*self.dt: #checks if we are above a line of the two last points
                 #reached end, gather the path
                 print "reached end, Gathering solution"
                 self.path = self.gatherPath(Point(vs.x, vs.y), endPoint,self.theta1, self.theta2)
@@ -213,13 +218,13 @@ class graphFinder:
         pret1 = self.theta1
         pret2 = self.theta2
         while not (prex== startPoint.x and  prey == startPoint.y):
-            path.append(vehicleState(prex,prey, pret1, pret2))
+            path.append(VehicleState(prex,prey, pret1, pret2))
             ((nx,ny),nt1, nt2, err) = self.fromPoints[prex,prey]
             prex=nx
             prey=ny
             pret1 = nt1
             pret2 = nt2
-        return path
+        return path[::-1]
 
     def gatherPathMiddle(self, startPoint, endPoint, end_theta1, end_theta2, end_err):
         path = []
@@ -285,8 +290,14 @@ class graphFinder:
         self.toVisit.append(((point.x,point.y), th1, th2, error))
 
     def setOptimalpath(self, path):
+        print "setoptpath", path
+        path = [Point(x,y) for x,y in path]
         self.optimal_path = path
         self.ec = error_calc.errorCalc(path)
 
     def setMap(self, mat):
         self.trackChecker.setMap(mat)
+        
+    def checkIfInTrack(self, vs):
+        return self.trackChecker.(Point(vs.x, vs.y), vs.theta1, vs.theta2)
+        

@@ -1,4 +1,4 @@
-class vehicleState:
+class VehicleState:
 
     def __init__(self, x, y, theta1, theta2):
         self.x = x
