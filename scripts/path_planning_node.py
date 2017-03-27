@@ -79,47 +79,63 @@ class PathPlanningNode:
         self.refpath_publisher = rospy.Publisher('ref_path', Path, queue_size=10)
         
         
-        #rospy.Subscriber('map_update', MapUpdateMsg, self.mapUpdateHandler) #TODO
+        rospy.Subscriber('map_updated', Int8, self.mapUpdateHandler)
         rospy.Subscriber('truck_state', TruckState, self.truckStateHandler)
         
         self.path_request_srv = rospy.Service('request_path', RequestPath, self.requestPathHandler)
 
     
     def isVehicleStateOK(self, state):
-        self.pathplanner.checkIfInTrack(state)
+        r = self.pathplanner.checkIfInTrack(state)
+        if not r:
+            print "not OK: ", state.x, state.y, state.theta1, state.theta2
+        return r
     
     def isCurrentPlanOK(self):
         i = 0
-        for state in current_path:
+        for state in self.current_path:
             if not self.isVehicleStateOK(state):
                 return (False,i)
             i += 1
                 
         return (True,0)
     
-    def updateMap(self, changes):
-        for x, y, v in changes:
-            self.map[y][x] = v
+    def updateMap(self, obst):
+        print "update map", obst
+        add = self.map_obj.addObstacle(obst)
+        if not add:
+            rem = self.map_obj.removeObstacle(obst)
+            if not rem:
+                print "can't add or remove obstacle"
+                
+        self.map, _ = self.map_obj.getMapAndScale()
 
 
     def mapUpdateHandler(self, data):
+        
+        print "cur_path before"
+        for c in self.current_path:
+            print c.x, c.y
+        
         self.wait_for_map_update = True
         
-        self.updateMap(data.changes)
+        self.updateMap(data.data)
         self.pathplanner.setMap(self.map)
         
         (ok, i) = self.isCurrentPlanOK()
         
         if ok:
-            self.wait_for_map_update = False
-            return
+            print "cur path ok"
+            
+            
         else:
-            if i-30 < 0:
+            print "cur path NOT ok"
+            if i-10 < 0:
                 self.current_start_state = self.latest_state
                 self.current_path = []
             else:
-                self.current_start_state = self.current_path[i-30]
-                self.current_path = self.current_path[:i-30+1]
+                self.current_start_state = self.current_path[i-10]
+                self.current_path = self.current_path[:i-10+1]
             
             p = []
             for state in self.current_path:
@@ -130,11 +146,17 @@ class PathPlanningNode:
             self.path_rework_publisher.publish(Path(p))
             
             self.i = self.getClosestIndex(self.refpath, (self.current_start_state.x, self.current_start_state.y))
-            self.wait_for_map_update = False
             
+            self.active = True    
+            
+        self.wait_for_map_update = False
+        print "cur_path after"
+        for c in self.current_path:
+            print c.x, c.y
+        print
         
     
-    def getClosestIndex(refpath, (x,y)):
+    def getClosestIndex(self, refpath, (x,y)):
         i = 0
         minl = 9999
         minindex = 0
@@ -149,10 +171,12 @@ class PathPlanningNode:
         return minindex
     
     def traverseCurrentPath(self):
-    
+        
+        
         p = (self.latest_state.x, self.latest_state.y)
         
         path = list(self.current_path)
+        
         
         if len(path) < 2:
             return
@@ -160,7 +184,10 @@ class PathPlanningNode:
         l1 = path.pop(0)
         l2 = path.pop(0)
         
+        
+        
         while hasPassedLine(Point(*p), (Point(l1.x, l1.y), Point(l2.x, l2.y))):
+            
             
             if len(path) == 0:
                 self.current_path = [l2]
@@ -171,6 +198,8 @@ class PathPlanningNode:
             l2 = path.pop(0)
             
         self.current_path = [l1, l2] + path
+        
+        
 
     
     def truckStateHandler(self, data):
@@ -211,7 +240,9 @@ class PathPlanningNode:
 
             self.wait_for_map_update = False
             
-            self.current_path = []
+            
+            c = self.current_start_state
+            self.current_path = [VehicleState(c.x, c.y, c.theta1, c.theta2)]
             self.active = True
             
             
@@ -227,13 +258,13 @@ class PathPlanningNode:
             if self.active and not self.wait_for_map_update:
                 
                 done = False
-                if self.i + 30 >= len(self.refpath) - 1:
+                if self.i + 10 >= len(self.refpath) - 1:
                     g = self.refpath[-1]
                     g2 = self.refpath[-2]
                     done = True
                 else:
-                    g = self.refpath[self.i + 30]
-                    g2 = self.refpath[self.i + 29]
+                    g = self.refpath[self.i + 10]
+                    g2 = self.refpath[self.i + 9]
 
                 
                 print self.current_start_state.x, self.current_start_state.y, self.current_start_state.theta1, self.current_start_state.theta2
@@ -267,7 +298,10 @@ class PathPlanningNode:
                     xx = round(state.x * self.scale)
                     yy = round(state.y * self.scale)
                     p.append(Position(xx,yy))
-
+                
+                if done:
+                    p.append(Position(-1, -1))
+                
                 self.path_append_publisher.publish(Path(p))
                 
                 if done:

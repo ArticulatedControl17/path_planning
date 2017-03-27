@@ -9,7 +9,7 @@ class trackChecker:
         self.model = model.truck() #model used to calculate error
         self.map = mapp #map with allowed/not allowed areas
     
-    def checkIfInTrack(self, toPoint, th1, th2)
+    def checkIfInTrack2(self, toPoint, th1, th2):
 
         #check the range of the matrix with the allowed positions, to avoid index error
         if toPoint.x <0 or toPoint.y <0 or toPoint.x >540 or toPoint.y >950:
@@ -143,5 +143,5 @@ class trackChecker:
 
         return points
 
-    def setmap(self, mapp):
+    def setMap(self, mapp):
         self.map = mapp

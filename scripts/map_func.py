@@ -54,7 +54,7 @@ OBSTACLES = [
         Obstacle(1780, 3750, 200, 110, 20),
         Obstacle(2020, 4360, 140, 120, 20),
         Obstacle(1470, 6860, 400, 80, 10),
-        Obstacle(2880, 8440, 100, 150, 30)
+        Obstacle(2980, 7710, 1000, 350, 30)
     ]
 
 
@@ -138,7 +138,7 @@ class Map:
 
         # If given obstacle is Not active, there is no need to reset the matrix
         if not obstacle.active:
-            return
+            return False
 
         height = ceil(float(obstacle.height)/float(self.scale))
         width = ceil(float(obstacle.width)/float(self.scale))
@@ -160,6 +160,7 @@ class Map:
         # Clearing 'backup' of given obstacle
         obstacle.matrix_backup = []
         obstacle.active = False
+        return True
 
 
     # Takes (x, y)-coordinates for an element

@@ -3,10 +3,12 @@
 from map_func import *
 
 import rospy
+from std_msgs.msg import Int8
 from os.path import dirname, abspath
 from PIL import Image
 
 
+PUBLISH_TOPIC = "map_updated"
 IMG_PATH = "/map.png"
 
 SCALE = 10  # Map img is in scale 1:10
@@ -22,6 +24,10 @@ class ObstacleHandler:
 
         # To handle user input
         self.ax = None
+
+        # Ros topic
+        self.pub = rospy.Publisher(PUBLISH_TOPIC, Int8, queue_size=10)
+        rospy.loginfo("Publishing on topic '%s'", PUBLISH_TOPIC)
 
 
     # Handler for 'key_press_event'
@@ -45,6 +51,7 @@ class ObstacleHandler:
                 # Removing obstacle from the map matrix
                 self.map.removeObstacle(index)
                 print "Obstacle '%s' was deactivated" % (index+1)
+                self.pub.publish(index)
 
                 # Updating obstacle plot
                 obstacle.plot.remove()
@@ -59,6 +66,8 @@ class ObstacleHandler:
                 # Adding obstacle to the map matrix
                 self.map.addObstacle(index)
                 print "Obstacle '%s' was activated" % (index+1)
+                self.pub.publish(index)
+                #rospy.loginfo("Published on topic '%s'", PUBLISH_TOPIC)
 
                 # Updating obstacle plot
                 obstacle.plot.remove()
@@ -103,16 +112,23 @@ class ObstacleHandler:
                                              verticalalignment="top", color="blue", fontweight="bold")
 
         print ("=====\nRed obstacles are activated, Blue obstacles are deactivated\n" +
-               "Press the corresponding number key, to activate/deactivate an obstacle")
+               "Press the corresponding number key, to activate/deactivate an obstacle\n=====")
 
         fig.canvas.mpl_connect("key_press_event", self.onKeyPress)
 
         plt.show()
 
 
-# Main, used for testing
 if __name__ == "__main__":
+    rospy.init_node("obstacles", anonymous=True)
     map_obj = Map()
     handler_obj = ObstacleHandler(map_obj)
 
-    handler_obj.handleObstacles()
+    try:
+        handler_obj.handleObstacles()
+    except rospy.ROSInterruptException:
+        pass
+
+
+# rosrun truck_map obstacle_node.py
+# rostopic echo map_updated

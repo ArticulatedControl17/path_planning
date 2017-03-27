@@ -101,7 +101,7 @@ class ObstacleHandler:
                                              verticalalignment="top", color="blue", fontweight="bold")
 
         print ("=====\nRed obstacles are activated, Blue obstacles are deactivated\n" +
-               "Press the corresponding number key, to activate/deactivate an obstacle")
+               "Press the corresponding number key, to activate/deactivate an obstacle\n=====")
 
         fig.canvas.mpl_connect("key_press_event", self.onKeyPress)
 
