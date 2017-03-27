@@ -10,7 +10,9 @@ from Point import Point
 from vehicleState import vehicleState
 
 class graphFinder:
-    #TODO: make variables in start for "magic numbers" and extract to methods for better structure
+    #TODO: add second to last point for error_calc
+    #TODO: The absolute last point is not towrad the optimal path, could be maximum turn. FIX
+    #TODO: fix "other-lane-padding"
 
     def __init__(self, mapp):
         self.speed = 1
@@ -82,12 +84,12 @@ class graphFinder:
                 (to_point_right,right_theta1,right_theta2, right_error) = self.calculateNextState(dd, steering_angle_rad)
 
                 #going left
-                steering_angle_rad = radians(-21) #max left angle
+                steering_angle_rad = radians(-16) #max left angle
 
                 (to_point_left,left_theta1, left_theta2, left_error) = self.calculateNextState(dd, steering_angle_rad)
 
                 #finding optimal path
-                (to_point_optimal, optimal_theta1, optimal_theta2, optimal_error) = self.calculate_steering(radians(-21), radians(16), dd, 10)
+                (to_point_optimal, optimal_theta1, optimal_theta2, optimal_error) = self.calculate_steering(radians(-16), radians(16), dd, 10)
                 added_optimal = False
 
                 if abs(currentError) > self.offset_treshold and self.on_optimal_path:
