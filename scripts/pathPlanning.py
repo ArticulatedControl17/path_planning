@@ -17,12 +17,16 @@ class graphFinder:
         self.length_header = 27
         self.length_trailer = 62
         self.solutions = 1
+
+        self.dt = 20 #the delta time used for kinematic model, basicly the path step size
+        self.go_back_steps = 5
+        self.padding_weight = 5
+
         self.trackChecker = track_checker.trackChecker(mapp)
 
     def getPath(self, vs, endPoint):
 
-        start_time = time.time() #start a timer, to stop the really slow searches, some dt's are reallly slow, other are quick
-        self.recalculate_path = recalculatePath.recalculatePath(self.speed, self.length_header, self.length_trailer, self.trackChecker)
+        self.recalculate_path = recalculatePath.recalculatePath(self.speed, self.length_header, self.length_trailer, self.trackChecker, self.padding_weight)
         self.on_optimal_path = True
         self.left_track_at = (-1,-1)
         self.could_left_at = []
@@ -30,7 +34,6 @@ class graphFinder:
 
         self.theta1 = vs.theta1 #start angle for header
         self.theta2 = vs.theta2 #start angle for trailer
-        self.dt = 30 #the delta time used for kinematic model, basicly the path step size
         self.ec = error_calc.errorCalc(self.optimal_path) #make new error calc every time to reset it and look from the beginning
 
         #initiate fields
@@ -41,6 +44,7 @@ class graphFinder:
         self.path = [] #list of solutions for current delta t
         self.fromPoints = {}
         self.toVisit = []
+        #TODO: change so that first step dont allways go strait
         (toPoint,strait_theta1, strait_theta2, err) = self.calculateNextState(dd, steering_angle_rad)
         self.visited = set([]) #the points we have visited
         self.addState(toPoint, strait_theta1, strait_theta2, err)
@@ -58,7 +62,7 @@ class graphFinder:
             #check if we have reached the end
             dist = sqrt( (endPoint.x - x)**2 + (endPoint.y - y)**2 )
             #TODO: Add so that we can get the second to last point from error calc
-            if self.ec.isAboveEnd(Point(480, 130),Point(endPoint.x,endPoint.y), self.pos) and dist <5*self.dt: #checks if we are above a line of the two last points
+            if self.ec.isAboveEnd(Point(330, 497),Point(endPoint.x,endPoint.y), self.pos) and dist <5*self.dt: #checks if we are above a line of the two last points
                 #reached end, gather the path
                 print "reached end, Gathering solution"
                 self.path = self.gatherPath(Point(vs.x, vs.y), endPoint,self.theta1, self.theta2)
@@ -94,16 +98,27 @@ class graphFinder:
                 if currentError<0:
                     #Go right
                     #check if the nodes are within the allowed track
-                    if self.trackChecker.checkIfInTrack(self.pos, self.theta1, self.theta2, to_point_left, left_theta1, left_theta2, self.dt):
+                    #Left
+                    (inTrack, inPadding) = self.trackChecker.checkIfInTrack(self.pos, self.theta1, self.theta2, to_point_left, left_theta1, left_theta2, self.dt, left_error)
+                    if inPadding:
+                        left_error = left_error * self.padding_weight
+                    if inTrack:
                         self.addState(to_point_left, left_theta1, left_theta2, left_error)
                         if self.on_optimal_path and left_error <= self.offset_treshold:
                             self.could_left_at.append((self.pos.x, self.pos.y))
-                    if self.trackChecker.checkIfInTrack(self.pos, self.theta1, self.theta2, to_point_strait, strait_theta1, strait_theta2, self.dt):
+                    #Strait
+                    (inTrack, inPadding) =self.trackChecker.checkIfInTrack(self.pos, self.theta1, self.theta2, to_point_strait, strait_theta1, strait_theta2, self.dt, strait_error)
+                    if inPadding:
+                        strait_error = strait_error* self.padding_weight
+                    if inTrack:
                         self.addState(to_point_strait, strait_theta1, strait_theta2, strait_error)
                         if self.on_optimal_path and strait_error <= self.offset_treshold:
                             self.could_left_at.append((self.pos.x, self.pos.y))
-                    #find the optimal path, return max steering angle if we cant reach the optimal path
-                    if self.trackChecker.checkIfInTrack(self.pos, self.theta1, self.theta2, to_point_optimal, optimal_theta1, optimal_theta2, self.dt):
+                    #Optimal
+                    (inTrack, inPadding) =self.trackChecker.checkIfInTrack(self.pos, self.theta1, self.theta2, to_point_optimal, optimal_theta1, optimal_theta2, self.dt, optimal_error)
+                    if inPadding:
+                        optimal_error = optimal_error * self.padding_weight
+                    if inTrack:
                         added_optimal = True
                         self.addState(to_point_optimal, optimal_theta1, optimal_theta2, optimal_error)
                         if self.on_optimal_path and optimal_error <= self.offset_treshold:
@@ -112,16 +127,27 @@ class graphFinder:
                 else:
                     #Go left
                     #check if the nodes are within the allowed track
-                    if self.trackChecker.checkIfInTrack(self.pos, self.theta1, self.theta2, to_point_right, right_theta1, right_theta2, self.dt):
+                    #Right
+                    (inTrack, inPadding) = self.trackChecker.checkIfInTrack(self.pos, self.theta1, self.theta2, to_point_right, right_theta1, right_theta2, self.dt, right_error)
+                    if inPadding:
+                        right_error = right_error * self.padding_weight
+                    if inTrack:
                         self.addState(to_point_right, right_theta1, right_theta2, right_error)
                         if self.on_optimal_path and right_error <= self.offset_treshold:
                             self.could_left_at.append((self.pos.x, self.pos.y))
-                    if self.trackChecker.checkIfInTrack(self.pos, self.theta1, self.theta2, to_point_strait, strait_theta1, strait_theta2, self.dt):
+                    #Strait
+                    (inTrack, inPadding) = self.trackChecker.checkIfInTrack(self.pos, self.theta1, self.theta2, to_point_strait, strait_theta1, strait_theta2, self.dt, strait_error)
+                    if inPadding:
+                        strait_error = strait_error * self.padding_weight
+                    if inTrack:
                         self.addState(to_point_strait, strait_theta1, strait_theta2, strait_error)
                         if self.on_optimal_path and strait_error <= self.offset_treshold:
                             self.could_left_at.append((self.pos.x, self.pos.y))
-                    #find the optimal path, return max steering angle if we cant reach the optimal path
-                    if self.trackChecker.checkIfInTrack(self.pos, self.theta1, self.theta2, to_point_optimal, optimal_theta1, optimal_theta2, self.dt):
+                    #Optimal
+                    (inTrack, inPadding) = self.trackChecker.checkIfInTrack(self.pos, self.theta1, self.theta2, to_point_optimal, optimal_theta1, optimal_theta2, self.dt, optimal_error)
+                    if inPadding:
+                        optimal_error = optimal_error * self.padding_weight
+                    if inTrack:
                         added_optimal = True
                         self.addState(to_point_optimal, optimal_theta1, optimal_theta2, optimal_error)
                         if self.on_optimal_path and optimal_error <= self.offset_treshold:
@@ -130,17 +156,20 @@ class graphFinder:
                 #check if we are off the optimal path and searching for it
                 if self.left_track_at != (-1,-1):
                     (a,b), _, _, _ = self.fromPoints[(self.left_track_at.x, self.left_track_at.y)]
-                if abs(optimal_error) <= self.offset_treshold and abs(currentError)<= self.offset_treshold and not self.on_optimal_path and self.ec.isAboveEnd(Point(a,b),self.left_track_at, to_point_optimal) and added_optimal:
+                if abs(optimal_error) <= self.offset_treshold and not self.on_optimal_path and self.ec.isAboveEnd(Point(a,b),self.left_track_at, to_point_optimal) and added_optimal:  #and abs(currentError)<= self.offset_treshold
                     self.on_optimal_path = True
                     #gather the path to make better, find startPoint
                     prex = self.left_track_at.x
                     prey = self.left_track_at.y
-                    for r in range (0,2): #go back two steps to be able to adapt the path
+                    for r in range (0, self.go_back_steps): #go back two steps to be able to adapt the path
+                        if prex == vs.x and prey == vs.y:
+                            #we have reached the startPoint
+                            break
                         ((nx,ny),nth1, nth2, nerr) = self.fromPoints[(prex,prey)]
                         prex=nx
                         prey=ny
                     #gather the toalError of the path that's off the optimal path
-                    totError = self.gatherError(Point(prex,prey), to_point_optimal) + abs(optimal_error)
+                    totError = self.gatherError(Point(prex,prey), to_point_optimal, Point(vs.x, vs.y)) + abs(optimal_error)
                     #create new errorCalc and take it to the correct point
                     new_ec = error_calc.errorCalc(self.optimal_path)
                     tempPath = self.gatherPathMiddle(Point(vs.x, vs.y), Point(nx,ny), nth1, nth2, nerr)
@@ -151,7 +180,7 @@ class graphFinder:
                     #reset the previous toVisit stack and extend the fromPoints to also include the adjusted path
                     if len(part)>0:
                         self.fromPoints.update(fromP)
-                        self.fromPoints[(part[0][0][0],part[0][0][1])] = self.fromPoints[(nx,ny)]
+                        #self.fromPoints[(part[0][0][0],part[0][0][1])] = self.fromPoints[(nx,ny)]
                         self.toVisit = [part[-1]]
                         self.could_left_at = []
 
@@ -208,7 +237,7 @@ class graphFinder:
             prerr = err
         return path
 
-    def gatherError(self, startPoint, endPoint):
+    def gatherError(self, startPoint, endPoint, firstPoint):
         print startPoint.x, startPoint.y
         prex = endPoint.x
         prey = endPoint.y
@@ -220,8 +249,9 @@ class graphFinder:
             prex=nx
             prey=ny
             totErr= totErr+ abs(err)
-        ((nx,ny),_, _, err) = self.fromPoints[prex,prey]
-        totErr= totErr + err
+        if not prex == firstPoint.x and not prey == firstPoint.y:
+            ((nx,ny),_, _, err) = self.fromPoints[prex,prey]
+            totErr= totErr + abs(err)
         return totErr
 
 

@@ -5,9 +5,10 @@ import time
 import numpy as np
 import cv2
 from vehicleState import vehicleState
+import map_func
 
-optimalFile = "optimal_path3.txt"
-mapName = 'map3.png'
+optimalFile = "optimal_hard_T_round.txt"
+mapName = 'padding8line0.png'
 mapp = np.asarray(cv2.imread(mapName, 0), dtype=np.bool).tolist()
 #optimalFile = "optimal_path_rondell3.txt"
 #mapName = 'rondell_4.png'
@@ -20,16 +21,17 @@ optimalPath = []
 for l in posL:
     optimalPath.append(Point(float(l[0]),float(l[1])))
 
-pf = graphFinder(mapp)
+matr = map_func.readImgToMatrix('/'+mapName)
+pf = graphFinder(matr)
 pf.setOptimalpath(optimalPath)
 
 #startPoint = Point(100, 530) # for rondell
 #endPoint = Point(523, 60) #for rondell
-startPoint = Point(400, 900) #for map3
-endPoint = Point(90,130) #for map3
+startPoint = Point(115, 510) #for map3
+endPoint = Point(325, 650) #for map3
 
 start_time = time.time()
-vehicleState = vehicleState(startPoint.x, startPoint.y, radians(180), radians(180))
+vehicleState = vehicleState(startPoint.x, startPoint.y, radians(90), radians(90))
 #path = pf.creategraph(startPoint, endPoint, 30, radians(0), radians(0))
 path = pf.getPath(vehicleState, endPoint)
 #37 does many laps
