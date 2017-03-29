@@ -72,10 +72,17 @@ class trackChecker:
 #            print "**********************************************************"
 #            return (False, True)
 
+        #used to avoid going wrong direction, optimal path should be close enugh that this restriction holds
         if ec.getMaxDistPoint(toPoint) > 80:
             return (False,True)
 
-        #65, 720
+
+        if abs(error) > 20:
+            inPadding=True
+
+        #lowest error:  393.97329468
+        #start error:  564.665198373
+
 
         inPadding = False
 

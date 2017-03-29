@@ -11,18 +11,17 @@ from vehicleState import VehicleState
 import model
 
 class PathPlanner:
-    #TODO: add second to last point for error_calc
-    #TODO: The absolute last point is not towrad the optimal path, could be maximum turn. FIX
     #TODO: fix "other-lane-padding"
+    #TODO: The absolute last point is not towrad the optimal path, could be maximum turn. FIX
 
     def __init__(self, mapp):
         self.speed = 1
         self.length_header = 27
         self.length_trailer = 62
         self.solutions = 1
-        self.dt = 35 #the delta time used for kinematic model, basicly the path step size
+        self.dt = 25 #the delta time used for kinematic model, basicly the path step size
         self.go_back_steps = 5
-        self.padding_weight = 5
+        self.padding_weight = 2
         self.offset_treshold = 10
 
         self.trackChecker = track_checker.trackChecker(mapp)
@@ -134,10 +133,11 @@ class PathPlanner:
                 #def calculate_path(self, startPoint, snd_to_last_end, endPoint, dt, theta1, theta2, totError, errorC, offset_treshold
                 ((nx,ny),_, _,_) = self.fromPoints[self.pos.x,self.pos.y]
                 fromPoint = Point(nx,ny)
-                #(fromP, part, nn_ec) = self.recalculate_path.calculate_path(Point(vs.x, vs.y), secondEndPoint, endPoint, self.dt, vs.theta1, vs.theta2, totError, error_calc.errorCalc(self.optimal_path))
-                #if part == []:
-                return self.gatherPath(Point(vs.x, vs.y), endPoint,self.theta1, self.theta2)
-                print part
+                #return self.gatherPath(Point(vs.x, vs.y), endPoint,self.theta1, self.theta2)
+                (fromP, part, nn_ec) = self.recalculate_path.calculate_path(Point(vs.x, vs.y), secondEndPoint, endPoint, self.dt, vs.theta1, vs.theta2, totError, error_calc.errorCalc(self.optimal_path))
+                #part = self.recalculate_path.calculate_path(Point(vs.x, vs.y), secondEndPoint, endPoint, self.dt, vs.theta1, vs.theta2, totError, error_calc.errorCalc(self.optimal_path))
+                if part == []:
+                    return self.gatherPath(Point(vs.x, vs.y), endPoint,self.theta1, self.theta2)
                 return part
 
 
