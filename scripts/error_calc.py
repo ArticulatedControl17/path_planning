@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from math import sqrt
+from math import sqrt, atan2
 import os
 from collections import deque
 import copy
@@ -17,14 +17,11 @@ class errorCalc:
         self.queue = deque(startList)
         self.p1= self.queue.popleft()
         self.p2= self.queue.popleft()
-        self.queue.append(self.p1)
-        self.queue.append(self.p2)
         self.line = (self.p1,self.p2)
 
     def calculateError(self, p0):
         (self.p1,self.p2) = self.line
-        while self.isAboveEnd(self.p1,self.p2,p0):
-            self.queue.append(self.p1)
+        while self.isAboveEnd(self.p1,self.p2,p0) and len(self.queue)>0:
             tempP1=self.p2
             tempP2=self.queue.popleft()
             self.line= (tempP1,tempP2)
@@ -65,3 +62,28 @@ class errorCalc:
             else:
                 #going down
                 return p0.y < end.y
+
+    def getDirection(self):
+        dy = self.line[1].y - self.line[0].y
+        dx = self.line[1].x - self.line[0].x
+        theta = atan2(dy, dx)
+        return theta
+
+    def getMaxDistPoint(self, point):
+        p1 = self.line[1]
+        p0 = self.line[0]
+        d1 = sqrt( (point.x - p1.x)**2 + (point.y - p1.y)**2 )
+        d0 = sqrt( (point.x - p0.x)**2 + (point.y - p0.y)**2 )
+        return max(d1,d0)
+
+    def getCopy(self):
+        q = copy.copy(self.queue)
+        q.appendleft(self.line[1])
+        q.appendleft(self.line[0])
+        return errorCalc(q)
+
+    def printEC(self):
+        print "EC"
+        print
+        for p in self.queue:
+            print p.x, p.y

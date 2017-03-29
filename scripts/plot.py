@@ -4,36 +4,44 @@ from model import *
 import time
 import numpy as np
 import cv2
-from vehicleState import vehicleState
+from vehicleState import VehicleState
 import map_func
+import ref_path
 
-optimalFile = "optimal_hard_T_round.txt"
-mapName = 'padding8line0.png'
+#GET optimal path
+map_obj = map_func.Map()
+ref_obj = ref_path.RefPath()
+mapo, scaleo = map_obj.getMapAndScale()
+start = ref_path.VehicleState(1150, 6000, 90, 90)
+#start = ref_path.VehicleState(3700, 7000, 90, 90)
+#start = ref_path.VehicleState(3300, 6000, -90, -90)
+
+rp = ref_obj.getRefPath(start)
+optimalPath = map(lambda a : (a[0]/10, a[1]/10), rp)
+
+#optimalPath = [(115, 510), (115, 415), (165, 415), (260, 415), (273, 444), (294, 467), (323, 483), (330, 497), (325, 670)]
+
+mapName = 'map.png'
 mapp = np.asarray(cv2.imread(mapName, 0), dtype=np.bool).tolist()
 #optimalFile = "optimal_path_rondell3.txt"
 #mapName = 'rondell_4.png'
 
-dirpath = os.path.dirname(os.path.abspath(__file__))
-f = open(dirpath+'/'+optimalFile, 'r')
-lines = [line.rstrip('\n') for line in f.readlines()]
-posL = [s.split(' ', 1 ) for s in lines]
-optimalPath = []
-for l in posL:
-    optimalPath.append(Point(float(l[0]),float(l[1])))
-
 matr = map_func.readImgToMatrix('/'+mapName)
-pf = graphFinder(matr)
+pf = PathPlanner(matr)
 pf.setOptimalpath(optimalPath)
 
 #startPoint = Point(100, 530) # for rondell
 #endPoint = Point(523, 60) #for rondell
-startPoint = Point(115, 510) #for map3
-endPoint = Point(325, 650) #for map3
+startPoint = Point(115, 600) #for map3
+#startPoint = Point(370, 700) #for map3
+#startPoint = Point(330, 600) #for map3
+endPoint = optimalPath[-1] #for map3
 
 start_time = time.time()
-vehicleState = vehicleState(startPoint.x, startPoint.y, radians(90), radians(90))
+vehicleState = VehicleState(startPoint.x, startPoint.y, radians(-90), radians(-90))
+#vehicleState = VehicleState(startPoint.x, startPoint.y, radians(-90), radians(-90))
 #path = pf.creategraph(startPoint, endPoint, 30, radians(0), radians(0))
-path = pf.getPath(vehicleState, endPoint)
+path = pf.getPath(vehicleState, endPoint, optimalPath[-2])
 #37 does many laps
 
 run_time = ("--- %s seconds ---" % (time.time() - start_time))
@@ -45,9 +53,11 @@ lt1= []
 lt2=[]
 
 
-#for ((xa,ya),ta1, ta2) in reversed(path):
-#    print "angle", ta1
-#    print xa,ya
+#for ((xa,ya),ta1, ta2) in path:
+    #print "angle", ta1
+    #print xa,ya
+#    lx.append(xa)
+#    ly.append(ya)
 
 for vs in path:
     print "x, y: ", vs.x, vs.y
@@ -57,8 +67,8 @@ for vs in path:
     lt2.append(vs.theta2)
 
 li= []
-for i in range(len(lx)-1):
-    li = li + [(model.calculateCorners(Point(lx[i],ly[i]), lt1[i],lt2[i]))]
+#for i in range(len(lx)-1):
+#    li = li + [(model.calculateCorners(Point(lx[i],ly[i]), lt1[i],lt2[i]))]
 
 headerFrontLeftx = []
 headerFrontLefty = []
@@ -116,19 +126,21 @@ plt.plot(trailerBackLeftx, trailerBackLefty, 'green')
 #plt.plot(wallx1, wally1, 'yellow')
 #plt.plot(wallx2, wally2, 'yellow')
 
-plt.plot([startPoint.x, endPoint.x], [startPoint.y, endPoint.y], 'ro')
+plt.plot([startPoint.x, endPoint[0]], [startPoint.y, endPoint[1]], 'ro')
 
 plt.plot(lx, ly, 'go')
 
 optimal_x =  []
 optimal_y =  []
 for l in optimalPath:
-    optimal_x.append(l.x)
-    optimal_y.append(l.y)
+    optimal_x.append(l[0])
+    optimal_y.append(l[1])
 
 plt.plot(optimal_x, optimal_y, 'yellow')
 
 print run_time
+print start
+print "opt", optimalPath
 
 plt.axis([-10, 1000, 1000, -10])
 plt.show()

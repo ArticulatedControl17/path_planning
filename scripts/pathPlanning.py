@@ -8,6 +8,7 @@ import track_checker
 import recalculatePath
 from Point import Point
 from vehicleState import VehicleState
+import model
 
 class PathPlanner:
     #TODO: add second to last point for error_calc
@@ -19,25 +20,22 @@ class PathPlanner:
         self.length_header = 27
         self.length_trailer = 62
         self.solutions = 1
-
-        self.dt = 20 #the delta time used for kinematic model, basicly the path step size
+        self.dt = 35 #the delta time used for kinematic model, basicly the path step size
         self.go_back_steps = 5
         self.padding_weight = 5
+        self.offset_treshold = 10
 
         self.trackChecker = track_checker.trackChecker(mapp)
 
     def getPath(self, vs, endPoint, secondEndPoint):
-        
-        print "endpoints", endPoint, secondEndPoint
 
         endPoint = Point(*endPoint)
         secondEndPoint = Point(*secondEndPoint)
-        
+
         self.recalculate_path = recalculatePath.recalculatePath(self.speed, self.length_header, self.length_trailer, self.trackChecker, self.padding_weight)
         self.on_optimal_path = True
         self.left_track_at = (-1,-1)
         self.could_left_at = []
-        self.offset_treshold = 5
 
         self.theta1 = vs.theta1 #start angle for header
         self.theta2 = vs.theta2 #start angle for trailer
@@ -51,27 +49,98 @@ class PathPlanner:
         self.path = [] #list of solutions for current delta t
         self.fromPoints = {}
         self.toVisit = []
-        #TODO: change so that first step dont allways go strait
-        (toPoint,strait_theta1, strait_theta2, err) = self.calculateNextState(dd, steering_angle_rad)
         self.visited = set([]) #the points we have visited
-        self.addState(toPoint, strait_theta1, strait_theta2, err)
+
+
+        #add all possible pathes for the first point before looping
+        steering_angle_rad = radians(0)
+        (to_point_strait, strait_theta1, strait_theta2, strait_error) = self.calculateNextState(dd, steering_angle_rad)
+        #going right
+        steering_angle_rad = radians(-16) #max right angle
+        (to_point_right,right_theta1,right_theta2, right_error) = self.calculateNextState(dd, steering_angle_rad)
+        #going left
+        steering_angle_rad = radians(16) #max left angle
+        (to_point_left,left_theta1, left_theta2, left_error) = self.calculateNextState(dd, steering_angle_rad)
+        #finding optimal path
+        (to_point_optimal, optimal_theta1, optimal_theta2, optimal_error) = self.calculate_steering(radians(16), radians(-16), dd, 10)
+        #check if the nodes are within the allowed track and we haven't reached the maximum error
+
+        #Strait
+        (inTrack, inPadding) =self.trackChecker.checkIfInTrack(self.pos, self.theta1, self.theta2, to_point_strait, strait_theta1, strait_theta2, self.dt, strait_error, self.ec)
+        if inPadding:
+            strait_error = strait_error* self.padding_weight
+            if inTrack:
+                self.addState(to_point_strait, strait_theta1, strait_theta2, strait_error)
+                if self.on_optimal_path and strait_error <= self.offset_treshold:
+                    self.could_left_at.append((self.pos.x, self.pos.y))
+        #Left
+        (inTrack, inPadding) = self.trackChecker.checkIfInTrack(self.pos, self.theta1, self.theta2, to_point_left, left_theta1, left_theta2, self.dt, left_error, self.ec)
+        if inPadding:
+            left_error = left_error * self.padding_weight
+        if inTrack:
+            self.addState(to_point_left, left_theta1, left_theta2, left_error)
+            if self.on_optimal_path and left_error <= self.offset_treshold:
+                self.could_left_at.append((self.pos.x, self.pos.y))
+        #Right
+        (inTrack, inPadding) = self.trackChecker.checkIfInTrack(self.pos, self.theta1, self.theta2, to_point_right, right_theta1, right_theta2, self.dt, right_error, self.ec)
+        if inPadding:
+            right_error = right_error * self.padding_weight
+        if inTrack:
+            self.addState(to_point_right, right_theta1, right_theta2, right_error)
+            if self.on_optimal_path and right_error <= self.offset_treshold:
+                self.could_left_at.append((self.pos.x, self.pos.y))
+        #Optimal
+        (inTrack, inPadding) =self.trackChecker.checkIfInTrack(self.pos, self.theta1, self.theta2, to_point_optimal, optimal_theta1, optimal_theta2, self.dt, optimal_error, self.ec)
+        if inPadding:
+            optimal_error = optimal_error * self.padding_weight
+        if inTrack:
+            added_optimal = True
+            self.addState(to_point_optimal, optimal_theta1, optimal_theta2, optimal_error)
+            if self.on_optimal_path and optimal_error <= self.offset_treshold:
+                self.could_left_at.append((self.pos.x, self.pos.y))
+
+        count = 0
 
         while len(self.toVisit)>0:
+            count = count+1
             #loop until all possible nodes have been visited
             while True:
-                ((x,y),t1, t2, err) = self.toVisit.pop()
-                if ((x,y),t1, t2, err) not in self.visited:
+                ((x,y),t1, t2, err, new_ec) = self.toVisit.pop()
+                #round to not having to visit every mm, to make it faster
+                round_x= round(x,0)
+                round_y= round(y,0)
+                round_theta1 = round(t1, 1)
+                round_theta2 = round(t2, 1)
+                if ((round_x,round_y),round_theta1, round_theta2) not in self.visited:
                     break
             #found new node to visit
             self.pos = Point(x, y) # get the toPoint
             self.theta1= t1
             self.theta2= t2
+            self.ec= new_ec
+
+            #print count
+
+
             #check if we have reached the end
             dist = sqrt( (endPoint.x - x)**2 + (endPoint.y - y)**2 )
             #TODO: Add so that we can get the second to last point from error calc
-            if self.ec.isAboveEnd(secondEndPoint,endPoint, self.pos) and dist <5*self.dt: #checks if we are above a line of the two last points
+            if self.ec.isAboveEnd(secondEndPoint,endPoint, self.pos) and dist <1*self.dt: #checks if we are above a line of the two last points
                 #reached end, gather the path
                 print "reached end, Gathering solution"
+
+                totError = self.gatherError(Point(vs.x, vs.y), self.pos, Point(vs.x, vs.y))
+                #Gather a new optimized path for the parts that go off the optimal path
+                #def calculate_path(self, startPoint, snd_to_last_end, endPoint, dt, theta1, theta2, totError, errorC, offset_treshold
+                ((nx,ny),_, _,_) = self.fromPoints[self.pos.x,self.pos.y]
+                fromPoint = Point(nx,ny)
+                #(fromP, part, nn_ec) = self.recalculate_path.calculate_path(Point(vs.x, vs.y), secondEndPoint, endPoint, self.dt, vs.theta1, vs.theta2, totError, error_calc.errorCalc(self.optimal_path))
+                #if part == []:
+                return self.gatherPath(Point(vs.x, vs.y), endPoint,self.theta1, self.theta2)
+                print part
+                return part
+
+
                 self.path = self.gatherPath(Point(vs.x, vs.y), endPoint,self.theta1, self.theta2)
                 return self.path
             else:
@@ -84,17 +153,17 @@ class PathPlanner:
                 (to_point_strait, strait_theta1, strait_theta2, strait_error) = self.calculateNextState(dd, steering_angle_rad)
 
                 #going right
-                steering_angle_rad = radians(16) #max right angle
+                steering_angle_rad = radians(-16) #max right angle
 
                 (to_point_right,right_theta1,right_theta2, right_error) = self.calculateNextState(dd, steering_angle_rad)
 
                 #going left
-                steering_angle_rad = radians(-16) #max left angle
+                steering_angle_rad = radians(16) #max left angle
 
                 (to_point_left,left_theta1, left_theta2, left_error) = self.calculateNextState(dd, steering_angle_rad)
 
                 #finding optimal path
-                (to_point_optimal, optimal_theta1, optimal_theta2, optimal_error) = self.calculate_steering(radians(-16), radians(16), dd, 10)
+                (to_point_optimal, optimal_theta1, optimal_theta2, optimal_error) = self.calculate_steering(radians(16), radians(-16), dd, 10)
                 added_optimal = False
 
                 if abs(currentError) > self.offset_treshold and self.on_optimal_path:
@@ -105,8 +174,16 @@ class PathPlanner:
                 if currentError<0:
                     #Go right
                     #check if the nodes are within the allowed track
+                    #Right
+                    (inTrack, inPadding) = self.trackChecker.checkIfInTrack(self.pos, self.theta1, self.theta2, to_point_right, right_theta1, right_theta2, self.dt, right_error, self.ec)
+                    if inPadding:
+                        right_error = right_error * self.padding_weight
+                    if inTrack:
+                        self.addState(to_point_right, right_theta1, right_theta2, right_error)
+                        if self.on_optimal_path and right_error <= self.offset_treshold:
+                            self.could_left_at.append((self.pos.x, self.pos.y))
                     #Left
-                    (inTrack, inPadding) = self.trackChecker.checkIfInTrack(self.pos, self.theta1, self.theta2, to_point_left, left_theta1, left_theta2, self.dt, left_error)
+                    (inTrack, inPadding) = self.trackChecker.checkIfInTrack(self.pos, self.theta1, self.theta2, to_point_left, left_theta1, left_theta2, self.dt, left_error, self.ec)
                     if inPadding:
                         left_error = left_error * self.padding_weight
                     if inTrack:
@@ -114,7 +191,7 @@ class PathPlanner:
                         if self.on_optimal_path and left_error <= self.offset_treshold:
                             self.could_left_at.append((self.pos.x, self.pos.y))
                     #Strait
-                    (inTrack, inPadding) =self.trackChecker.checkIfInTrack(self.pos, self.theta1, self.theta2, to_point_strait, strait_theta1, strait_theta2, self.dt, strait_error)
+                    (inTrack, inPadding) =self.trackChecker.checkIfInTrack(self.pos, self.theta1, self.theta2, to_point_strait, strait_theta1, strait_theta2, self.dt, strait_error, self.ec)
                     if inPadding:
                         strait_error = strait_error* self.padding_weight
                     if inTrack:
@@ -122,7 +199,7 @@ class PathPlanner:
                         if self.on_optimal_path and strait_error <= self.offset_treshold:
                             self.could_left_at.append((self.pos.x, self.pos.y))
                     #Optimal
-                    (inTrack, inPadding) =self.trackChecker.checkIfInTrack(self.pos, self.theta1, self.theta2, to_point_optimal, optimal_theta1, optimal_theta2, self.dt, optimal_error)
+                    (inTrack, inPadding) =self.trackChecker.checkIfInTrack(self.pos, self.theta1, self.theta2, to_point_optimal, optimal_theta1, optimal_theta2, self.dt, optimal_error, self.ec)
                     if inPadding:
                         optimal_error = optimal_error * self.padding_weight
                     if inTrack:
@@ -134,8 +211,16 @@ class PathPlanner:
                 else:
                     #Go left
                     #check if the nodes are within the allowed track
+                    #Left
+                    (inTrack, inPadding) = self.trackChecker.checkIfInTrack(self.pos, self.theta1, self.theta2, to_point_left, left_theta1, left_theta2, self.dt, left_error, self.ec)
+                    if inPadding:
+                        left_error = left_error * self.padding_weight
+                    if inTrack:
+                        self.addState(to_point_left, left_theta1, left_theta2, left_error)
+                        if self.on_optimal_path and left_error <= self.offset_treshold:
+                            self.could_left_at.append((self.pos.x, self.pos.y))
                     #Right
-                    (inTrack, inPadding) = self.trackChecker.checkIfInTrack(self.pos, self.theta1, self.theta2, to_point_right, right_theta1, right_theta2, self.dt, right_error)
+                    (inTrack, inPadding) = self.trackChecker.checkIfInTrack(self.pos, self.theta1, self.theta2, to_point_right, right_theta1, right_theta2, self.dt, right_error, self.ec)
                     if inPadding:
                         right_error = right_error * self.padding_weight
                     if inTrack:
@@ -143,7 +228,7 @@ class PathPlanner:
                         if self.on_optimal_path and right_error <= self.offset_treshold:
                             self.could_left_at.append((self.pos.x, self.pos.y))
                     #Strait
-                    (inTrack, inPadding) = self.trackChecker.checkIfInTrack(self.pos, self.theta1, self.theta2, to_point_strait, strait_theta1, strait_theta2, self.dt, strait_error)
+                    (inTrack, inPadding) = self.trackChecker.checkIfInTrack(self.pos, self.theta1, self.theta2, to_point_strait, strait_theta1, strait_theta2, self.dt, strait_error, self.ec)
                     if inPadding:
                         strait_error = strait_error * self.padding_weight
                     if inTrack:
@@ -151,7 +236,7 @@ class PathPlanner:
                         if self.on_optimal_path and strait_error <= self.offset_treshold:
                             self.could_left_at.append((self.pos.x, self.pos.y))
                     #Optimal
-                    (inTrack, inPadding) = self.trackChecker.checkIfInTrack(self.pos, self.theta1, self.theta2, to_point_optimal, optimal_theta1, optimal_theta2, self.dt, optimal_error)
+                    (inTrack, inPadding) = self.trackChecker.checkIfInTrack(self.pos, self.theta1, self.theta2, to_point_optimal, optimal_theta1, optimal_theta2, self.dt, optimal_error, self.ec)
                     if inPadding:
                         optimal_error = optimal_error * self.padding_weight
                     if inTrack:
@@ -160,40 +245,16 @@ class PathPlanner:
                         if self.on_optimal_path and optimal_error <= self.offset_treshold:
                             self.could_left_at.append((self.pos.x, self.pos.y))
 
-                #check if we are off the optimal path and searching for it
-                if self.left_track_at != (-1,-1):
-                    (a,b), _, _, _ = self.fromPoints[(self.left_track_at.x, self.left_track_at.y)]
-                if abs(optimal_error) <= self.offset_treshold and not self.on_optimal_path and self.ec.isAboveEnd(Point(a,b),self.left_track_at, to_point_optimal) and added_optimal:  #and abs(currentError)<= self.offset_treshold
-                    self.on_optimal_path = True
-                    #gather the path to make better, find startPoint
-                    prex = self.left_track_at.x
-                    prey = self.left_track_at.y
-                    for r in range (0, self.go_back_steps): #go back two steps to be able to adapt the path
-                        if prex == vs.x and prey == vs.y:
-                            #we have reached the startPoint
-                            break
-                        ((nx,ny),nth1, nth2, nerr) = self.fromPoints[(prex,prey)]
-                        prex=nx
-                        prey=ny
-                    #gather the toalError of the path that's off the optimal path
-                    totError = self.gatherError(Point(prex,prey), to_point_optimal, Point(vs.x, vs.y)) + abs(optimal_error)
-                    #create new errorCalc and take it to the correct point
-                    new_ec = error_calc.errorCalc(self.optimal_path)
-                    tempPath = self.gatherPathMiddle(Point(vs.x, vs.y), Point(nx,ny), nth1, nth2, nerr)
-                    for (((a,b),_,_,_)) in list(reversed(tempPath)):
-                        new_ec.calculateError(Point(a,b))
-                    #Gather a new optimized path for the parts that go off the optimal path
-                    (fromP, part) = self.recalculate_path.calculate_path(Point(prex,prey), self.pos, to_point_optimal, self.dt, nth1, nth2, totError, new_ec)
-                    #reset the previous toVisit stack and extend the fromPoints to also include the adjusted path
-                    if len(part)>0:
-                        self.fromPoints.update(fromP)
-                        #self.fromPoints[(part[0][0][0],part[0][0][1])] = self.fromPoints[(nx,ny)]
-                        self.toVisit = [part[-1]]
-                        self.could_left_at = []
 
+                #round to not having to visit every mm, for making it faster
+                round_x= round(self.pos.x,0)
+                round_y= round(self.pos.y,0)
+                round_theta1 = round(self.theta1, 1)
+                round_theta2 = round(self.theta2, 1)
                 #mark the previous node/state as visited
-                self.visited.add(((self.pos.x, self.pos.y),self.theta1, self.theta2))
+                self.visited.add(((round_x, round_y),round_theta1, round_theta2))
         print "no soluton found"
+        return self.visited
         return []
 
     def calculate_steering(self, steering_min, steering_max, dd, iters):
@@ -266,7 +327,7 @@ class PathPlanner:
         next_theta1 = self.theta1 + (dd * tan(steering_angle_rad)) / self.length_header
         next_theta2 = self.theta2 + (dd * sin(self.theta1 - self.theta2))/ self.length_trailer
         next_x = self.pos.x + dd * cos(next_theta1)
-        next_y = self.pos.y - dd * sin(next_theta1)  # Subtracting instead of adding, since the y-axis is flipped
+        next_y = self.pos.y + dd * sin(next_theta1)  # Subtracting instead of adding, since the y-axis is flipped
         error= self.ec.calculateError(Point(next_x, next_y))
 
         return (Point(next_x,next_y), next_theta1, next_theta2, error)
@@ -287,7 +348,7 @@ class PathPlanner:
     def addState(self, point, th1, th2, error):
         #add the vector as an adjacent vector to the previous vector in the graph
         self.fromPoints[(point.x, point.y)] = ((self.pos.x, self.pos.y),self.theta1, self.theta2, error)
-        self.toVisit.append(((point.x,point.y), th1, th2, error))
+        self.toVisit.append(((point.x,point.y), th1, th2, error, self.ec.getCopy()))
 
     def setOptimalpath(self, path):
         print "setoptpath", path
@@ -297,7 +358,6 @@ class PathPlanner:
 
     def setMap(self, mat):
         self.trackChecker.setMap(mat)
-        
+
     def checkIfInTrack(self, vs):
-        return self.trackChecker.checkIfInTrack2(Point(vs.x, vs.y), vs.theta1, vs.theta2)
-        
+        return self.trackChecker.checkIfInTrack2(Point(vs.x, vs.y), vs.theta1, vs.theta2, self.ec)

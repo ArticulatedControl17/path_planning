@@ -2,14 +2,16 @@ import model
 import numpy as np
 import cv2
 from Point import Point
+from math import radians
 
 class trackChecker:
 
     def __init__(self, mapp):
         self.model = model.truck() #model used to calculate error
         self.map = mapp #map with allowed/not allowed areas
-    
+
     def checkIfInTrack2(self, toPoint, th1, th2):
+
 
         #check the range of the matrix with the allowed positions, to avoid index error
         if toPoint.x <0 or toPoint.y <0 or toPoint.x >540 or toPoint.y >950:
@@ -36,8 +38,8 @@ class trackChecker:
             return False
         if self.map[int(left_front_wheel.y)][int(left_front_wheel.x)] ==0:
             return False
-        
-        
+
+
         #check right front wheels
         if right_back_wheel.x <0 or right_back_wheel.y <0 or right_back_wheel.x >540 or right_back_wheel.y >950:
             return False
@@ -48,20 +50,36 @@ class trackChecker:
             return False
         if self.map[int(left_back_wheel.y)][int(left_back_wheel.x)] ==0:
             return False
-            
-        return True
-            
-                
-            
-    
 
-    def checkIfInTrack(self, prevPoint, prevth1, prevth2, toPoint, th1, th2, dt, error):
+        return True
+
+
+
+
+
+    def checkIfInTrack(self, prevPoint, prevth1, prevth2, toPoint, th1, th2, dt, error, ec):
         #TODO: Make between points for front and back header wheels
         #check if point and key wheels are in the track
 
+
+#        upperBound = ec.getDirection() + radians(135)
+#        lowerBound = ec.getDirection() - radians(135)
+#        print "ec direction", ec.getDirection()
+#        print "th1: ", th1
+#        print "upperBound: ", upperBound
+#        print "lowerBound: ", lowerBound
+#        if th1 < lowerBound or th1 > upperBound:
+#            print "**********************************************************"
+#            return (False, True)
+
+        if ec.getMaxDistPoint(toPoint) > 80:
+            return (False,True)
+
+        #65, 720
+
         inPadding = False
 
-        if error > 2* dt:
+        if abs(error) > 50:
             return (False, True)
 
         #check the range of the matrix with the allowed positions, to avoid index error

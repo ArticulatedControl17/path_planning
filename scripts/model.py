@@ -70,37 +70,37 @@ class truck:
 
         # hitch joint
         x2 = point.x + self.trailer_length*cos(th2);
-        y2 = point.y - self.trailer_length*sin(th2);
+        y2 = point.y + self.trailer_length*sin(th2);
 
         #print x2, y2
 
         #middle of front of header
         x3 = x2 + self.header_length*cos(th1);
-        y3 = y2 - self.header_length*sin(th1);
+        y3 = y2 + self.header_length*sin(th1);
 
         #left back wheel
         x4 = point.x - cos(pi/2-th2)*self.trailer_width/2;
-        y4 = point.y - sin(pi/2-th2)*self.trailer_width/2;
+        y4 = point.y + sin(pi/2-th2)*self.trailer_width/2;
 
         #right back wheel
         x5 = point.x + cos(pi/2-th2)*self.trailer_width/2;
-        y5 = point.y + sin(pi/2-th2)*self.trailer_width/2;
+        y5 = point.y - sin(pi/2-th2)*self.trailer_width/2;
 
         #left joint wheel
         x6 = x2 - cos(pi/2-th1)*self.header_width/2;
-        y6 = y2 - sin(pi/2-th1)*self.header_width/2;
+        y6 = y2 + sin(pi/2-th1)*self.header_width/2;
 
         #right joint wheel
         x7 = x2 + cos(pi/2-th1)*self.header_width/2;
-        y7 = y2 + sin(pi/2-th1)*self.header_width/2;
+        y7 = y2 - sin(pi/2-th1)*self.header_width/2;
 
         #left front wheel
         x8 = x6 + self.header_length*cos(th1);
-        y8 = y6 - self.header_length*sin(th1);
+        y8 = y6 + self.header_length*sin(th1);
 
         #right front wheel
         x9 = x7 + self.header_length*cos(th1);
-        y9 = y7 - self.header_length*sin(th1);
+        y9 = y7 + self.header_length*sin(th1);
 
         return((x8,y8), (x9,y9), (x6,y6), (x7,y7), (x4,y4), (x5,y5))
 
@@ -109,14 +109,14 @@ class truck:
         point = self.back_middle_trailer()
 
         x5 = point.x + cos(pi/2-th2)*self.trailer_width/2;
-        y5 = point.y + sin(pi/2-th2)*self.trailer_width/2;
+        y5 = point.y - sin(pi/2-th2)*self.trailer_width/2;
 
     def back_middle_trailer(self, pointFront, th1, th2):
         jpx = pointFront.x - cos(th1) * self.header_length
-        jpy = pointFront.y + sin(th1) * self.header_length
+        jpy = pointFront.y - sin(th1) * self.header_length
 
         px = jpx - cos(th2) * self.trailer_length
-        py = jpy + sin(th2) * self.trailer_length
+        py = jpy - sin(th2) * self.trailer_length
         return Point(px,py)
 
 
