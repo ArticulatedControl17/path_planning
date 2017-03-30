@@ -3,7 +3,7 @@ from math import *
 from Point import Point
 from vehicleState import VehicleState
 import rospy
-from custom_msgs import Path
+from custom_msgs.msg import Path, Position
 
 class recalculatePath:
 
@@ -121,6 +121,7 @@ class recalculatePath:
                 #reached a sloution, gather the path if we are on the optimal path
                 count = count+1
                 print count
+                #rospy.sleep(0.2)
                 (new_point, nt1, nt2, nerror) = self.calculate_steering(radians(16), radians(-16), dd, 10)
                 self.path_pub.publish(Path(self.gather_x_y_path(startPoint, new_point, nt1, nt2, nerror)))
                 if abs(nerror)< 1 and toterr < self.lowest_error:

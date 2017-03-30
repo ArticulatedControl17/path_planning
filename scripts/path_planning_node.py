@@ -13,6 +13,7 @@ from pathPlanning import *
 from Point import *
 import time
 
+from geometry_msgs.msg import PoseWithCovarianceStamped
 
 p = os.path.abspath(os.path.dirname(__file__))
 lib_path = os.path.abspath(os.path.join(p, '..', '..', 'truck_map', 'scripts'))
@@ -81,6 +82,7 @@ class PathPlanningNode:
         
         self.i = 0
         
+        
         self.map_obj = Map()
         self.ref_obj = ref_path.RefPath() #ref_path_no_gui
         
@@ -101,17 +103,25 @@ class PathPlanningNode:
                 
         self.latest_ts = None
         
+        
+        
         self.startend_publisher = rospy.Publisher('alg_startend', Path, queue_size=10)
         self.path_append_publisher = rospy.Publisher('path_append', Path, queue_size=10)
         self.path_rework_publisher = rospy.Publisher('path_rework', Path, queue_size=10)
         self.refpath_publisher = rospy.Publisher('ref_path', Path, queue_size=10)
         self.long_path_publisher = rospy.Publisher('long_path', Path, queue_size=10)
         
+        
+        rospy.Subscriber('initialpose', PoseWithCovarianceStamped, self.initPoseCallback)
+        
         rospy.Subscriber('map_updated', Int8, self.mapUpdateHandler)
         rospy.Subscriber('truck_state', TruckState, self.truckStateHandler)
         
         self.path_request_srv = rospy.Service('request_path', RequestPath, self.requestPathHandler)
 
+
+    def initPoseCallback(self, data):
+        self.current_path = self.current_path[:1]
     
     def isVehicleStateOK(self, state):
         r = self.pathplanner.checkIfInTrack(state)
@@ -137,14 +147,13 @@ class PathPlanningNode:
                 print "can't add or remove obstacle"
                 
         self.map, _ = self.map_obj.getMapAndScale()
-
+        
 
     def mapUpdateHandler(self, data):
         
         print "cur_path before"
         for c in self.current_path:
             print c.x, c.y
-        
         self.wait_for_map_update = True
         
         self.updateMap(data.data)
@@ -177,7 +186,7 @@ class PathPlanningNode:
             
             self.active = True    
             
-        self.wait_for_map_update = False
+        #self.wait_for_map_update = False
         print "cur_path after"
         for c in self.current_path:
             print c.x, c.y
@@ -285,9 +294,9 @@ class PathPlanningNode:
     def spin(self):
         
         while not rospy.is_shutdown():
-            if self.active and not self.wait_for_map_update:
+            if self.active:# and not self.wait_for_map_update:
                 
-                sub_target = 15
+                sub_target = 45
                 
                 done = False
                 if self.i + sub_target >= len(self.refpath) - 1:
@@ -310,7 +319,7 @@ class PathPlanningNode:
                         lfg = sqrt((g[0] - latest[0])**2 + (g[1] - latest[1])**2 )
                         if lfg <= 200:
                             print "lfg too close"
-                            self.i += 5
+                            self.i += 7
                             continue
                         
                     #loop through i -> sub_target
@@ -330,6 +339,10 @@ class PathPlanningNode:
                 
                 s = self.current_start_state
                 print s.x, s.y, s.theta1, s.theta2
+                self.wait_for_map_update = False
+                ri = max(self.i - 1, 0)
+                self.pathplanner.setOptimalpath(self.refpath[self.i:self.i + sub_target])
+                
                 path = self.pathplanner.getPath(self.current_start_state, g, g2)
                 
                 
@@ -340,11 +353,12 @@ class PathPlanningNode:
                     lx = round(state.x * self.scale)
                     ly = round(state.y * self.scale)
                     lp.append(Position(lx, ly))
-                
+                #self.wait_for_map_update = False
                 self.long_path_publisher.publish(lp)
                 
                 if self.wait_for_map_update: #map updated while planning
                     continue
+                    
                 print "path from planning"
                 for pp in path:
                     print pp.x, pp.y, pp.theta1, pp.theta2
@@ -356,7 +370,7 @@ class PathPlanningNode:
                     continue
 
 
-                ti = int(ceil(len(path)/5.0))
+                ti = int(ceil(len(path)/4.5))
                 if done:
                     ti = len(path)-1
                     print "done"
@@ -380,7 +394,7 @@ class PathPlanningNode:
                     self.active = False
                     continue
 
-                self.i += 5
+                self.i += 10
                 
             
             

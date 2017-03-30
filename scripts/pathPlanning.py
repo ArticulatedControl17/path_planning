@@ -10,7 +10,7 @@ from Point import Point
 from vehicleState import VehicleState
 import model
 import rospy
-from custom_msgs import Position
+from custom_msgs.msg import Position
 
 class PathPlanner:
     #TODO: fix "other-lane-padding"
@@ -109,6 +109,8 @@ class PathPlanner:
             count = count+1
             #loop until all possible nodes have been visited
             while True:
+                if len(self.toVisit) == 0:
+                    break
                 ((x,y),t1, t2, err, new_ec) = self.toVisit.pop()
                 self.visited_pub.publish(Position(x,y))
                 #round to not having to visit every mm, to make it faster
@@ -259,7 +261,7 @@ class PathPlanner:
                 #mark the previous node/state as visited
                 self.visited.add(((round_x, round_y),round_theta1, round_theta2))
         print "no soluton found"
-        return self.visited
+        #return self.visited
         return []
 
     def calculate_steering(self, steering_min, steering_max, dd, iters):

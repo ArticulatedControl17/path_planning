@@ -42,7 +42,7 @@ mapp = np.asarray(cv2.imread(mapName, 0), dtype=np.bool).tolist()
 
 matr = map_func.readImgToMatrix('/'+mapName)
 pf = PathPlanner(mapo)
-pf.setOptimalpath(optimalPath)
+#pf.setOptimalpath(optimalPath)
 
 #startPoint = Point(100, 530) # for rondell
 #endPoint = Point(523, 60) #for rondell
@@ -55,7 +55,11 @@ start_time = time.time()
 vehicleState = VehicleState(startPoint.x, startPoint.y, radians(-90), radians(-90))
 #vehicleState = VehicleState(startPoint.x, startPoint.y, radians(-90), radians(-90))
 #path = pf.creategraph(startPoint, endPoint, 30, radians(0), radians(0))
-path = pf.getPath(vehicleState, endPoint, optimalPath[-2])
+
+pf.setOptimalpath([(327.6, 585.0), (327.2, 605.0), (326.7, 625.0), (326.2, 645.0), (325.8, 665.0), (325.3, 685.0), (324.8, 705.0), (324.4, 725.0), (323.9, 745.0), (323.4, 765.0), (323.0, 785.0), (321.1, 799.8), (318.3, 809.7), (314.5, 819.3), (309.9, 828.5), (304.4, 837.2), (298.1, 845.4), (291.1, 852.9), (283.4, 859.8), (275.1, 865.8), (266.3, 871.1), (257.0, 875.0), (245.9, 878.4), (234.7, 880.6), (223.2, 881.8), (211.7, 881.8), (200.3, 880.8), (189.0, 878.6), (178.0, 875.0), (166.4, 870.5), (155.6, 864.4), (145.7, 856.9), (137.0, 848.0), (129.6, 838.1), (123.7, 827.1), (119.4, 815.5), (116.8, 803.3), (116.0, 797.0), (116.0, 776.3), (116.0, 755.7), (116.1, 735.1), (116.1, 714.5), (116.1, 693.9), (116.2, 673.3), (116.2, 652.7), (116.2, 632.1), (116.3, 611.5), (116.3, 590.9), (116.3, 570.3), (116.4, 549.7), (116.4, 529.1), (116.5, 508.5), (116.5, 487.8), (116.5, 467.2), (116.6, 446.6), (116.6, 426.0), (116.6, 405.4), (116.7, 384.8), (116.7, 364.2), (116.7, 343.6), (116.8, 323.0), (116.8, 302.4), (116.8, 281.8), (116.9, 261.2), (116.9, 240.6)])
+
+path = pf.getPath(VehicleState(116.152891805, 693.191225702, 4.71239524926, 4.588817296), (116.9, 240.6), (116.9, 261.2))
+#path = pf.getPath(vehicleState, endPoint, optimalPath[-2])
 #37 does many laps
 
 run_time = ("--- %s seconds ---" % (time.time() - start_time))
