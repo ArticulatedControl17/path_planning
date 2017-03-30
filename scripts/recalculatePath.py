@@ -122,7 +122,7 @@ class recalculatePath:
                 count = count+1
                 print count
                 (new_point, nt1, nt2, nerror) = self.calculate_steering(radians(16), radians(-16), dd, 10)
-                self.path_pub.publish(Path(self.gather_x_y_path(startPoint, new_point, nt1, nt2)))
+                self.path_pub.publish(Path(self.gather_x_y_path(startPoint, new_point, nt1, nt2, nerror)))
                 if abs(nerror)< 1 and toterr < self.lowest_error:
                     print "found better solution"
                     self.path = self.gatherPath(startPoint, new_point, nt1, nt2, nerror, err)
@@ -219,7 +219,7 @@ class recalculatePath:
             prerr = err
         return (fromPoints, list(reversed(path)), self.ec)
 
-    def gather_x_y_path(self, startPoint, endPoint, end_theta1, end_theta2):
+    def gather_x_y_path(self, startPoint, endPoint, end_theta1, end_theta2, err):
         path = []
         self.fromPoints[(endPoint.x, endPoint.y)] = ((self.pos.x, self.pos.y),self.theta1, self.theta2, err)
         prex = self.pos.x
