@@ -9,10 +9,13 @@ import recalculatePath
 from Point import Point
 from vehicleState import VehicleState
 import model
+import rospy
+from custom_msgs import Position
 
 class PathPlanner:
     #TODO: fix "other-lane-padding"
-    #TODO: The absolute last point is not towrad the optimal path, could be maximum turn. FIX
+    #TODO: fix so that we dont stop before all of optimal path is visited.
+    #TODO: allways return empty list
 
     def __init__(self, mapp):
         self.speed = 1
@@ -23,8 +26,10 @@ class PathPlanner:
         self.go_back_steps = 5
         self.padding_weight = 2
         self.offset_treshold = 10
-
         self.trackChecker = track_checker.trackChecker(mapp)
+
+        self.visited_pub = rospy.Publisher('visited_node', Position, queue_size=10)
+        self.to_visit_pub = rospy.Publisher('to_visit_node', Position, queue_size=10)
 
     def getPath(self, vs, endPoint, secondEndPoint):
 
@@ -105,6 +110,7 @@ class PathPlanner:
             #loop until all possible nodes have been visited
             while True:
                 ((x,y),t1, t2, err, new_ec) = self.toVisit.pop()
+                self.visited_pub.publish(Position(x,y))
                 #round to not having to visit every mm, to make it faster
                 round_x= round(x,0)
                 round_y= round(y,0)
@@ -130,7 +136,6 @@ class PathPlanner:
 
                 totError = self.gatherError(Point(vs.x, vs.y), self.pos, Point(vs.x, vs.y))
                 #Gather a new optimized path for the parts that go off the optimal path
-                #def calculate_path(self, startPoint, snd_to_last_end, endPoint, dt, theta1, theta2, totError, errorC, offset_treshold
                 ((nx,ny),_, _,_) = self.fromPoints[self.pos.x,self.pos.y]
                 fromPoint = Point(nx,ny)
                 #return self.gatherPath(Point(vs.x, vs.y), endPoint,self.theta1, self.theta2)
@@ -349,6 +354,7 @@ class PathPlanner:
         #add the vector as an adjacent vector to the previous vector in the graph
         self.fromPoints[(point.x, point.y)] = ((self.pos.x, self.pos.y),self.theta1, self.theta2, error)
         self.toVisit.append(((point.x,point.y), th1, th2, error, self.ec.getCopy()))
+        self.to_visit_pub.publish(Position(point.x, point.y))
 
     def setOptimalpath(self, path):
         print "setoptpath", path

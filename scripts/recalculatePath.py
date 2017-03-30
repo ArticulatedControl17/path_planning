@@ -2,6 +2,8 @@ from error_calc import errorCalc
 from math import *
 from Point import Point
 from vehicleState import VehicleState
+import rospy
+from custom_msgs import Path
 
 class recalculatePath:
 
@@ -11,6 +13,8 @@ class recalculatePath:
         self.length_trailer = length_trailer
         self.trackChecker = trackChecker
         self.padding_weight = weight
+
+        self.path_pub = rospy.Publisher('possible_path', Path, queue_size=10)
 
 
     def calculate_path(self, startPoint, snd_to_last_end, endPoint, dt, theta1, theta2, totError, errorC):
@@ -77,8 +81,8 @@ class recalculatePath:
         print len(self.toVisit)
         count = 0
         while len(self.toVisit)>=0:
-            count= count+1
-            print "count: ", count
+            #count= count+1
+            #print "count: ", count
             #loop until all possible nodes have been visited
             while True:
                 if len(self.toVisit)==0:
@@ -115,8 +119,12 @@ class recalculatePath:
             dist = sqrt( (endPoint.x - x)**2 + (endPoint.y - y)**2 )
             if self.ec.isAboveEnd(snd_to_last_end, endPoint, self.pos) and dist <1*self.dt: #checks if we are above a line of the two last points
                 #reached a sloution, gather the path if we are on the optimal path
+                count = count+1
+                print count
                 (new_point, nt1, nt2, nerror) = self.calculate_steering(radians(16), radians(-16), dd, 10)
+                self.path_pub.publish(Path(self.gather_x_y_path(startPoint, new_point, nt1, nt2)))
                 if abs(nerror)< 1 and toterr < self.lowest_error:
+                    print "found better solution"
                     self.path = self.gatherPath(startPoint, new_point, nt1, nt2, nerror, err)
                     self.lowest_error = toterr
                 #mark visited
@@ -210,6 +218,19 @@ class recalculatePath:
             pret2 = nt2
             prerr = err
         return (fromPoints, list(reversed(path)), self.ec)
+
+    def gather_x_y_path(self, startPoint, endPoint, end_theta1, end_theta2):
+        path = []
+        self.fromPoints[(endPoint.x, endPoint.y)] = ((self.pos.x, self.pos.y),self.theta1, self.theta2, err)
+        prex = self.pos.x
+        prey = self.pos.y
+        while not (prex== startPoint.x and  prey == startPoint.y):
+            path.append(Position(prex,prey))
+            ((nx,ny),nt1, nt2, err) = self.fromPoints[prex,prey]
+            prex=nx
+            prey=ny
+        return list(reversed(path))
+
 
     def calculateNextState(self, dd, steering_angle_rad):
         next_theta1 = self.theta1 + (dd * tan(steering_angle_rad)) / self.length_header
