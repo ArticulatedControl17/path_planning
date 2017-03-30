@@ -360,4 +360,4 @@ class PathPlanner:
         self.trackChecker.setMap(mat)
 
     def checkIfInTrack(self, vs):
-        return self.trackChecker.checkIfInTrack2(Point(vs.x, vs.y), vs.theta1, vs.theta2, self.ec)
+        return self.trackChecker.checkIfInTrack2(Point(vs.x, vs.y), vs.theta1, vs.theta2)

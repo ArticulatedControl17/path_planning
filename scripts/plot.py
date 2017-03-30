@@ -5,19 +5,33 @@ import time
 import numpy as np
 import cv2
 from vehicleState import VehicleState
+from math import *
+
+p = os.path.abspath(os.path.dirname(__file__))
+lib_path = os.path.abspath(os.path.join(p, '..', '..', 'truck_map', 'scripts'))
+sys.path.append(lib_path)
 import map_func
-import ref_path
+import ref_path_gui
+
+
 
 #GET optimal path
 map_obj = map_func.Map()
-ref_obj = ref_path.RefPath()
+ref_obj = ref_path_gui.RefPath()
 mapo, scaleo = map_obj.getMapAndScale()
-start = ref_path.VehicleState(1150, 6000, 90, 90)
+start = ref_path_gui.VehicleState(115, 600, -pi/2, -pi/2)
 #start = ref_path.VehicleState(3700, 7000, 90, 90)
 #start = ref_path.VehicleState(3300, 6000, -90, -90)
 
-rp = ref_obj.getRefPath(start)
-optimalPath = map(lambda a : (a[0]/10, a[1]/10), rp)
+optimalPath = ref_obj.getRefPath(start)
+"""
+output = []
+for x in optimalPath:
+    if x not in output:
+        output.append(x)
+optimalPath = output"""
+
+#optimalPath = map(lambda a : (a[0], a[1]), rp)
 
 #optimalPath = [(115, 510), (115, 415), (165, 415), (260, 415), (273, 444), (294, 467), (323, 483), (330, 497), (325, 670)]
 
@@ -27,7 +41,7 @@ mapp = np.asarray(cv2.imread(mapName, 0), dtype=np.bool).tolist()
 #mapName = 'rondell_4.png'
 
 matr = map_func.readImgToMatrix('/'+mapName)
-pf = PathPlanner(matr)
+pf = PathPlanner(mapo)
 pf.setOptimalpath(optimalPath)
 
 #startPoint = Point(100, 530) # for rondell
@@ -105,8 +119,8 @@ for ((x1,y1),(x2,y2),(x3,y3),(x4,y4),(x5,y5),(x6,y6)) in reversed(li):
     trailerBackLefty.append(y5)
     trailerBackRightx.append(x6)
     trailerBackRighty.append(y6)
-matrix = np.asarray(cv2.imread(mapName, 0), dtype=np.bool).tolist()
-plt.imshow(matrix)
+#matrix = np.asarray(cv2.imread(mapName, 0), dtype=np.bool).tolist()
+plt.imshow(mapo)
 #wall,
 #wallx1 = [500,80,80,80,500,500]
 #wally1 = [842,842,842,540,540,0]
