@@ -22,7 +22,7 @@ from map_func import *
 import ref_path
 
 
-def getPointsInBetween(self, p1, p2, n):
+def getPointsInBetween(p1, p2, n):
         p1x, p1y = p1
         p2x, p2y = p2
 
@@ -287,7 +287,7 @@ class PathPlanningNode:
         while not rospy.is_shutdown():
             if self.active and not self.wait_for_map_update:
                 
-                sub_target = 40
+                sub_target = 15
                 
                 done = False
                 if self.i + sub_target >= len(self.refpath) - 1:
@@ -296,8 +296,32 @@ class PathPlanningNode:
                     done = True
                 else:
                     g = self.refpath[self.i + sub_target]
-                    g2 = self.refpath[self.i + sub_target]
+                    g2 = self.refpath[self.i + sub_target-1]
+                    
+                    latest = None
+                    for j in range(self.i, sub_target):
+                        p1,p2 = self.refpath[j], self.refpath[j+1]
+                        pts = getPointsInBetween(p1,p2,6)
+                        for x,y in pts:
+                            if self.map[y][x] in [0,2]:
+                                latest = (x,y)
+                    print latest
+                    if latest != None:
+                        lfg = sqrt((g[0] - latest[0])**2 + (g[1] - latest[1])**2 )
+                        if lfg <= 200:
+                            print "lfg too close"
+                            self.i += 5
+                            continue
+                        
+                    #loop through i -> sub_target
+                    #add more points in between
+                    #find last one on obst
+                    #comp length from goal
+                    # if length too small increase i and continue
 
+                
+                
+                
                 
                 sp = Position(self.current_start_state.x * self.scale, self.current_start_state.y * self.scale)
                 ep = Position(g[0] * self.scale, g[1] * self.scale)
