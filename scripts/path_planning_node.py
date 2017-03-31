@@ -103,8 +103,7 @@ class PathPlanningNode:
                 
         self.latest_ts = None
         
-        
-        
+
         self.startend_publisher = rospy.Publisher('alg_startend', Path, queue_size=10)
         self.path_append_publisher = rospy.Publisher('path_append', Path, queue_size=10)
         self.path_rework_publisher = rospy.Publisher('path_rework', Path, queue_size=10)
@@ -293,8 +292,11 @@ class PathPlanningNode:
 
     def spin(self):
         
-        while not rospy.is_shutdown():
-            if self.active:# and not self.wait_for_map_update:
+        while not rospy.is_shutdown():# and not self.wait_for_map_update:
+            
+            if not self.active:
+                time.sleep(0.05)
+            else:
                 
                 sub_target = 45
                 
