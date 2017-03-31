@@ -124,24 +124,27 @@ class trackChecker:
         prev_points = self.model.calculateCorners(prevPoint, prevth1, prevth2)
         prev_right_back_wheel = Point(prev_points[5][0], prev_points[5][1])
         prev_left_back_wheel = Point(prev_points[4][0], prev_points[4][1])
-        #prev_right_front_wheel = Point(points[1][0], points[1][1])
-        #prev_left_front_wheel = Point(points[0][0], points[0][1])
+        prev_right_front_wheel = Point(prev_points[1][0], prev_points[1][1])
+        prev_left_front_wheel = Point(prev_points[0][0], prev_points[0][1])
 
         #TODO: affects performance quite a lot with dt amount of points
-        between_right = self.getPointsInBetween((right_back_wheel.x, right_back_wheel.y), (prev_right_back_wheel.x, prev_right_back_wheel.y), dt/1)
-        between_left = self.getPointsInBetween((left_back_wheel.x, left_back_wheel.y), (prev_left_back_wheel.x, prev_left_back_wheel.y), dt/1)
+        between_back_right = self.getPointsInBetween((right_back_wheel.x, right_back_wheel.y), (prev_right_back_wheel.x, prev_right_back_wheel.y), dt/1)
+        between_back_left = self.getPointsInBetween((left_back_wheel.x, left_back_wheel.y), (prev_left_back_wheel.x, prev_left_back_wheel.y), dt/1)
+
+        between_front_right = self.getPointsInBetween((right_front_wheel.x, right_front_wheel.y), (prev_right_front_wheel.x, prev_right_front_wheel.y), dt/1)
+        between_front_left = self.getPointsInBetween((left_front_wheel.x, left_front_wheel.y), (prev_left_front_wheel.x, prev_left_front_wheel.y), dt/1)
 
 
         #check right back wheel
-        for (x,y) in between_right:
+        for (x,y) in between_back_right:
             if x <0 or y <0 or x >540 or y >950:
                 return (False, True)
             if self.map[y][x] ==0:
                 return (False, True)
             if self.map[y][x] ==2:
                 inPadding = True
-        for (x,y) in between_left:
-            #Check left back wheel
+        #Check left back wheel
+        for (x,y) in between_back_left:
             if x <0 or y <0 or x >540 or y >950:
                 return (False, True)
             if self.map[y][x]==0:
@@ -149,6 +152,25 @@ class trackChecker:
             if self.map[y][x]==2:
                 inPadding = True
         return (True, inPadding)
+
+        #check right front wheel
+        for (x,y) in between_front_right:
+            if x <0 or y <0 or x >540 or y >950:
+                return (False, True)
+            if self.map[y][x] ==0:
+                return (False, True)
+            if self.map[y][x] ==2:
+                inPadding = True
+
+        #check left front wheel
+        for (x,y) in between_left_right:
+            if x <0 or y <0 or x >540 or y >950:
+                return (False, True)
+            if self.map[y][x] ==0:
+                return (False, True)
+            if self.map[y][x] ==2:
+                inPadding = True
+
 
     def getPointsInBetween(self, p1, p2, n):
         p1x, p1y = p1

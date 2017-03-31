@@ -18,9 +18,10 @@ class PathPlanner:
     #TODO: allways return empty list
 
     def __init__(self, mapp):
+        self.max_left_angle = -19
         self.speed = 1
         self.length_header = 27
-        self.length_trailer = 62
+        self.length_trailer = 50
         self.solutions = 1
         self.dt = 25 #the delta time used for kinematic model, basicly the path step size
         self.go_back_steps = 5
@@ -60,13 +61,13 @@ class PathPlanner:
         steering_angle_rad = radians(0)
         (to_point_strait, strait_theta1, strait_theta2, strait_error) = self.calculateNextState(dd, steering_angle_rad)
         #going right
-        steering_angle_rad = radians(-16) #max right angle
+        steering_angle_rad = radians(self.max_left_angle) #max right angle
         (to_point_right,right_theta1,right_theta2, right_error) = self.calculateNextState(dd, steering_angle_rad)
         #going left
         steering_angle_rad = radians(16) #max left angle
         (to_point_left,left_theta1, left_theta2, left_error) = self.calculateNextState(dd, steering_angle_rad)
         #finding optimal path
-        (to_point_optimal, optimal_theta1, optimal_theta2, optimal_error) = self.calculate_steering(radians(16), radians(-16), dd, 10)
+        (to_point_optimal, optimal_theta1, optimal_theta2, optimal_error) = self.calculate_steering(radians(16), radians(self.max_left_angle), dd, 10)
         #check if the nodes are within the allowed track and we haven't reached the maximum error
 
         #Strait
@@ -160,7 +161,7 @@ class PathPlanner:
                 (to_point_strait, strait_theta1, strait_theta2, strait_error) = self.calculateNextState(dd, steering_angle_rad)
 
                 #going right
-                steering_angle_rad = radians(-16) #max right angle
+                steering_angle_rad = radians(self.max_left_angle) #max right angle
 
                 (to_point_right,right_theta1,right_theta2, right_error) = self.calculateNextState(dd, steering_angle_rad)
 
@@ -170,7 +171,7 @@ class PathPlanner:
                 (to_point_left,left_theta1, left_theta2, left_error) = self.calculateNextState(dd, steering_angle_rad)
 
                 #finding optimal path
-                (to_point_optimal, optimal_theta1, optimal_theta2, optimal_error) = self.calculate_steering(radians(16), radians(-16), dd, 10)
+                (to_point_optimal, optimal_theta1, optimal_theta2, optimal_error) = self.calculate_steering(radians(16), radians(self.max_left_angle), dd, 10)
                 added_optimal = False
 
                 if abs(currentError) > self.offset_treshold and self.on_optimal_path:
@@ -333,6 +334,19 @@ class PathPlanner:
     def calculateNextState(self, dd, steering_angle_rad):
         next_theta1 = self.theta1 + (dd * tan(steering_angle_rad)) / self.length_header
         next_theta2 = self.theta2 + (dd * sin(self.theta1 - self.theta2))/ self.length_trailer
+
+        #dt2 = next_theta2 - self.theta2
+
+        dt1 = next_theta1 - self.theta1
+        dt2 = next_theta2 - self.theta2
+        alpha = next_theta2 - next_theta1
+        if alpha > 0:
+            next_theta2 += (dt2 * 0.10 + (-dt1) * 0.10)
+        else:
+            next_theta2 -= (dt2 * 0.10 + dt1 * 0.10)
+
+        next_theta2 += alpha * 0.10
+
         next_x = self.pos.x + dd * cos(next_theta1)
         next_y = self.pos.y + dd * sin(next_theta1)  # Subtracting instead of adding, since the y-axis is flipped
         error= self.ec.calculateError(Point(next_x, next_y))
