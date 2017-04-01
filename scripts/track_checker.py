@@ -198,7 +198,6 @@ class trackChecker:
                 inPadding = True
                 
         
-        return (True, inPadding)
 
         #calculate avarege error for key wheels
 
