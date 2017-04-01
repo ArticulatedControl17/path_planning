@@ -291,17 +291,17 @@ class PathPlanningNode:
     
 
     def spin(self):
-        
+        next_subadd = 0
         while not rospy.is_shutdown():# and not self.wait_for_map_update:
             
             if not self.active:
                 time.sleep(0.05)
             else:
                 
-                sub_target = 45
+                sub_target = 45 + next_subadd
                 
                 done = False
-                if self.i + sub_target >= len(self.refpath) - 1:
+                if self.i + sub_target>= len(self.refpath) - 1:
                     g = self.refpath[-1]
                     g2 = self.refpath[-2]
                     done = True
@@ -314,14 +314,14 @@ class PathPlanningNode:
                         p1,p2 = self.refpath[j], self.refpath[j+1]
                         pts = getPointsInBetween(p1,p2,6)
                         for x,y in pts:
-                            if self.map[y][x] in [0,2]:
+                            if self.map[y][x] in [0]:
                                 latest = (x,y)
                     print latest
                     if latest != None:
                         lfg = sqrt((g[0] - latest[0])**2 + (g[1] - latest[1])**2 )
                         if lfg <= 200:
                             print "lfg too close"
-                            self.i += 7
+                            next_subadd += 7
                             continue
                         
                     #loop through i -> sub_target
@@ -330,7 +330,7 @@ class PathPlanningNode:
                     #comp length from goal
                     # if length too small increase i and continue
 
-                
+                next_subadd = 0
                 
                 
                 

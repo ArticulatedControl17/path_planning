@@ -194,7 +194,6 @@ class trackChecker:
                 return (False, True)
             if self.map[y][x]==2:
                 inPadding = True
-        return (True, inPadding)
 
         #check right front wheel
         for (x,y) in between_front_right:
@@ -206,14 +205,15 @@ class trackChecker:
                 inPadding = True
 
         #check left front wheel
-        for (x,y) in between_left_right:
+        for (x,y) in between_front_left:
             if x <0 or y <0 or x >540 or y >950:
                 return (False, True)
             if self.map[y][x] ==0:
                 return (False, True)
             if self.map[y][x] ==2:
                 inPadding = True
-                
+        
+        return (True, inPadding)
         
 
 
