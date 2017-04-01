@@ -5,6 +5,11 @@ from vehicleState import VehicleState
 import rospy
 from custom_msgs.msg import Path, Position
 
+w1 = 0.165
+w2 = 0.06
+w4 = 0.0
+w5 = 0.0
+
 class recalculatePath:
 
     def __init__(self, speed, length_header, length_trailer, trackChecker, weight):
@@ -217,15 +222,37 @@ class recalculatePath:
         next_theta1 = self.theta1 + (dd * tan(steering_angle_rad)) / self.length_header
         next_theta2 = self.theta2 + (dd * sin(self.theta1 - self.theta2))/ self.length_trailer
 
-#        dt1 = next_theta1 - self.theta1
-#        dt2 = next_theta2 - self.theta2
-#        alpha = next_theta2 - next_theta1
-#        if alpha > 0:
-#            next_theta2 += (dt2 * 0.10 + (-dt1) * 0.10)
-#        else:
-#            next_theta2 -= (dt2 * 0.10 + dt1 * 0.10)
-#
-#        next_theta2 += alpha * 0.10
+
+
+        a1 = self.theta2 - self.theta1
+        a2 = next_theta2 - next_theta1
+        
+        
+        da = a2 - a1
+        print da
+        if a2 > 0:
+            if da > 0:
+                next_theta2 += da * w4
+            else:
+                next_theta2 += abs(da) * w5
+        else:
+            if da < 0:
+                next_theta2 -= abs(da) * w4
+            else:
+                next_theta2 -= da * w5
+        
+        
+        dt1 = next_theta1 - self.theta1
+        dt2 = next_theta2 - self.theta2
+        alpha = next_theta2 - next_theta1
+        
+        
+        if alpha > 0:
+            next_theta2 += (dt2 * w2 + (-dt1) * w1)
+        else:
+            next_theta2 -= (dt2 * w2 + dt1 * w1)
+            
+        
 
         next_x = self.pos.x + dd * cos(next_theta1)
         next_y = self.pos.y + dd * sin(next_theta1)

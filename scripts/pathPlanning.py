@@ -12,6 +12,8 @@ import model
 import rospy
 from custom_msgs.msg import Position
 
+from recalculatePath import w1, w2, w4, w5
+
 class PathPlanner:
     #TODO: fix "other-lane-padding"
     #TODO: fix so that we dont stop before all of optimal path is visited.
@@ -20,7 +22,7 @@ class PathPlanner:
     def __init__(self, mapp):
         self.max_left_angle = -19
         self.speed = 1
-        self.length_header = 27
+        self.length_header = 21
         self.length_trailer = 50
         self.solutions = 1
         self.dt = 20 #the delta time used for kinematic model, basicly the path step size
@@ -274,17 +276,35 @@ class PathPlanner:
         next_theta1 = self.theta1 + (dd * tan(steering_angle_rad)) / self.length_header
         next_theta2 = self.theta2 + (dd * sin(self.theta1 - self.theta2))/ self.length_trailer
 
-        #dt2 = next_theta2 - self.theta2
 
-        #dt1 = next_theta1 - self.theta1
-        #dt2 = next_theta2 - self.theta2
-        #alpha = next_theta2 - next_theta1
-        #if alpha > 0:
-    #        next_theta2 += (dt2 * 0.10 + (-dt1) * 0.10)
-    #    else:
-    #        next_theta2 -= (dt2 * 0.10 + dt1 * 0.10)
-#
-#        next_theta2 += alpha * 0.10
+        a1 = self.theta2 - self.theta1
+        a2 = next_theta2 - next_theta1
+        
+        
+        da = a2 - a1
+        print da
+        if a2 > 0:
+            if da > 0:
+                next_theta2 += da * w4
+            else:
+                next_theta2 += abs(da) * w5
+        else:
+            if da < 0:
+                next_theta2 -= abs(da) * w4
+            else:
+                next_theta2 -= da * w5
+        
+        
+        dt1 = next_theta1 - self.theta1
+        dt2 = next_theta2 - self.theta2
+        alpha = next_theta2 - next_theta1
+        
+        
+        if alpha > 0:
+            next_theta2 += (dt2 * w2 + (-dt1) * w1)
+        else:
+            next_theta2 -= (dt2 * w2 + dt1 * w1)
+        
 
         next_x = self.pos.x + dd * cos(next_theta1)
         next_y = self.pos.y + dd * sin(next_theta1)

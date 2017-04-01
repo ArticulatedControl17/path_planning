@@ -59,7 +59,7 @@ class truck:
 
     def __init__(self):
         self.header_length = 27;
-        self.trailer_length = 62;
+        self.trailer_length = 50;
 
         self.header_width = 18;
         self.trailer_width = 18;
