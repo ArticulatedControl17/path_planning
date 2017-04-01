@@ -28,38 +28,16 @@ class Vector:
 point = Point(0,0)
 point1 = Point(0,0)
 
-class rectangle:
 
-
-    def vectorToPoint(self, vector , prevToPoint ):
-        (x,y) = vector.values
-        return (prevToPoint.x + x, prevToPoint.y + y)
-
-    def calculateCorners(self, fromPoint, toPoint):
-        self.width = 18
-        self.length =  27
-        self.theta = 90- math.degrees(math.atan((self.length)/(self.width)))
-
-        distance = math.sqrt((self.length/2)*(self.length/2) + (self.width/2)*(self.width/2))
-
-        prevV = Vector(toPoint.x - fromPoint.x , toPoint.y - fromPoint.y)
-        mag = prevV.magnitude()
-        nPrevV = tuple( comp/mag for comp in prevV.values )
-        (x,y) = tuple(comp*distance for comp in nPrevV) #the vector from toPoint to a straight new point
-
-        rightTopCorner = self.vectorToPoint(Vector(x,y).rotate(self.theta), toPoint)
-        leftTopCorner = self.vectorToPoint(Vector(x,y).rotate(-(self.theta)), toPoint)
-        rightBottomCorner = self.vectorToPoint(Vector(x,y).rotate(180-self.theta), toPoint)
-        leftBottomCorner = self.vectorToPoint(Vector(x,y).rotate(-(180-self.theta)), toPoint)
-
-        return (rightTopCorner, leftTopCorner, rightBottomCorner, leftBottomCorner)
-        #return rightTopCorner
 
 class truck:
 
     def __init__(self):
         self.header_length = 27;
-        self.trailer_length = 50;
+        self.trailer_length = 49;
+        
+        self.hl_front = 10.0
+        self.tl_back = 13.5
 
         self.header_width = 18;
         self.trailer_width = 18;
@@ -69,22 +47,30 @@ class truck:
         point = self.back_middle_trailer(pointFront, th1, th2)
 
         # hitch joint
-        x2 = point.x + self.trailer_length*cos(th2);
-        y2 = point.y + self.trailer_length*sin(th2);
+        x2 = point.x + (self.trailer_length + self.tl_back) *cos(th2);
+        y2 = point.y + (self.trailer_length + self.tl_back) *sin(th2);
 
         #print x2, y2
 
-        #middle of front of header
-        x3 = x2 + self.header_length*cos(th1);
-        y3 = y2 + self.header_length*sin(th1);
 
-        #left back wheel
+        #left back
         x4 = point.x - cos(pi/2-th2)*self.trailer_width/2;
         y4 = point.y + sin(pi/2-th2)*self.trailer_width/2;
 
-        #right back wheel
+        #right back
         x5 = point.x + cos(pi/2-th2)*self.trailer_width/2;
         y5 = point.y - sin(pi/2-th2)*self.trailer_width/2;
+        
+        
+        #left back axis
+        x12 = x4 + self.tl_back * cos(th2)
+        y12 = y4 + self.tl_back * sin(th2)
+        
+        #right back axis
+        x13 = x5 + self.tl_back * cos(th2)
+        y13 = y5 + self.tl_back * sin(th2)
+        
+        
 
         #left joint wheel
         x6 = x2 - cos(pi/2-th1)*self.header_width/2;
@@ -94,15 +80,28 @@ class truck:
         x7 = x2 + cos(pi/2-th1)*self.header_width/2;
         y7 = y2 - sin(pi/2-th1)*self.header_width/2;
 
-        #left front wheel
+        #left front axis
         x8 = x6 + self.header_length*cos(th1);
         y8 = y6 + self.header_length*sin(th1);
 
-        #right front wheel
+        #right front axis
         x9 = x7 + self.header_length*cos(th1);
         y9 = y7 + self.header_length*sin(th1);
+        
+        
+        #left front
+        
+        x10 = x6 + (self.header_length + self.hl_front)*cos(th1);
+        y10 = y6 + (self.header_length + self.hl_front)*sin(th1);
+        
+        #right front
+        
+        x11 = x7 + (self.header_length + self.hl_front)*cos(th1);
+        y11 = y7 + (self.header_length + self.hl_front)*sin(th1);
+        
+        
 
-        return((x8,y8), (x9,y9), (x6,y6), (x7,y7), (x4,y4), (x5,y5))
+        return((x8,y8), (x9,y9), (x6,y6), (x7,y7), (x12, y12), (x13, y13), (x10, y10), (x11, y11), (x4, y4), (x5, y5))
 
     def rightbackWheel(self):
 
@@ -115,8 +114,8 @@ class truck:
         jpx = pointFront.x - cos(th1) * self.header_length
         jpy = pointFront.y - sin(th1) * self.header_length
 
-        px = jpx - cos(th2) * self.trailer_length
-        py = jpy - sin(th2) * self.trailer_length
+        px = jpx - cos(th2) * (self.trailer_length + self.tl_back)
+        py = jpy - sin(th2) * (self.trailer_length + self.tl_back)
         return Point(px,py)
 
 

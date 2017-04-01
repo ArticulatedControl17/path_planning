@@ -5,8 +5,8 @@ from vehicleState import VehicleState
 import rospy
 from custom_msgs.msg import Path, Position
 
-w1 = 0.165
-w2 = 0.06
+w1 = 0#0.165
+w2 = 0#0.06
 w4 = 0.0
 w5 = 0.0
 
@@ -229,7 +229,7 @@ class recalculatePath:
         
         
         da = a2 - a1
-        print da
+        #print da
         if a2 > 0:
             if da > 0:
                 next_theta2 += da * w4

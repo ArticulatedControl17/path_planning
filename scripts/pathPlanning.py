@@ -20,10 +20,10 @@ class PathPlanner:
     #TODO: allways return empty list
 
     def __init__(self, mapp):
-        self.max_left_angle = -19
+        self.max_left_angle = -17
         self.speed = 1
         self.length_header = 21
-        self.length_trailer = 50
+        self.length_trailer = 49
         self.solutions = 1
         self.dt = 20 #the delta time used for kinematic model, basicly the path step size
         self.padding_weight = 2
@@ -282,7 +282,7 @@ class PathPlanner:
         
         
         da = a2 - a1
-        print da
+        #print da
         if a2 > 0:
             if da > 0:
                 next_theta2 += da * w4
