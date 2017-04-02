@@ -6,14 +6,14 @@ import rospy
 from custom_msgs.msg import Path, Position
 
 w1 = 0.175
-w2 = 0.09#0.06
-w4 = 0.0
-w5 = 0.0
+w2 = 0.09
+w4 = 0
+w5 = 0
 
 class recalculatePath:
 
     def __init__(self, speed, length_header, length_trailer, trackChecker, weight):
-        self.max_left_angle = -19
+        self.max_left_angle = -18
         self.speed = speed
         self.length_header = length_header
         self.length_trailer = length_trailer

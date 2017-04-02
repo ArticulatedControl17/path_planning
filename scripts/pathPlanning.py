@@ -20,7 +20,7 @@ class PathPlanner:
     #TODO: allways return empty list
 
     def __init__(self, mapp):
-        self.max_left_angle = -17
+        self.max_left_angle = -18
         self.speed = 1
         self.length_header = 21
         self.length_trailer = 49

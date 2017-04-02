@@ -88,6 +88,8 @@ class PathPlanningNode:
         
         self.sp_count = 1
         
+        self.tp = []
+        
         self.map_obj = Map()
         self.ref_obj = ref_path.RefPath() #ref_path_no_gui
         
@@ -114,6 +116,7 @@ class PathPlanningNode:
         self.path_rework_publisher = rospy.Publisher('path_rework', Path, queue_size=10)
         self.refpath_publisher = rospy.Publisher('ref_path', Path, queue_size=10)
         self.long_path_publisher = rospy.Publisher('long_path', Path, queue_size=10)
+        self.trailer_path_publisher = rospy.Publisher('trailer_path', Path, queue_size=10)
         
         
         rospy.Subscriber('initialpose', PoseWithCovarianceStamped, self.initPoseCallback)
@@ -183,9 +186,11 @@ class PathPlanningNode:
                 if i-10 < 0:
                     self.current_start_state = self.latest_state
                     self.current_path = []
+                    self.tp = []
                 else:
                     self.current_start_state = self.current_path[i-10]
                     self.current_path = self.current_path[:i-10+1]
+                    self.tp = self.tp[:i-10+1]
                 
                 p = []
                 for state in self.current_path:
@@ -215,6 +220,7 @@ class PathPlanningNode:
                 self.path_rework_publisher.publish(Path([]))
                 s = self.current_start_state = self.latest_state
                 self.i = 0
+                self.tp = []
                 
                 self.current_path = [VehicleState(s.x, s.y, s.theta1, s.theta2)]
                 
@@ -296,7 +302,7 @@ class PathPlanningNode:
     def requestPathHandler(self, data):
         
         self.sp_count = 1
-        
+        self.tp = []
         s = data.state
         
         start = ref_path.VehicleState(s.p.x / self.scale, s.p.y / self.scale, s.theta1, s.theta2)
@@ -402,13 +408,6 @@ class PathPlanningNode:
                 
                 
                 
-                lp = []
-                for state in path:
-                    lx = round(state.x * self.scale)
-                    ly = round(state.y * self.scale)
-                    lp.append(Position(lx, ly))
-                #self.wait_for_map_update = False
-                self.long_path_publisher.publish(lp)
                 
                 if self.wait_for_map_update: #map updated while planning
                     continue
@@ -457,9 +456,11 @@ class PathPlanningNode:
                             if ten:
                                 rwp = self.current_path[:-8]
                                 self.current_path = list(rwp)
+                                self.tp = self.tp[:-8]
                             else:
                                 rwp = self.current_path[:2]
                                 self.current_path = list(rwp)
+                                self.tp = self.tp[:2]
                                 
                             
                             self.path_rework_publisher.publish(Path([Position(s.x * self.scale, s.y * self.scale) for s in rwp]))
@@ -488,6 +489,7 @@ class PathPlanningNode:
                         self.path_rework_publisher.publish(Path([]))
                         s = self.current_start_state = self.latest_state
                         self.i = 0
+                        self.tp = []
                         
                         self.current_path = [VehicleState(s.x, s.y, s.theta1, s.theta2)]
                         
@@ -518,7 +520,7 @@ class PathPlanningNode:
                         
 
 
-                ti = int(ceil(len(path)/4.5))
+                ti = int(ceil(len(path)/4.6))+1
                 if done:
                     ti = len(path)-1
                     print "done"
@@ -528,16 +530,37 @@ class PathPlanningNode:
                 app_path = path[:ti+1]
                 self.current_path += app_path
                 
+                
+                lp = []
+                for state in path:
+                    lx = round(state.x * self.scale)
+                    ly = round(state.y * self.scale)
+                    lp.append(Position(lx, ly))
+                #self.wait_for_map_update = False
+                self.long_path_publisher.publish(lp)
+                
+                
+                
                 p = []
+                
+                hl = 21.0
+                tl = 49.0 + 13.5
+                
                 for state in app_path:
                     xx = round(state.x * self.scale)
                     yy = round(state.y * self.scale)
+                    
+                    tx = state.x - hl*cos(state.theta1) - tl * cos(state.theta2)
+                    ty = state.y - hl*sin(state.theta1) - tl * sin(state.theta2)
+                    self.tp.append(Position(round(tx * self.scale),round(ty * self.scale)))
+                    
                     p.append(Position(xx,yy))
                 
                 if done:
                     p.append(Position(-1, -1))
                 
                 self.path_append_publisher.publish(Path(p))
+                self.trailer_path_publisher.publish(Path(self.tp))
                 
                 if done:
                     self.active = False
