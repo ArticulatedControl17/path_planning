@@ -81,7 +81,12 @@ class PathPlanningNode:
         rospy.init_node('path_planning', anonymous=False)
         
         self.i = 0
+        self.done = False
         
+        self.goals = []
+        self.gi = []
+        
+        self.sp_count = 1
         
         self.map_obj = Map()
         self.ref_obj = ref_path.RefPath() #ref_path_no_gui
@@ -146,6 +151,12 @@ class PathPlanningNode:
                 print "can't add or remove obstacle"
                 
         self.map, _ = self.map_obj.getMapAndScale()
+        if add:
+            return True
+        elif rem:
+            return False
+        else:
+            return False
         
 
     def mapUpdateHandler(self, data):
@@ -155,41 +166,79 @@ class PathPlanningNode:
             print c.x, c.y
         self.wait_for_map_update = True
         
-        self.updateMap(data.data)
+        added = self.updateMap(data.data)
         self.pathplanner.setMap(self.map)
         
-        (ok, i) = self.isCurrentPlanOK()
+        if added:
+            print "added obst"
         
-        if ok:
-            print "cur path ok"
+            (ok, i) = self.isCurrentPlanOK()
             
-            
-        else:
-            print "cur path NOT ok"
-            if i-10 < 0:
-                self.current_start_state = self.latest_state
-                self.current_path = []
+            if ok:
+                print "cur path ok"
+                
+                
             else:
-                self.current_start_state = self.current_path[i-10]
-                self.current_path = self.current_path[:i-10+1]
-            
-            p = []
-            for state in self.current_path:
-                xx = round(state.x * self.scale)
-                yy = round(state.y * self.scale)
-                p.append(Position(xx,yy))
+                print "cur path NOT ok"
+                if i-10 < 0:
+                    self.current_start_state = self.latest_state
+                    self.current_path = []
+                else:
+                    self.current_start_state = self.current_path[i-10]
+                    self.current_path = self.current_path[:i-10+1]
+                
+                p = []
+                for state in self.current_path:
+                    xx = round(state.x * self.scale)
+                    yy = round(state.y * self.scale)
+                    p.append(Position(xx,yy))
 
-            self.path_rework_publisher.publish(Path(p))
-            
-            self.i = self.getClosestIndex(self.refpath, (self.current_start_state.x, self.current_start_state.y))
-            
-            self.active = True    
-            
-        #self.wait_for_map_update = False
-        print "cur_path after"
-        for c in self.current_path:
-            print c.x, c.y
-        print
+                self.done = False
+                self.path_rework_publisher.publish(Path(p))
+                
+                self.i = self.getClosestIndex(self.refpath, (self.current_start_state.x, self.current_start_state.y))
+                
+                self.active = True    
+                
+            #self.wait_for_map_update = False
+            print "cur_path after"
+            for c in self.current_path:
+                print c.x, c.y
+            print
+        
+        else:
+            print "removed obstacle", self.active, self.done
+            if (not self.active) and (not self.done):
+                print "came here"
+                self.sp_count = 1
+                
+                self.path_rework_publisher.publish(Path([]))
+                s = self.current_start_state = self.latest_state
+                self.i = 0
+                
+                self.current_path = [VehicleState(s.x, s.y, s.theta1, s.theta2)]
+                
+                
+                
+                start = ref_path.VehicleState(s.x, s.y, s.theta1, s.theta2)
+                
+                
+                ci = self.getClosestIndex(self.refpath, (s.x, s.y))
+                
+                x = len(filter(lambda f: f > ci, self.gi))
+                
+                #rp, self.gi = self.ref_obj.getRefPath(start, self.goals[-x:]), self.sp_count)
+                rp = self.ref_obj.getRefPath(start, self.goals[-x:])
+                if rp == None:
+                    print "Can't find a path"
+                    self.active = False
+                    self.sp_count = 1
+                    return
+                
+                self.ref_path = rp
+                p = [Position(x*10,y*10) for x,y in self.refpath]
+                self.refpath_publisher.publish(Path(p))
+                self.active = True
         
     
     def getClosestIndex(self, refpath, (x,y)):
@@ -246,16 +295,20 @@ class PathPlanningNode:
     
     def requestPathHandler(self, data):
         
+        self.sp_count = 1
+        
         s = data.state
         
         start = ref_path.VehicleState(s.p.x / self.scale, s.p.y / self.scale, s.theta1, s.theta2)
-        goals = [(float(p.x)/self.scale, float(p.y)/self.scale) for p in data.goals.path]
-        print "goals", goals
+        self.goals = [(float(p.x)/self.scale, float(p.y)/self.scale) for p in data.goals.path]
+        
+        print "goals", self.goals
         response = RequestPathResponse()     
         
         print 
         st = time.time()
-        rp = self.ref_obj.getRefPath(start, goals)
+        #rp, self.gi = self.ref_obj.getRefPath(start, self.goals, self.sp_count)
+        rp = self.ref_obj.getRefPath(start, self.goals)
         print "time", time.time()-st
         #rp = [(x/ float(self.scale), y / float(self.scale)) for x,y in rp]
         #rp = [(1161, 7145), (1161, 6939), (1162, 6733), (1162, 6527), (1162, 6321), (1163, 6115), (1163, 5909), (1163, 5703), (1164, 5497), (1164, 5291), (1165, 5085), (1165, 4878), (1165, 4672), (1166, 4466), (1166, 4260), (1170, 4200), (1377, 4198), (1584, 4197), (1791, 4195), (1998, 4194), (2205, 4192), (2412, 4191), (2620, 4190), (2650, 4293), (2695, 4395), (2752, 4492), (2821, 4580), (2901, 4658), (2990, 4726), (3088, 4781), (3191, 4824), (3300, 4850), (3295, 5050), (3290, 5250), (3286, 5450)]
@@ -265,13 +318,13 @@ class PathPlanningNode:
 
         else:
             response.success = True
-            
+            self.done = False
             self.i = 0
             
             self.current_start_state = VehicleState(s.p.x / self.scale, s.p.y / self.scale, s.theta1, s.theta2)
             
             self.refpath = rp
-            self.pathplanner.setOptimalpath(rp)
+            #self.pathplanner.setOptimalpath(rp)
 
             p = [Position(x*10,y*10) for x,y in self.refpath]
             self.refpath_publisher.publish(Path(p))
@@ -342,7 +395,6 @@ class PathPlanningNode:
                 s = self.current_start_state
                 print s.x, s.y, s.theta1, s.theta2
                 self.wait_for_map_update = False
-                ri = max(self.i - 1, 0)
                 self.pathplanner.setOptimalpath(self.refpath[self.i:self.i + sub_target])
                 
                 path = self.pathplanner.getPath(self.current_start_state, g, g2)
@@ -367,15 +419,110 @@ class PathPlanningNode:
                 print
                 
                 if path == []:
-                    print "Can't find a path"
-                    self.active = False
-                    continue
+                    print ":D:D:D:"
+                    #rospy.sleep(3)
+                    nr = True
+                    
+                    if len(self.current_path) > 0 and (not self.current_start_state == self.current_path[0]) and len(self.current_path) > 1:
+                        
+                        
+                        ten = True
+                        if len(self.current_path) >= 10:
+                            self.current_start_state = self.current_path[-9]
+                        
+                        else:
+                            self.current_start_state = self.current_path[1]
+                            ten = False
+                            
+                    
+                        k = self.getClosestIndex(self.refpath, (self.current_start_state.x, self.current_start_state.y))
+                        op = self.refpath[k: self.i + sub_target]
+                        if len(op) < 3:
+                            op = self.refpath[k-25: self.i + sub_target]
+                            if len(op) < 3:
+                                op = self.refpath
+                        self.pathplanner.setOptimalpath(op)
+                        
+                        sp = Position(self.current_start_state.x * self.scale, self.current_start_state.y * self.scale)
+                        
+                        ep = Position(g[0] * self.scale, g[1] * self.scale)
+                        self.startend_publisher.publish(Path([sp, ep]))
+                    
+                        
+                        p2 = self.pathplanner.getPath(self.current_start_state, g, g2)
+                        
+                        if p2 != []:
+                            path = p2
+                            
+                            if ten:
+                                rwp = self.current_path[:-8]
+                                self.current_path = list(rwp)
+                            else:
+                                rwp = self.current_path[:2]
+                                self.current_path = list(rwp)
+                                
+                            
+                            self.path_rework_publisher.publish(Path([Position(s.x * self.scale, s.y * self.scale) for s in rwp]))
+                            self.i -= 3
+                            
+                            
+                            
+                            nr = False
+                        
+                    if nr:
+                        
+                            
+                        self.sp_count += 1
+                        
+                        
+                        print "trying new ref path, sp count is ", self.sp_count
+                        
+                        #if self.sp_count > 4:
+                        if self.sp_count > 4 or True:
+                            print "Can't find a path"
+                            self.active = False
+                            self.sp_count = 1
+                            continue
+                            
+                            
+                        self.path_rework_publisher.publish(Path([]))
+                        s = self.current_start_state = self.latest_state
+                        self.i = 0
+                        
+                        self.current_path = [VehicleState(s.x, s.y, s.theta1, s.theta2)]
+                        
+                        
+                        
+                        start = ref_path.VehicleState(s.x, s.y, s.theta1, s.theta2)
+                        
+                        
+                        ci = self.getClosestIndex(self.refpath, (s.x, s.y))
+                        
+                        x = len(filter(lambda f: f > ci, self.gi))
+                        
+                        #rp, self.gi = self.ref_obj.getRefPath(start, self.goals[-x:], self.sp_count)
+                        rp = self.ref_obj.getRefPath(start, self.goals[-x:])
+                        if rp == None:
+                            print "Can't find a path"
+                            self.active = False
+                            self.sp_count = 1
+                            continue
+                        
+                        self.ref_path = rp
+                        p = [Position(x*10,y*10) for x,y in self.refpath]
+                        self.refpath_publisher.publish(Path(p))
+
+                        continue
+                        
+                        
+                        
 
 
                 ti = int(ceil(len(path)/4.5))
                 if done:
                     ti = len(path)-1
                     print "done"
+                    self.done = True
                 self.current_start_state = path[ti]
                 print ti, len(path)
                 app_path = path[:ti+1]
