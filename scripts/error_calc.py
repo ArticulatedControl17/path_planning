@@ -82,6 +82,14 @@ class errorCalc:
         q.appendleft(self.line[0])
         return errorCalc(q)
 
+    def is_next_Left(self):
+        if len(self.queue)>0:
+            isLeft = ((self.p2.x - self.p1.x)*(self.queue[0].y - self.p1.y) - (self.p2.y - self.p1.y)*(self.queue[0].x - self.p1.x)) >0
+        else:
+            isLeft=True
+        return isLeft
+
+
     def printEC(self):
         print "EC"
         print
