@@ -58,22 +58,22 @@ class trackChecker:
 
 
 
-    def checkIfInTrack(self, prevPoint, prevth1, prevth2, toPoint, th1, th2, dt, front_ec, back_ec):
+    def checkIfInTrack(self, prevPoint, prevth1, prevth2, toPoint, th1, th2, dt, ec, front_ec_i, back_ec_i):
         #TODO: Make between points for front and back header wheels
         #check if point and key wheels are in the track
 
         #used to avoid going wrong direction, optimal path should be close enugh that this restriction holds
-        if front_ec.getMaxDistPoint(toPoint) > 80:
-            return (False,True)
+        if ec.getMaxDistPoint(toPoint, front_ec_i) > 80:
+            return (False,True, -1, -1)
 
         inPadding = False
 
         #check the range of the matrix with the allowed positions, to avoid index error
         if toPoint.x <0 or toPoint.y <0 or toPoint.x >540 or toPoint.y >950:
-            return (False, True)
+            return (False, True, -1, -1)
 
         if self.map[int(toPoint.y)][int(toPoint.x)]==0:
-            return (False, True)
+            return (False, True, -1, -1)
         #if self.map[int(toPoint.y)][int(toPoint.x)]==2:
         #    inPadding = True
 
@@ -130,80 +130,84 @@ class trackChecker:
         #check right back wheel
         for (x,y) in between_back_wheel_right:
             if x <0 or y <0 or x >540 or y >950:
-                return (False, True)
+                return (False, True, -1, -1)
             if self.map[y][x] ==0:
-                return (False, True)
+                return (False, True, -1, -1)
             if self.map[y][x] ==2:
                 right_front_inPadding = True
         #Check left back wheel
         for (x,y) in between_back_wheel_left:
             if x <0 or y <0 or x >540 or y >950:
-                return (False, True)
+                return (False, True, -1, -1)
             if self.map[y][x]==0:
-                return (False, True)
+                return (False, True, -1, -1)
             if self.map[y][x]==2:
                 left_front_inPadding = True
 
         #check right front wheel
         for (x,y) in between_front_wheel_right:
             if x <0 or y <0 or x >540 or y >950:
-                return (False, True)
+                return (False, True, -1, -1)
             if self.map[y][x] ==0:
-                return (False, True)
+                return (False, True, -1, -1)
             if self.map[y][x] ==2:
                 right_front_inPadding = True
 
         #check left front wheel
         for (x,y) in between_front_wheel_left:
             if x <0 or y <0 or x >540 or y >950:
-                return (False, True)
+                return (False, True, -1, -1)
             if self.map[y][x] ==0:
-                return (False, True)
+                return (False, True, -1, -1)
             if self.map[y][x] ==2:
                 left_front_inPadding = True
 
         #trailer back
         for (x,y) in between_back_right:
             if x <0 or y <0 or x >540 or y >950:
-                return (False, True)
+                return (False, True, -1, -1)
             if self.map[y][x] ==0:
-                return (False, True)
+                return (False, True, -1, -1)
             if self.map[y][x] ==2:
                 right_back_inPadding = True
 
         #trailer back
         for (x,y) in between_back_left:
             if x <0 or y <0 or x >540 or y >950:
-                return (False, True)
+                return (False, True, -1, -1)
             if self.map[y][x]==0:
-                return (False, True)
+                return (False, True, -1, -1)
             if self.map[y][x]==2:
                 left_back_inPadding = True
 
         #check right front wheel
         for (x,y) in between_front_right:
             if x <0 or y <0 or x >540 or y >950:
-                return (False, True)
+                return (False, True, -1, -1)
             if self.map[y][x] ==0:
-                return (False, True)
+                return (False, True, -1, -1)
             if self.map[y][x] ==2:
                 inPadding = True
 
         #check left front wheel
         for (x,y) in between_front_left:
             if x <0 or y <0 or x >540 or y >950:
-                return (False, True)
+                return (False, True, -1, -1)
             if self.map[y][x] ==0:
-                return (False, True)
+                return (False, True, -1, -1)
             if self.map[y][x] ==2:
                 inPadding = True
 
          #calculate avarege error for key wheels
 
-        right_front_wheel_err = front_ec.calculateError(right_front_wheel) - HEADER_WIDTH/2
-        left_front_wheel_err = front_ec.calculateError(left_front_wheel) + HEADER_WIDTH/2
-        right_back_wheel_err = back_ec.calculateError(right_back_wheel) - HEADER_WIDTH/2
-        left_back_wheel_err = back_ec.calculateError(left_back_wheel) + HEADER_WIDTH/2
+        (right_front_wheel_err,i1) = ec.calculateError(right_front_wheel, front_ec_i)
+        right_front_wheel_err = right_front_wheel_err - HEADER_WIDTH/2
+        (left_front_wheel_err, i2) = ec.calculateError(left_front_wheel, front_ec_i)
+        left_front_wheel_err =  left_front_wheel_err + HEADER_WIDTH/2
+        (right_back_wheel_err, i3) = ec.calculateError(right_back_wheel, back_ec_i)
+        right_back_wheel_err = right_back_wheel_err - HEADER_WIDTH/2
+        (left_back_wheel_err, i4) = ec.calculateError(left_back_wheel, back_ec_i)
+        left_back_wheel_err = left_back_wheel_err  + HEADER_WIDTH/2
 
         if abs(right_front_wheel_err) > LANE_WIDTH/2:
             right_front_wheel_err = right_front_wheel_err * OTHERLANE_WEIGHT
@@ -240,7 +244,7 @@ class trackChecker:
 #        if inn:
 #            totError = totError * OTHERLANE_WEIGHT
 
-        return (True, totError)
+        return (True, totError, max(i1,i2), max(i3,i4))
 
     def getPointsInBetween(self, p1, p2, n):
         p1x, p1y = p1

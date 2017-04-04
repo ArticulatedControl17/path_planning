@@ -16,19 +16,19 @@ OUTSIDE_TURN_ERROR = 8
 OTHERLANE_WEIGHT = 10
 PADDING_WEIGHT = 20
 
-def calculate_steering(steering_min, steering_max, dd, iters, target_error, pos, theta1, theta2, ec):
+def calculate_steering(steering_min, steering_max, dd, iters, target_error, pos, theta1, theta2, ec, ec_i):
     #Calculates a point within 1 unit of the optimal path, return the closest possibility if we cant find the optimal path
     steering_new = (steering_min + steering_max)/2
     (new_point, t1, t2) = calculateNextState(theta1, theta2, pos, dd, steering_new)
-    error = ec.calculateError(new_point)
+    (error, i) = ec.calculateError(new_point, ec_i)
     if abs(error-target_error)<0.1 or iters==0:
         return (new_point, t1, t2)
     elif error<target_error:
         #search right
-        return calculate_steering(steering_new, steering_max, dd, iters-1, target_error, pos, theta1, theta2, ec)
+        return calculate_steering(steering_new, steering_max, dd, iters-1, target_error, pos, theta1, theta2, ec, ec_i)
     else:
         #search left
-        return calculate_steering(steering_min, steering_new, dd, iters-1, target_error, pos, theta1, theta2, ec)
+        return calculate_steering(steering_min, steering_new, dd, iters-1, target_error, pos, theta1, theta2, ec, ec_i)
 
 
 def calculateNextState(theta1, theta2, pos, dd, steering_angle_rad):
