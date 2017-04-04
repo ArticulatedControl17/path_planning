@@ -3,7 +3,7 @@ import numpy as np
 import cv2
 from Point import Point
 from math import radians
-from helper_functions import LANE_WIDTH, PADDING_WEIGHT, HEADER_WIDTH
+from helper_functions import LANE_WIDTH, OTHERLANE_WEIGHT, HEADER_WIDTH, PADDING_WEIGHT
 
 class trackChecker:
 
@@ -74,14 +74,14 @@ class trackChecker:
 
         if self.map[int(toPoint.y)][int(toPoint.x)]==0:
             return (False, True)
-        if self.map[int(toPoint.y)][int(toPoint.x)]==2:
-            inPadding = True
+        #if self.map[int(toPoint.y)][int(toPoint.x)]==2:
+        #    inPadding = True
 
         points = self.model.calculateCorners(toPoint, th1, th2)
 
 
 
-
+        #header
         right_back_wheel = Point(points[5][0], points[5][1])
         left_back_wheel = Point(points[4][0], points[4][1])
         right_front_wheel = Point(points[1][0], points[1][1])
@@ -89,6 +89,7 @@ class trackChecker:
 
         left_front = Point(points[6][0], points[6][1])
         right_front = Point(points[7][0], points[7][1])
+        #trailer
         left_back = Point(points[8][0], points[8][1])
         right_back = Point(points[9][0], points[9][1])
 
@@ -121,6 +122,11 @@ class trackChecker:
         between_back_left = self.getPointsInBetween((left_back.x, left_back.y), (prev_left_back.x, prev_left_back.y), dt/4)
 
 
+        right_front_inPadding = False
+        left_front_inPadding = False
+        right_back_inPadding = False
+        left_back_inPadding = False
+
         #check right back wheel
         for (x,y) in between_back_wheel_right:
             if x <0 or y <0 or x >540 or y >950:
@@ -128,7 +134,7 @@ class trackChecker:
             if self.map[y][x] ==0:
                 return (False, True)
             if self.map[y][x] ==2:
-                inPadding = True
+                right_front_inPadding = True
         #Check left back wheel
         for (x,y) in between_back_wheel_left:
             if x <0 or y <0 or x >540 or y >950:
@@ -136,7 +142,7 @@ class trackChecker:
             if self.map[y][x]==0:
                 return (False, True)
             if self.map[y][x]==2:
-                inPadding = True
+                left_front_inPadding = True
 
         #check right front wheel
         for (x,y) in between_front_wheel_right:
@@ -145,7 +151,7 @@ class trackChecker:
             if self.map[y][x] ==0:
                 return (False, True)
             if self.map[y][x] ==2:
-                inPadding = True
+                right_front_inPadding = True
 
         #check left front wheel
         for (x,y) in between_front_wheel_left:
@@ -154,25 +160,25 @@ class trackChecker:
             if self.map[y][x] ==0:
                 return (False, True)
             if self.map[y][x] ==2:
-                inPadding = True
+                left_front_inPadding = True
 
-
+        #trailer back
         for (x,y) in between_back_right:
             if x <0 or y <0 or x >540 or y >950:
                 return (False, True)
             if self.map[y][x] ==0:
                 return (False, True)
             if self.map[y][x] ==2:
-                inPadding = True
+                right_back_inPadding = True
 
-        #Check left back wheel
+        #trailer back
         for (x,y) in between_back_left:
             if x <0 or y <0 or x >540 or y >950:
                 return (False, True)
             if self.map[y][x]==0:
                 return (False, True)
             if self.map[y][x]==2:
-                inPadding = True
+                left_back_inPadding = True
 
         #check right front wheel
         for (x,y) in between_front_right:
@@ -200,13 +206,24 @@ class trackChecker:
         left_back_wheel_err = back_ec.calculateError(left_back_wheel) + HEADER_WIDTH/2
 
         if abs(right_front_wheel_err) > LANE_WIDTH/2:
-            right_front_wheel_err = right_front_wheel_err * PADDING_WEIGHT
+            right_front_wheel_err = right_front_wheel_err * OTHERLANE_WEIGHT
+        if right_front_inPadding:
+            print "Right in padding", toPoint.x, toPoint.y
+
+            right_front_wheel_err = (abs(right_front_wheel_err)+20) * PADDING_WEIGHT
         if abs(left_front_wheel_err) > LANE_WIDTH/2:
-            left_front_wheel_err = left_front_wheel_err * PADDING_WEIGHT
+            left_front_wheel_err = left_front_wheel_err * OTHERLANE_WEIGHT
+        if left_front_inPadding:
+            print "left in padding", toPoint.x, toPoint.y
+            left_front_wheel_err = (abs(left_front_wheel_err)+20) * PADDING_WEIGHT
         if abs(right_back_wheel_err) > LANE_WIDTH/2:
-            right_back_wheel_err = right_back_wheel_err * PADDING_WEIGHT
+            right_back_wheel_err = right_back_wheel_err * OTHERLANE_WEIGHT
+        if right_back_inPadding:
+            right_back_wheel_err = (abs(right_back_wheel_err)+20) * PADDING_WEIGHT
         if abs(left_back_wheel_err) > LANE_WIDTH/2:
-            left_back_wheel_err = left_back_wheel_err * PADDING_WEIGHT
+            left_back_wheel_err = left_back_wheel_err * OTHERLANE_WEIGHT
+        if left_back_inPadding:
+            left_back_wheel_err = (abs(left_back_wheel_err)+20) * PADDING_WEIGHT
 
 #        inn = False
 
@@ -221,7 +238,7 @@ class trackChecker:
 
         totError = abs(right_front_wheel_err) + abs(left_front_wheel_err) + abs(right_back_wheel_err) + abs(left_back_wheel_err)
 #        if inn:
-#            totError = totError * PADDING_WEIGHT
+#            totError = totError * OTHERLANE_WEIGHT
 
         return (True, totError)
 

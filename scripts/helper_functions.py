@@ -8,10 +8,13 @@ HL_FRONT = 10.0
 TL_BACK = 13.5
 HEADER_WIDTH = 18.0;
 TRAILER_WIDTH = 18.0
+MAX_LEFT_ANGLE = -18
+MAX_RIGHT_ANGLE = 16
 
 LANE_WIDTH = 20
-PADDING_WEIGHT = 10
 OUTSIDE_TURN_ERROR = 8
+OTHERLANE_WEIGHT = 10
+PADDING_WEIGHT = 20
 
 def calculate_steering(steering_min, steering_max, dd, iters, target_error, pos, theta1, theta2, ec):
     #Calculates a point within 1 unit of the optimal path, return the closest possibility if we cant find the optimal path
@@ -41,3 +44,35 @@ def calculateNextState(theta1, theta2, pos, dd, steering_angle_rad):
 
 
     return (Point(next_x,next_y), next_theta1, next_theta2)
+
+def rounding(x, y, th1, th2):
+    modPoint = 3.0
+    modTheta = 0.3
+
+    m_x = x % modPoint
+    if m_x >= modPoint/2:   #round up
+        x = x-m_x + modPoint
+    else:                   #round down
+        x = x - m_x
+
+    m_y = y % modPoint
+    if m_y >= modPoint/2:   #round up
+        y = y-m_y + modPoint
+    else:                   #round down
+        y = y - m_y
+
+    th1 = round(th1, 1)
+    m_t1 = round(th1 % modTheta, 1)
+    if m_t1 >= modTheta/2:   #round up
+        th1 = th1-m_t1 + modTheta
+    else:                   #round down
+        th1 = th1 - m_t1
+
+    th2 = round(th2, 1)
+    m_t2 = round(th2 % modTheta, 1)
+    if m_t2 >= modTheta/2:   #round up
+        th2 = th2-m_t2 + modTheta
+    else:                   #round down
+        th2 = th2 - m_t2
+
+    return ((x,y),th1,th2)

@@ -14,12 +14,9 @@ from custom_msgs.msg import Position
 from helper_functions import *
 
 class PathPlanner:
-    #TODO: fix "other-lane-padding"
-    #TODO: fix so that we dont stop before all of optimal path is visited.
-    #TODO: allways return empty list
+    #TODO: Left and right are flipped in some parts, make them correct (only variables are wrong, functionality correct)
 
     def __init__(self, mapp):
-        self.max_left_angle = -16
         self.speed = 1
         self.dt = 25 #the delta time used for kinematic model, basicly the path step size
         self.trackChecker = track_checker.trackChecker(mapp)
@@ -55,10 +52,7 @@ class PathPlanner:
                 ((x,y),t1, t2, err, new_front_ec, new_back_ec) = self.toVisit.pop()
                 self.visited_pub.publish(Position(x,y))
                 #round to not having to visit every mm, to make it faster
-                round_x= round(x,0)
-                round_y= round(y,0)
-                round_theta1 = round(t1, 1)
-                round_theta2 = round(t2, 1)
+                ((round_x, round_y), round_theta1, round_theta2) = rounding(x, y, t1, t2)
                 if ((round_x,round_y),round_theta1, round_theta2) not in self.visited:
                     break
             #found new node to visit
@@ -74,7 +68,7 @@ class PathPlanner:
             #check if we have reached the end
             dist = sqrt( (endPoint.x - x)**2 + (endPoint.y - y)**2 )
             #TODO: Add so that we can get the second to last point from error calc
-            if self.front_ec.isAboveEnd(secondEndPoint,endPoint, self.pos) and dist <1*self.dt: #checks if we are above a line of the two last points
+            if self.front_ec.isAboveEnd(secondEndPoint,endPoint, self.pos) and dist <1*self.dt and self.front_ec.isAtEnd(): #checks if we are above a line of the two last points
                 #reached end, gather the path
                 print "reached end, Gathering solution"
 
@@ -103,10 +97,7 @@ class PathPlanner:
                     self.addPossiblePathes(True)
 
                 #round to not having to visit every mm, for making it faster
-                round_x= round(self.pos.x,0)
-                round_y= round(self.pos.y,0)
-                round_theta1 = round(self.theta1, 1)
-                round_theta2 = round(self.theta2, 1)
+                ((round_x, round_y), round_theta1, round_theta2) = rounding(self.pos.x, self.pos.y, self.theta1, self.theta2)
                 #mark the previous node/state as visited
                 self.visited.add(((round_x, round_y),round_theta1, round_theta2))
         print "no soluton found"
@@ -119,19 +110,19 @@ class PathPlanner:
         steering_angle_rad = radians(0)
         (to_point_strait, strait_theta1, strait_theta2) = calculateNextState(self.theta1, self.theta2, self.pos, dd, steering_angle_rad)
         #going right
-        steering_angle_rad = radians(self.max_left_angle) #max right angle
+        steering_angle_rad = radians(MAX_LEFT_ANGLE) #max right angle
         (to_point_right,right_theta1,right_theta2) = calculateNextState(self.theta1, self.theta2, self.pos, dd, steering_angle_rad)
         #going left
-        steering_angle_rad = radians(16) #max left angle
+        steering_angle_rad = radians(MAX_RIGHT_ANGLE) #max left angle
         (to_point_left,left_theta1, left_theta2) = calculateNextState(self.theta1, self.theta2, self.pos, dd, steering_angle_rad)
         #finding optimal path
-        (to_point_optimal, optimal_theta1, optimal_theta2) = calculate_steering(radians(16), radians(self.max_left_angle), dd, 10, 0, self.pos, self.theta1, self.theta2, self.front_ec)
+        (to_point_optimal, optimal_theta1, optimal_theta2) = calculate_steering(radians(MAX_RIGHT_ANGLE), radians(MAX_LEFT_ANGLE), dd, 10, 0, self.pos, self.theta1, self.theta2, self.front_ec)
         #Optimal outside turn
         goingLeft = self.front_ec.is_next_Left()
         if goingLeft:
-            (to_point_optimal_outside, optimal_outside_theta1, optimal_outside_theta2) = calculate_steering(radians(16), radians(self.max_left_angle), dd, 10, OUTSIDE_TURN_ERROR, self.pos, self.theta1, self.theta2, self.front_ec)
+            (to_point_optimal_outside, optimal_outside_theta1, optimal_outside_theta2) = calculate_steering(radians(MAX_RIGHT_ANGLE), radians(MAX_LEFT_ANGLE), dd, 10, OUTSIDE_TURN_ERROR, self.pos, self.theta1, self.theta2, self.front_ec)
         else:
-            (to_point_optimal_outside, optimal_outside_theta1, optimal_outside_theta2) = calculate_steering(radians(16), radians(self.max_left_angle), dd, 10, -OUTSIDE_TURN_ERROR, self.pos, self.theta1, self.theta2, self.front_ec)
+            (to_point_optimal_outside, optimal_outside_theta1, optimal_outside_theta2) = calculate_steering(radians(MAX_RIGHT_ANGLE), radians(MAX_LEFT_ANGLE), dd, 10, -OUTSIDE_TURN_ERROR, self.pos, self.theta1, self.theta2, self.front_ec)
 
         #Strait
         (inTrack, tot_error) =self.trackChecker.checkIfInTrack(self.pos, self.theta1, self.theta2, to_point_strait, strait_theta1, strait_theta2, self.dt, self.front_ec, self.back_ec)

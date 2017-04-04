@@ -69,6 +69,10 @@ class errorCalc:
         theta = atan2(dy, dx)
         return theta
 
+    def isAtEnd(self):
+        if len(self.queue)==0:
+            return True
+
     def getMaxDistPoint(self, point):
         p1 = self.line[1]
         p0 = self.line[0]
