@@ -12,6 +12,7 @@ from vehicleState import *
 from pathPlanning import *
 from Point import *
 import time
+from helper_functions import HEADER_LENGTH, TRAILER_LENGTH
 
 from geometry_msgs.msg import PoseWithCovarianceStamped
 
@@ -543,15 +544,12 @@ class PathPlanningNode:
 
                 p = []
 
-                hl = 23.0
-                tl = 48.5 + 14
-
                 for state in app_path:
                     xx = round(state.x * self.scale)
                     yy = round(state.y * self.scale)
 
-                    tx = state.x - hl*cos(state.theta1) - tl * cos(state.theta2)
-                    ty = state.y - hl*sin(state.theta1) - tl * sin(state.theta2)
+                    tx = state.x - HEADER_LENGTH*cos(state.theta1) - TRAILER_LENGTH * cos(state.theta2)
+                    ty = state.y - HEADER_LENGTH*sin(state.theta1) - TRAILER_LENGTH * sin(state.theta2)
                     self.tp.append(Position(round(tx * self.scale),round(ty * self.scale)))
 
                     p.append(Position(xx,yy))

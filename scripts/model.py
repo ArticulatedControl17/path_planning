@@ -1,5 +1,6 @@
 from math import *
 import matplotlib.pyplot as plt
+from helper_functions import HEADER_LENGTH, HEADER_WIDTH, TRAILER_LENGTH, TRAILER_WIDTH, HL_FRONT, TL_BACK
 
 
 
@@ -32,72 +33,62 @@ point1 = Point(0,0)
 
 class truck:
 
-    def __init__(self):
-        self.header_length = 23.0;
-        self.trailer_length = 48.5;
-
-        self.hl_front = 9.0
-        self.tl_back = 14.0
-
-        self.header_width = 18;
-        self.trailer_width = 18;
-
     def calculateCorners(self, pointFront, th1, th2):
 
         point = self.back_middle_trailer(pointFront, th1, th2)
 
         # hitch joint
-        x2 = point.x + (self.trailer_length + self.tl_back) *cos(th2);
-        y2 = point.y + (self.trailer_length + self.tl_back) *sin(th2);
+        x2 = point.x + (TRAILER_LENGTH + TL_BACK) *cos(th2);
+        y2 = point.y + (TRAILER_LENGTH + TL_BACK) *sin(th2);
 
         #print x2, y2
 
 
         #left back
-        x4 = point.x - cos(pi/2-th2)*self.trailer_width/2;
-        y4 = point.y + sin(pi/2-th2)*self.trailer_width/2;
+        x4 = point.x - cos(pi/2-th2)*TRAILER_WIDTH/2;
+        y4 = point.y + sin(pi/2-th2)*TRAILER_WIDTH/2;
 
         #right back
-        x5 = point.x + cos(pi/2-th2)*self.trailer_width/2;
-        y5 = point.y - sin(pi/2-th2)*self.trailer_width/2;
+        x5 = point.x + cos(pi/2-th2)*TRAILER_WIDTH/2;
+        y5 = point.y - sin(pi/2-th2)*TRAILER_WIDTH/2;
 
 
         #left back axis
-        x12 = x4 + self.tl_back * cos(th2)
-        y12 = y4 + self.tl_back * sin(th2)
+        x12 = x4 + TL_BACK * cos(th2)
+        y12 = y4 + TL_BACK * sin(th2)
 
         #right back axis
-        x13 = x5 + self.tl_back * cos(th2)
-        y13 = y5 + self.tl_back * sin(th2)
+        x13 = x5 + TL_BACK * cos(th2)
+        y13 = y5 + TL_BACK * sin(th2)
 
 
 
         #left joint wheel
-        x6 = x2 - cos(pi/2-th1)*self.header_width/2;
-        y6 = y2 + sin(pi/2-th1)*self.header_width/2;
+        x6 = x2 - cos(pi/2-th1)*HEADER_WIDTH/2;
+        y6 = y2 + sin(pi/2-th1)*HEADER_WIDTH/2;
 
         #right joint wheel
-        x7 = x2 + cos(pi/2-th1)*self.header_width/2;
-        y7 = y2 - sin(pi/2-th1)*self.header_width/2;
+        x7 = x2 + cos(pi/2-th1)*HEADER_WIDTH/2;
+        y7 = y2 - sin(pi/2-th1)*HEADER_WIDTH/2;
 
         #left front axis
-        x8 = x6 + self.header_length*cos(th1);
-        y8 = y6 + self.header_length*sin(th1);
+        x8 = x6 + HEADER_LENGTH*cos(th1);
+        y8 = y6 + HEADER_LENGTH*sin(th1);
 
         #right front axis
-        x9 = x7 + self.header_length*cos(th1);
-        y9 = y7 + self.header_length*sin(th1);
+        x9 = x7 + HEADER_LENGTH*cos(th1);
+        y9 = y7 + HEADER_LENGTH*sin(th1);
 
 
         #left front
 
-        x10 = x6 + (self.header_length + self.hl_front)*cos(th1);
-        y10 = y6 + (self.header_length + self.hl_front)*sin(th1);
+        x10 = x6 + (HEADER_LENGTH + HL_FRONT)*cos(th1);
+        y10 = y6 + (HEADER_LENGTH + HL_FRONT)*sin(th1);
 
         #right front
 
-        x11 = x7 + (self.header_length + self.hl_front)*cos(th1);
-        y11 = y7 + (self.header_length + self.hl_front)*sin(th1);
+        x11 = x7 + (HEADER_LENGTH + HL_FRONT)*cos(th1);
+        y11 = y7 + (HEADER_LENGTH + HL_FRONT)*sin(th1);
 
 
 
@@ -107,15 +98,15 @@ class truck:
 
         point = self.back_middle_trailer()
 
-        x5 = point.x + cos(pi/2-th2)*self.trailer_width/2;
-        y5 = point.y - sin(pi/2-th2)*self.trailer_width/2;
+        x5 = point.x + cos(pi/2-th2)*TRAILER_WIDTH/2;
+        y5 = point.y - sin(pi/2-th2)*TRAILER_WIDTH/2;
 
     def back_middle_trailer(self, pointFront, th1, th2):
-        jpx = pointFront.x - cos(th1) * self.header_length
-        jpy = pointFront.y - sin(th1) * self.header_length
+        jpx = pointFront.x - cos(th1) * HEADER_LENGTH
+        jpy = pointFront.y - sin(th1) * HEADER_LENGTH
 
-        px = jpx - cos(th2) * (self.trailer_length + self.tl_back)
-        py = jpy - sin(th2) * (self.trailer_length + self.tl_back)
+        px = jpx - cos(th2) * (TRAILER_LENGTH + TL_BACK)
+        py = jpy - sin(th2) * (TRAILER_LENGTH + TL_BACK)
         return Point(px,py)
 
 

@@ -3,7 +3,7 @@ import numpy as np
 import cv2
 from Point import Point
 from math import radians
-from helper_functions import LANE_WIDTH, PADDING_WEIGHT
+from helper_functions import LANE_WIDTH, PADDING_WEIGHT, HEADER_WIDTH
 
 class trackChecker:
 
@@ -194,10 +194,10 @@ class trackChecker:
 
          #calculate avarege error for key wheels
 
-        right_front_wheel_err = front_ec.calculateError(right_front_wheel) - self.model.header_width/2
-        left_front_wheel_err = front_ec.calculateError(left_front_wheel) + self.model.header_width/2
-        right_back_wheel_err = back_ec.calculateError(right_back_wheel) - self.model.header_width/2
-        left_back_wheel_err = back_ec.calculateError(left_back_wheel) + self.model.header_width/2
+        right_front_wheel_err = front_ec.calculateError(right_front_wheel) - HEADER_WIDTH/2
+        left_front_wheel_err = front_ec.calculateError(left_front_wheel) + HEADER_WIDTH/2
+        right_back_wheel_err = back_ec.calculateError(right_back_wheel) - HEADER_WIDTH/2
+        left_back_wheel_err = back_ec.calculateError(left_back_wheel) + HEADER_WIDTH/2
 
         if abs(right_front_wheel_err) > LANE_WIDTH/2:
             right_front_wheel_err = right_front_wheel_err * PADDING_WEIGHT

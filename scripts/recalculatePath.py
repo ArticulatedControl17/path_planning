@@ -8,13 +8,10 @@ from helper_functions import *
 
 class recalculatePath:
 
-    def __init__(self, speed, length_header, length_trailer, trackChecker, weight):
+    def __init__(self, speed, trackChecker):
         self.max_left_angle = -16
         self.speed = speed
-        self.length_header = LENGTH_HEADER
-        self.length_trailer = LENGTH_TRAILER
         self.trackChecker = trackChecker
-        self.padding_weight = weight
 
         self.path_pub = rospy.Publisher('possible_path', Path, queue_size=10)
 
@@ -62,7 +59,7 @@ class recalculatePath:
 
                 ((round_x, round_y), round_theta1, round_theta2) = self.rounding(x, y, t1, t2)
                 prev_err = self.errorList[((round_x, round_y), round_theta1, round_theta2)]
-                if ((round_x,round_y),round_theta1, round_theta2) not in self.visited or prev_err>toterr:
+                if ((round_x,round_y),round_theta1, round_theta2) not in self.visited: #or prev_err>toterr:
                     break
             #found new node to visit
             self.pos = Point(x,y) # get the toPoint
@@ -119,9 +116,9 @@ class recalculatePath:
         #finding optimal outside turn path
         goingLeft = self.front_ec.is_next_Left()
         if goingLeft:
-            (to_point_optimal_outside, optimal_outside_theta1, optimal_outside_theta2) = calculate_steering(radians(16), radians(self.max_left_angle), dd, 10, 5, self.pos, self.theta1, self.theta2, self.front_ec)
+            (to_point_optimal_outside, optimal_outside_theta1, optimal_outside_theta2) = calculate_steering(radians(16), radians(self.max_left_angle), dd, 10, OUTSIDE_TURN_ERROR, self.pos, self.theta1, self.theta2, self.front_ec)
         else:
-            (to_point_optimal_outside, optimal_outside_theta1, optimal_outside_theta2) = calculate_steering(radians(16), radians(self.max_left_angle), dd, 10, -5, self.pos, self.theta1, self.theta2, self.front_ec)
+            (to_point_optimal_outside, optimal_outside_theta1, optimal_outside_theta2) = calculate_steering(radians(16), radians(self.max_left_angle), dd, 10, -OUTSIDE_TURN_ERROR, self.pos, self.theta1, self.theta2, self.front_ec)
 
 
         #check if the nodes are within the allowed track and we haven't reached the maximum error
@@ -189,8 +186,8 @@ class recalculatePath:
         self.errorList[((round_x, round_y), round_th1, round_th2)] = self.totError + abs(error)
 
     def rounding(self, x, y, th1, th2):
-        modPoint = 10.0
-        modTheta = 0.5
+        modPoint = 3.0
+        modTheta = 0.3
 
         m_x = x % modPoint
         if m_x >= modPoint/2:   #round up

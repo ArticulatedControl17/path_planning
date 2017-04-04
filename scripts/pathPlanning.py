@@ -13,8 +13,6 @@ import rospy
 from custom_msgs.msg import Position
 from helper_functions import *
 
-from recalculatePath import w1, w2, w4, w5
-
 class PathPlanner:
     #TODO: fix "other-lane-padding"
     #TODO: fix so that we dont stop before all of optimal path is visited.
@@ -24,7 +22,6 @@ class PathPlanner:
         self.max_left_angle = -16
         self.speed = 1
         self.dt = 25 #the delta time used for kinematic model, basicly the path step size
-        self.offset_treshold = 10
         self.trackChecker = track_checker.trackChecker(mapp)
 
         self.visited_pub = rospy.Publisher('visited_node', Position, queue_size=10)
@@ -35,7 +32,7 @@ class PathPlanner:
         endPoint = Point(*endPoint)
         secondEndPoint = Point(*secondEndPoint)
 
-        self.recalculate_path = recalculatePath.recalculatePath(self.speed, LENGTH_HEADER, LENGTH_TRAILER, self.trackChecker, PADDING_WEIGHT)
+        self.recalculate_path = recalculatePath.recalculatePath(self.speed, self.trackChecker)
         self.theta1 = vs.theta1 #start angle for header
         self.theta2 = vs.theta2 #start angle for trailer
         self.front_ec = error_calc.errorCalc(self.optimal_path) #make new error calc every time to reset it and look from the beginning
@@ -132,9 +129,9 @@ class PathPlanner:
         #Optimal outside turn
         goingLeft = self.front_ec.is_next_Left()
         if goingLeft:
-            (to_point_optimal_outside, optimal_outside_theta1, optimal_outside_theta2) = calculate_steering(radians(16), radians(self.max_left_angle), dd, 10, 5, self.pos, self.theta1, self.theta2, self.front_ec)
+            (to_point_optimal_outside, optimal_outside_theta1, optimal_outside_theta2) = calculate_steering(radians(16), radians(self.max_left_angle), dd, 10, OUTSIDE_TURN_ERROR, self.pos, self.theta1, self.theta2, self.front_ec)
         else:
-            (to_point_optimal_outside, optimal_outside_theta1, optimal_outside_theta2) = calculate_steering(radians(16), radians(self.max_left_angle), dd, 10, -5, self.pos, self.theta1, self.theta2, self.front_ec)
+            (to_point_optimal_outside, optimal_outside_theta1, optimal_outside_theta2) = calculate_steering(radians(16), radians(self.max_left_angle), dd, 10, -OUTSIDE_TURN_ERROR, self.pos, self.theta1, self.theta2, self.front_ec)
 
         #Strait
         (inTrack, tot_error) =self.trackChecker.checkIfInTrack(self.pos, self.theta1, self.theta2, to_point_strait, strait_theta1, strait_theta2, self.dt, self.front_ec, self.back_ec)
