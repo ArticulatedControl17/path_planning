@@ -409,9 +409,11 @@ class PathPlanningNode:
                 print s.x, s.y, s.theta1, s.theta2
                 self.wait_for_map_update = False
                 self.pathplanner.setOptimalpath(self.refpath[self.i:self.i + sub_target])
-
+                
+                
+                
                 path = self.pathplanner.getPath(self.current_start_state, g, g2)
-
+                
 
 
 
@@ -429,7 +431,7 @@ class PathPlanningNode:
                     #rospy.sleep(3)
                     nr = True
 
-                    if len(self.current_path) > 0 and (not self.current_start_state == self.current_path[0]) and len(self.current_path) > 1:
+                    if len(self.current_path) > 0 and (not (self.current_start_state.x == self.current_path[0].x and self.current_start_state.y == self.current_path[0].y)) and len(self.current_path) > 1:
 
 
                         ten = True
@@ -454,8 +456,11 @@ class PathPlanningNode:
                         ep = Position(g[0] * self.scale, g[1] * self.scale)
                         self.startend_publisher.publish(Path([sp, ep]))
 
-
+                        self.wait_for_map_update = False
                         p2 = self.pathplanner.getPath(self.current_start_state, g, g2)
+                        while self.wait_for_map_update:
+                            self.wait_for_map_update = False
+                            p2 = self.pathplanner.getPath(self.current_start_state, g, g2)
 
                         if p2 != []:
                             path = p2
@@ -549,7 +554,13 @@ class PathPlanningNode:
                                 self.startend_publisher.publish(Path([sp, ep]))
                     
                                 
+                                self.wait_for_map_update = False
                                 newpath = self.pathplanner.getPath(self.current_start_state, g, g2)
+                                while self.wait_for_map_update:
+                                    self.wait_for_map_update = False
+                                    newpath = self.pathplanner.getPath(self.current_start_state, g, g2)
+                                
+                                
                                 if newpath != []:
                                     sol = True
                                     
