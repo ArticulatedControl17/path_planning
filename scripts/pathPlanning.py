@@ -12,7 +12,9 @@ import model
 import rospy
 from custom_msgs.msg import Position
 
+
 from recalculatePath import w1, w2, w4, w5
+MAX_EXECUTION_TIME = 5
 
 class PathPlanner:
     #TODO: fix "other-lane-padding"
@@ -36,6 +38,9 @@ class PathPlanner:
 
     def getPath(self, vs, endPoint, secondEndPoint):
 
+
+        starttime = rospy.get_time()
+        
         endPoint = Point(*endPoint)
         secondEndPoint = Point(*secondEndPoint)
 
@@ -108,10 +113,11 @@ class PathPlanner:
 
         count = 0
 
-        while len(self.toVisit)>0:
+        while len(self.toVisit)>0 and (not rospy.is_shutdown()) and rospy.get_time() - starttime < MAX_EXECUTION_TIME:
             count = count+1
             #loop until all possible nodes have been visited
-            while True:
+            while True and not rospy.is_shutdown() and rospy.get_time() - starttime < MAX_EXECUTION_TIME:
+                
                 if len(self.toVisit) == 0:
                     break
                 ((x,y),t1, t2, err, new_ec) = self.toVisit.pop()
