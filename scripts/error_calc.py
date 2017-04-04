@@ -72,6 +72,8 @@ class errorCalc:
     def isAtEnd(self):
         if len(self.queue)==0:
             return True
+        else:
+            return False
 
     def getMaxDistPoint(self, point):
         p1 = self.line[1]
