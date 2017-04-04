@@ -31,11 +31,11 @@ def getPointsInBetween(p1, p2, n):
         dx = p2x - p1x
         dy = p2y - p1y
 
-        stepX = dx/float(n+1)
-        stepY = dy/float(n+1)
+        stepX = dx/float(n-1)
+        stepY = dy/float(n-1)
 
         points = []
-        for i in range(1, n+1):
+        for i in range(0, n):
             x = int(round(p1x + i * stepX))
             y = int(round(p1y + i * stepY))
             points.append((x, y))
@@ -235,20 +235,25 @@ class PathPlanningNode:
                 x = len(filter(lambda f: f > ci, self.gi))
 
                 #rp, self.gi = self.ref_obj.getRefPath(start, self.goals[-x:]), self.sp_count)
-                rp = self.ref_obj.getRefPath(start, self.goals[-x:])
-                if rp == None:
+                rp, self.gi = self.ref_obj.getRefPath(start, self.goals[-x:])
+                if rp == []:
                     print "Can't find a path"
                     self.active = False
                     self.sp_count = 1
                     return
 
                 self.ref_path = rp
-                p = [Position(x*10,y*10) for x,y in self.refpath]
+                if self.refpath == None:
+                    p = []
+                else:
+                    p = [Position(x*10,y*10) for x,y in self.refpath]
                 self.refpath_publisher.publish(Path(p))
                 self.active = True
 
 
     def getClosestIndex(self, refpath, (x,y)):
+        if refpath == None:
+            return 0
         i = 0
         minl = 9999
         minindex = 0
@@ -314,8 +319,8 @@ class PathPlanningNode:
 
         print
         st = time.time()
-        #rp, self.gi = self.ref_obj.getRefPath(start, self.goals, self.sp_count)
-        rp = self.ref_obj.getRefPath(start, self.goals)
+        rp, self.gi = self.ref_obj.getRefPath(start, self.goals)
+        #rp = self.ref_obj.getRefPath(start, self.goals)
         print "time", time.time()-st
         #rp = [(x/ float(self.scale), y / float(self.scale)) for x,y in rp]
         #rp = [(1161, 7145), (1161, 6939), (1162, 6733), (1162, 6527), (1162, 6321), (1163, 6115), (1163, 5909), (1163, 5703), (1164, 5497), (1164, 5291), (1165, 5085), (1165, 4878), (1165, 4672), (1166, 4466), (1166, 4260), (1170, 4200), (1377, 4198), (1584, 4197), (1791, 4195), (1998, 4194), (2205, 4192), (2412, 4191), (2620, 4190), (2650, 4293), (2695, 4395), (2752, 4492), (2821, 4580), (2901, 4658), (2990, 4726), (3088, 4781), (3191, 4824), (3300, 4850), (3295, 5050), (3290, 5250), (3286, 5450)]
@@ -370,13 +375,14 @@ class PathPlanningNode:
                     g2 = self.refpath[self.i + sub_target-1]
 
                     latest = None
-                    for j in range(self.i, sub_target):
+                    for j in range(self.i, self.i + sub_target+1):
                         p1,p2 = self.refpath[j], self.refpath[j+1]
                         pts = getPointsInBetween(p1,p2,6)
                         for x,y in pts:
                             if self.map[y][x] in [0]:
                                 latest = (x,y)
-                    print latest
+                                
+                    
                     if latest != None:
                         lfg = sqrt((g[0] - latest[0])**2 + (g[1] - latest[1])**2 )
                         if lfg <= 200:
@@ -471,63 +477,122 @@ class PathPlanningNode:
 
                             nr = False
 
+                        else:
+                            self.current_start_state = self.current_path[-1]
+                        
                     if nr:
-
-
-                        self.sp_count += 1
-
-
-                        print "trying new ref path, sp count is ", self.sp_count
-
-                        #if self.sp_count > 4:
-                        if self.sp_count > 4 or True:
-                            print "Can't find a path"
-                            self.active = False
-                            self.sp_count = 1
+                        
+                            
+                        
+                        ind = []
+                        c = 0
+                        
+                        print "gi", self.gi
+                        print "i", self.i
+                        print "subt", self.i + sub_target
+                        
+                        for gl in self.gi:
+                            if gl > self.i-2 and gl < self.i + sub_target+2:
+                                ind.append(c)
+                            c += 1
+                        
+                        print "ind", ind
+                        
+                        if ind == []:
+                            
+                            for i in range(len(self.gi)-1):
+                                g1 = self.gi[i]
+                                g2 = self.gi[i+1]
+                                if self.i > g1 and self.i < g2:
+                                    ind = [i,i+1]
+                                    break
+                            
+                        
+                        else:
+                             
+                            if ind[0] != 0:
+                                ind = [ind[0]-1] + ind
+                            
+                            if ind[-1] != len(self.gi) -1:
+                                ind.append(ind[-1]+1)
+                            
+                        alt_path_index = 1
+                        while 1:
+                            ap = False
+                            sol = False
+                            for i in range(len(ind)-1)[::-1]:
+                                
+                                starti = self.gi[ind[i]]
+                                stopi = self.gi[ind[i+1]]
+                                
+                                newref = self.ref_obj.getAltPath(self.refpath, starti, stopi, alt_path_index)
+                                if newref == [] or newref == None:
+                                    continue
+                                
+                                ap = True
+                                
+                                
+                                p = [Position(x*10,y*10) for x,y in newref]
+                                self.refpath_publisher.publish(Path(p))
+                                
+                               
+                                
+                                diff = len(newref) - len(self.refpath)
+                                
+                                self.pathplanner.setOptimalpath(newref[self.i:self.i + sub_target + diff])
+                                #self.pathplanner.setOptimalpath(newref)
+                                
+                                
+                                sp = Position(self.current_start_state.x * self.scale, self.current_start_state.y * self.scale)
+                        
+                                ep = Position(g[0] * self.scale, g[1] * self.scale)
+                                self.startend_publisher.publish(Path([sp, ep]))
+                    
+                                
+                                newpath = self.pathplanner.getPath(self.current_start_state, g, g2)
+                                if newpath != []:
+                                    sol = True
+                                    
+                                    print "g", g
+                                    print "nrlast", newref[-1]
+                                    if g == newref[-1]:
+                                        done = True
+                                    
+                                    for k in range(i+1, len(self.gi)):
+                                        self.gi[k] += (len(newref) - len(self.refpath))
+                                    
+                                    self.refpath = newref
+                                    path = newpath
+                                    break
+                                
+                            
+                            if sol:
+                                break
+                            if not ap:
+                                print "cant find a path"
+                                self.active = False
+                                break
+                            
+                            alt_path_index += 1
+                            
+                            
+                        if self.active == False:
                             continue
-
-
-                        self.path_rework_publisher.publish(Path([]))
-                        s = self.current_start_state = self.latest_state
-                        self.i = 0
-                        self.tp = []
-
-                        self.current_path = [VehicleState(s.x, s.y, s.theta1, s.theta2)]
+                        
+                        
+                        
 
 
 
-                        start = ref_path.VehicleState(s.x, s.y, s.theta1, s.theta2)
-
-
-                        ci = self.getClosestIndex(self.refpath, (s.x, s.y))
-
-                        x = len(filter(lambda f: f > ci, self.gi))
-
-                        #rp, self.gi = self.ref_obj.getRefPath(start, self.goals[-x:], self.sp_count)
-                        rp = self.ref_obj.getRefPath(start, self.goals[-x:])
-                        if rp == None:
-                            print "Can't find a path"
-                            self.active = False
-                            self.sp_count = 1
-                            continue
-
-                        self.ref_path = rp
-                        p = [Position(x*10,y*10) for x,y in self.refpath]
-                        self.refpath_publisher.publish(Path(p))
-
-                        continue
-
-
-
-
-
-                ti = int(ceil(len(path)/4.6))+1
+                ti = int(ceil(len(path)/4.5))+1
                 if done:
                     ti = len(path)-1
                     print "done"
                     self.done = True
-                self.current_start_state = path[ti]
                 print ti, len(path)
+                if ti > len(path)-1:
+                    ti = len(path)-1
+                self.current_start_state = path[ti]
                 app_path = path[:ti+1]
                 self.current_path += app_path
 
