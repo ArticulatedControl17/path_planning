@@ -381,8 +381,8 @@ class PathPlanningNode:
                         for x,y in pts:
                             if self.map[y][x] in [0]:
                                 latest = (x,y)
-                                
-                    
+
+
                     if latest != None:
                         lfg = sqrt((g[0] - latest[0])**2 + (g[1] - latest[1])**2 )
                         if lfg <= 200:
@@ -409,11 +409,11 @@ class PathPlanningNode:
                 print s.x, s.y, s.theta1, s.theta2
                 self.wait_for_map_update = False
                 self.pathplanner.setOptimalpath(self.refpath[self.i:self.i + sub_target])
-                
-                
-                
+
+
+
                 path = self.pathplanner.getPath(self.current_start_state, g, g2)
-                
+
 
 
 
@@ -484,114 +484,114 @@ class PathPlanningNode:
 
                         else:
                             self.current_start_state = self.current_path[-1]
-                        
+
                     if nr:
-                        
-                            
-                        
+
+
+
                         ind = []
                         c = 0
-                        
+
                         print "gi", self.gi
                         print "i", self.i
                         print "subt", self.i + sub_target
-                        
+
                         for gl in self.gi:
                             if gl > self.i-2 and gl < self.i + sub_target+2:
                                 ind.append(c)
                             c += 1
-                        
+
                         print "ind", ind
-                        
+
                         if ind == []:
-                            
+
                             for i in range(len(self.gi)-1):
                                 g1 = self.gi[i]
-                                g2 = self.gi[i+1]
-                                if self.i > g1 and self.i < g2:
+                                g_2 = self.gi[i+1]
+                                if self.i > g1 and self.i < g_2:
                                     ind = [i,i+1]
                                     break
-                            
-                        
+
+
                         else:
-                             
+
                             if ind[0] != 0:
                                 ind = [ind[0]-1] + ind
-                            
+
                             if ind[-1] != len(self.gi) -1:
                                 ind.append(ind[-1]+1)
-                            
+
                         alt_path_index = 1
                         while 1:
                             ap = False
                             sol = False
                             for i in range(len(ind)-1)[::-1]:
-                                
+
                                 starti = self.gi[ind[i]]
                                 stopi = self.gi[ind[i+1]]
-                                
+
                                 newref = self.ref_obj.getAltPath(self.refpath, starti, stopi, alt_path_index)
                                 if newref == [] or newref == None:
                                     continue
-                                
+
                                 ap = True
-                                
-                                
+
+
                                 p = [Position(x*10,y*10) for x,y in newref]
                                 self.refpath_publisher.publish(Path(p))
-                                
-                               
-                                
+
+
+
                                 diff = len(newref) - len(self.refpath)
-                                
+
                                 self.pathplanner.setOptimalpath(newref[self.i:self.i + sub_target + diff])
                                 #self.pathplanner.setOptimalpath(newref)
-                                
-                                
+
+
                                 sp = Position(self.current_start_state.x * self.scale, self.current_start_state.y * self.scale)
-                        
+
                                 ep = Position(g[0] * self.scale, g[1] * self.scale)
                                 self.startend_publisher.publish(Path([sp, ep]))
-                    
-                                
+
+
                                 self.wait_for_map_update = False
                                 newpath = self.pathplanner.getPath(self.current_start_state, g, g2)
                                 while self.wait_for_map_update:
                                     self.wait_for_map_update = False
                                     newpath = self.pathplanner.getPath(self.current_start_state, g, g2)
-                                
-                                
+
+
                                 if newpath != []:
                                     sol = True
-                                    
+
                                     print "g", g
                                     print "nrlast", newref[-1]
                                     if g == newref[-1]:
                                         done = True
-                                    
+
                                     for k in range(i+1, len(self.gi)):
                                         self.gi[k] += (len(newref) - len(self.refpath))
-                                    
+
                                     self.refpath = newref
                                     path = newpath
                                     break
-                                
-                            
+
+
                             if sol:
                                 break
                             if not ap:
                                 print "cant find a path"
                                 self.active = False
                                 break
-                            
+
                             alt_path_index += 1
-                            
-                            
+
+
                         if self.active == False:
                             continue
-                        
-                        
-                        
+
+
+
 
 
 

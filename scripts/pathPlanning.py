@@ -26,6 +26,9 @@ class PathPlanner:
         self.dt = 25 #the delta time used for kinematic model, basicly the path step size
         self.trackChecker = track_checker.trackChecker(mapp)
 
+        self.modPoint = 1.0
+        self.modTheta = 0.1
+
         self.visited_pub = rospy.Publisher('visited_node', Position, queue_size=10)
         self.to_visit_pub = rospy.Publisher('to_visit_node', Position, queue_size=10)
 
@@ -65,7 +68,7 @@ class PathPlanner:
                 ((x,y),t1, t2, err, new_front_ec_i, new_back_ec_i) = self.toVisit.pop()
                 self.visited_pub.publish(Position(x,y))
                 #round to not having to visit every mm, to make it faster
-                ((round_x, round_y), round_theta1, round_theta2) = rounding(x, y, t1, t2)
+                ((round_x, round_y), round_theta1, round_theta2) = rounding(x, y, t1, t2, self.modPoint, self.modTheta)
                 if ((round_x,round_y),round_theta1, round_theta2) not in self.visited:
                     break
             #found new node to visit
@@ -74,9 +77,6 @@ class PathPlanner:
             self.theta2= t2
             self.front_ec_i= new_front_ec_i
             self.back_ec_i= new_back_ec_i
-
-            print count
-
 
             #check if we have reached the end
             dist = sqrt( (endPoint.x - x)**2 + (endPoint.y - y)**2 )
@@ -110,7 +110,7 @@ class PathPlanner:
                     self.addPossiblePathes(True)
 
                 #round to not having to visit every mm, for making it faster
-                ((round_x, round_y), round_theta1, round_theta2) = rounding(self.pos.x, self.pos.y, self.theta1, self.theta2)
+                ((round_x, round_y), round_theta1, round_theta2) = rounding(self.pos.x, self.pos.y, self.theta1, self.theta2, self.modPoint, self.modTheta)
                 #mark the previous node/state as visited
                 self.visited.add(((round_x, round_y),round_theta1, round_theta2))
         print "no soluton found"
@@ -165,7 +165,6 @@ class PathPlanner:
             self.addState(to_point_optimal_outside, optimal_outside_theta1, optimal_outside_theta2, tot_error, b_ec_i, f_ec_i)
         #Optimal
         (inTrack, tot_error, b_ec_i, f_ec_i) =self.trackChecker.checkIfInTrack(self.pos, self.theta1, self.theta2, to_point_optimal, optimal_theta1, optimal_theta2, self.dt, self.ec, self.front_ec_i, self.back_ec_i)
-        print tot_error
         if inTrack:
             self.addState(to_point_optimal, optimal_theta1, optimal_theta2, tot_error, b_ec_i, f_ec_i)
 

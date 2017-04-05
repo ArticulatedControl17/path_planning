@@ -13,7 +13,7 @@ MAX_RIGHT_ANGLE = 16
 
 LANE_WIDTH = 20
 OUTSIDE_TURN_ERROR = 8
-OTHERLANE_WEIGHT = 10
+OTHERLANE_WEIGHT = 2
 PADDING_WEIGHT = 20
 
 def calculate_steering(steering_min, steering_max, dd, iters, target_error, pos, theta1, theta2, ec, ec_i):
@@ -45,9 +45,9 @@ def calculateNextState(theta1, theta2, pos, dd, steering_angle_rad):
 
     return (Point(next_x,next_y), next_theta1, next_theta2)
 
-def rounding(x, y, th1, th2):
-    modPoint = 3.0
-    modTheta = 0.3
+def rounding(x, y, th1, th2, mp, mt):
+    modPoint = mp
+    modTheta = mt
 
     m_x = x % modPoint
     if m_x >= modPoint/2:   #round up

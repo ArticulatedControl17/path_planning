@@ -107,19 +107,20 @@ class trackChecker:
         prev_right_back = Point(prev_points[9][0], prev_points[9][1])
 
         #TODO: affects performance quite a lot with dt amount of points
-        between_back_wheel_right = self.getPointsInBetween((right_back_wheel.x, right_back_wheel.y), (prev_right_back_wheel.x, prev_right_back_wheel.y), dt/4)
-        between_back_wheel_left = self.getPointsInBetween((left_back_wheel.x, left_back_wheel.y), (prev_left_back_wheel.x, prev_left_back_wheel.y), dt/4)
+        amount_points = dt/4
+        between_back_wheel_right = self.getPointsInBetween((right_back_wheel.x, right_back_wheel.y), (prev_right_back_wheel.x, prev_right_back_wheel.y), amount_points)
+        between_back_wheel_left = self.getPointsInBetween((left_back_wheel.x, left_back_wheel.y), (prev_left_back_wheel.x, prev_left_back_wheel.y), amount_points)
 
-        between_front_wheel_right = self.getPointsInBetween((right_front_wheel.x, right_front_wheel.y), (prev_right_front_wheel.x, prev_right_front_wheel.y), dt/4)
-        between_front_wheel_left = self.getPointsInBetween((left_front_wheel.x, left_front_wheel.y), (prev_left_front_wheel.x, prev_left_front_wheel.y), dt/4)
-
-
-        between_front_right = self.getPointsInBetween((right_front.x, right_front.y), (prev_right_front.x, prev_right_front.y), dt/4)
-        between_front_left = self.getPointsInBetween((left_front.x, left_front.y), (prev_left_front.x, prev_left_front.y), dt/4)
+        between_front_wheel_right = self.getPointsInBetween((right_front_wheel.x, right_front_wheel.y), (prev_right_front_wheel.x, prev_right_front_wheel.y), amount_points)
+        between_front_wheel_left = self.getPointsInBetween((left_front_wheel.x, left_front_wheel.y), (prev_left_front_wheel.x, prev_left_front_wheel.y), amount_points)
 
 
-        between_back_right = self.getPointsInBetween((right_back.x, right_back.y), (prev_right_back.x, prev_right_back.y), dt/4)
-        between_back_left = self.getPointsInBetween((left_back.x, left_back.y), (prev_left_back.x, prev_left_back.y), dt/4)
+        #between_front_right = self.getPointsInBetween((right_front.x, right_front.y), (prev_right_front.x, prev_right_front.y), amount_points)
+        #between_front_left = self.getPointsInBetween((left_front.x, left_front.y), (prev_left_front.x, prev_left_front.y), amount_points)
+
+
+        #between_back_right = self.getPointsInBetween((right_back.x, right_back.y), (prev_right_back.x, prev_right_back.y), amount_points)
+        #between_back_left = self.getPointsInBetween((left_back.x, left_back.y), (prev_left_back.x, prev_left_back.y), amount_points)
 
 
         right_front_inPadding = False
@@ -162,6 +163,8 @@ class trackChecker:
             if self.map[y][x] ==2:
                 left_front_inPadding = True
 
+
+        """
         #trailer back
         for (x,y) in between_back_right:
             if x <0 or y <0 or x >540 or y >950:
@@ -197,6 +200,7 @@ class trackChecker:
                 return (False, True, -1, -1)
             if self.map[y][x] ==2:
                 inPadding = True
+        """
 
          #calculate avarege error for key wheels
 

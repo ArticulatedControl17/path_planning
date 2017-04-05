@@ -5,12 +5,16 @@ from vehicleState import VehicleState
 import rospy
 from custom_msgs.msg import Path, Position
 from helper_functions import *
+import time
 
 class recalculatePath:
 
     def __init__(self, speed, trackChecker):
         self.speed = speed
         self.trackChecker = trackChecker
+
+        self.modPoint = 20.0
+        self.modTheta = 0.5
 
         self.path_pub = rospy.Publisher('possible_path', Path, queue_size=10)
 
@@ -42,6 +46,7 @@ class recalculatePath:
 
         print len(self.toVisit)
         count = 0
+        start_time = time.time()
         while len(self.toVisit)>=0:
             count= count+1
             #loop until all possible nodes have been visited
@@ -52,13 +57,14 @@ class recalculatePath:
                     print "start error: ", totError
                     print "starPoint: ", startPoint.x, startPoint.y
                     print "endPoint: ", endPoint.x, endPoint.y
+                    print "end count" , count
                     return self.path
                 ((x,y),t1, t2, err, toterr, new_front_ec_i, new_back_ec_i) = self.toVisit.pop()
                 #round to make it faster, not having to visit as many nodes that are similar
 
-                ((round_x, round_y), round_theta1, round_theta2) = rounding(x, y, t1, t2)
+                ((round_x, round_y), round_theta1, round_theta2) = rounding(x, y, t1, t2, self.modPoint, self.modTheta)
                 prev_err = self.errorList[((round_x, round_y), round_theta1, round_theta2)]
-                if ((round_x,round_y),round_theta1, round_theta2) not in self.visited: #or prev_err>toterr:
+                if ((round_x,round_y),round_theta1, round_theta2) not in self.visited or prev_err>toterr:
                     break
             #found new node to visit
             self.pos = Point(x,y) # get the toPoint
@@ -89,7 +95,7 @@ class recalculatePath:
                 #we have not yet found a solution, search for new possible nodes
                 self.addPossiblePathes()
 
-                ((round_x, round_y), round_th1, round_th2) = rounding(self.pos.x, self.pos.y, self.theta1, self.theta2)
+                ((round_x, round_y), round_th1, round_th2) = rounding(self.pos.x, self.pos.y, self.theta1, self.theta2, self.modPoint, self.modTheta)
                 self.visited.add(((round_x, round_y),round_theta1, round_theta2))
 
     def addPossiblePathes(self):
@@ -181,5 +187,5 @@ class recalculatePath:
         #add the vector as an adjacent vector to the previous vector in the graph
         self.fromPoints[(point.x, point.y)] = ((self.pos.x, self.pos.y),self.theta1, self.theta2, error)
         self.toVisit.append(((point.x,point.y), th1, th2, error, self.totError + abs(error), b_ec_i, f_ec_i))
-        ((round_x, round_y), round_th1, round_th2) = rounding(point.x, point.y, th1, th2)
+        ((round_x, round_y), round_th1, round_th2) = rounding(point.x, point.y, th1, th2, self.modPoint, self.modTheta)
         self.errorList[((round_x, round_y), round_th1, round_th2)] = self.totError + abs(error)
