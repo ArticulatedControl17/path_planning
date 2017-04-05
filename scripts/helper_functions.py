@@ -3,16 +3,18 @@ from math import *
 
 
 HEADER_LENGTH = 27.0
-TRAILER_LENGTH = 49.0
-HL_FRONT = 10.0
-TL_BACK = 13.5
-HEADER_WIDTH = 18.0;
-TRAILER_WIDTH = 18.0
+TRAILER_LENGTH = 44.5+10.25/2#+2.5
+HL_FRONT = 9.5
+TL_BACK = 10.25/2 + 8.5#-2.5
+
+HEADER_WIDTH = 18;
+TRAILER_WIDTH = 18
+
 MAX_LEFT_ANGLE = -18
 MAX_RIGHT_ANGLE = 16
 
-LANE_WIDTH = 20
-OUTSIDE_TURN_ERROR = 8
+LANE_WIDTH = 19
+OUTSIDE_TURN_ERROR = 9#3
 OTHERLANE_WEIGHT = 10
 PADDING_WEIGHT = 20
 
@@ -33,21 +35,30 @@ def calculate_steering(steering_min, steering_max, dd, iters, target_error, pos,
 
 def calculateNextState(theta1, theta2, pos, dd, steering_angle_rad):
 
-    next_theta1 = theta1 + (dd * tan(steering_angle_rad)) / HEADER_LENGTH
-    next_theta2 = theta2 + (dd * sin(theta1 - theta2))/ TRAILER_LENGTH
+    dt1 = (dd * tan(steering_angle_rad)) / HEADER_LENGTH
+    next_theta1 = theta1 + dt1
+    
+    r = 5.0
+    x = sqrt(dd*dd + (r*dt1)**2)
+    
+    t1_avg = (theta1 + next_theta1)/2
+    
+    next_theta2 = theta2 + (x * sin((atan2(r*dt1, dd) + theta1 - theta2))) / TRAILER_LENGTH
+    
+    
+    
+    dx = pos.x - HEADER_LENGTH * cos(theta1)
+    dy = pos.y - HEADER_LENGTH * sin(theta1)
 
-    dx = pos.x - HEADER_LENGTH/2 * cos(theta1)
-    dy = pos.y - HEADER_LENGTH/2 * sin(theta1)
-
-    next_x = dx + dd * cos(next_theta1) + HEADER_LENGTH/2 * cos(next_theta1)
-    next_y = dy + dd * sin(next_theta1) + HEADER_LENGTH/2 * sin(next_theta1)
-
-
+    next_x = dx + dd * cos(t1_avg) + HEADER_LENGTH * cos(next_theta1)
+    next_y = dy + dd * sin(t1_avg) + HEADER_LENGTH * sin(next_theta1)
+    
+    
     return (Point(next_x,next_y), next_theta1, next_theta2)
 
 def rounding(x, y, th1, th2):
-    modPoint = 3.0
-    modTheta = 0.3
+    modPoint = 4.0#6.0
+    modTheta = 0.5#0.6
 
     m_x = x % modPoint
     if m_x >= modPoint/2:   #round up

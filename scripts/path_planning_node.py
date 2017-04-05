@@ -595,7 +595,7 @@ class PathPlanningNode:
 
 
 
-                ti = int(ceil(len(path)/4.5))+1
+                ti = int(ceil(len(path)/2.5))+1
                 if done:
                     ti = len(path)-1
                     print "done"
@@ -624,8 +624,8 @@ class PathPlanningNode:
                     xx = round(state.x * self.scale)
                     yy = round(state.y * self.scale)
 
-                    tx = state.x - HEADER_LENGTH*cos(state.theta1) - TRAILER_LENGTH * cos(state.theta2)
-                    ty = state.y - HEADER_LENGTH*sin(state.theta1) - TRAILER_LENGTH * sin(state.theta2)
+                    tx = state.x - 22*cos(state.theta1) - (44.5+10.25+ 8.5) * cos(state.theta2)
+                    ty = state.y - 22*sin(state.theta1) - (44.5+10.25+ 8.5) * sin(state.theta2)
                     self.tp.append(Position(round(tx * self.scale),round(ty * self.scale)))
 
                     p.append(Position(xx,yy))
@@ -640,7 +640,7 @@ class PathPlanningNode:
                     self.active = False
                     continue
 
-                self.i += 10
+                self.i += 18
 
 
 

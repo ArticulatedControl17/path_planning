@@ -72,23 +72,23 @@ class truck:
         y7 = y2 - sin(pi/2-th1)*HEADER_WIDTH/2;
 
         #left front axis
-        x8 = x6 + HEADER_LENGTH*cos(th1);
-        y8 = y6 + HEADER_LENGTH*sin(th1);
+        x8 = x6 + (HEADER_LENGTH-5.0)*cos(th1);
+        y8 = y6 + (HEADER_LENGTH-5.0)*sin(th1);
 
         #right front axis
-        x9 = x7 + HEADER_LENGTH*cos(th1);
-        y9 = y7 + HEADER_LENGTH*sin(th1);
+        x9 = x7 + (HEADER_LENGTH-5.0)*cos(th1);
+        y9 = y7 + (HEADER_LENGTH-5.0)*sin(th1);
 
 
         #left front
 
-        x10 = x6 + (HEADER_LENGTH + HL_FRONT)*cos(th1);
-        y10 = y6 + (HEADER_LENGTH + HL_FRONT)*sin(th1);
+        x10 = x6 + ((HEADER_LENGTH-5.0) + HL_FRONT)*cos(th1);
+        y10 = y6 + ((HEADER_LENGTH-5.0) + HL_FRONT)*sin(th1);
 
         #right front
 
-        x11 = x7 + (HEADER_LENGTH + HL_FRONT)*cos(th1);
-        y11 = y7 + (HEADER_LENGTH + HL_FRONT)*sin(th1);
+        x11 = x7 + ((HEADER_LENGTH-5.0) + HL_FRONT)*cos(th1);
+        y11 = y7 + ((HEADER_LENGTH-5.0) + HL_FRONT)*sin(th1);
 
 
 
@@ -102,8 +102,8 @@ class truck:
         y5 = point.y - sin(pi/2-th2)*TRAILER_WIDTH/2;
 
     def back_middle_trailer(self, pointFront, th1, th2):
-        jpx = pointFront.x - cos(th1) * HEADER_LENGTH
-        jpy = pointFront.y - sin(th1) * HEADER_LENGTH
+        jpx = pointFront.x - cos(th1) * (HEADER_LENGTH-5.0)
+        jpy = pointFront.y - sin(th1) * (HEADER_LENGTH-5.0)
 
         px = jpx - cos(th2) * (TRAILER_LENGTH + TL_BACK)
         py = jpy - sin(th2) * (TRAILER_LENGTH + TL_BACK)

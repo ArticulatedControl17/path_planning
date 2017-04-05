@@ -16,7 +16,7 @@ from helper_functions import *
 
 
 
-MAX_EXECUTION_TIME = 5
+MAX_EXECUTION_TIME = 8
 
 class PathPlanner:
     #TODO: Left and right are flipped in some parts, make them correct (only variables are wrong, functionality correct)
