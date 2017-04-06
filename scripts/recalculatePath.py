@@ -15,8 +15,10 @@ class recalculatePath:
         self.path_pub = rospy.Publisher('possible_path', Path, queue_size=10)
 
 
-    def calculate_path(self, startPoint, snd_to_last_end, endPoint, dt, theta1, theta2, totError, front_ec):
+    def calculate_path(self, startPoint, snd_to_last_end, endPoint, dt, theta1, theta2, totError, front_ec, modPoint, modTheta):
 
+        self.modPoint = modPoint
+        self.modTheta = modTheta
         self.start_theta1 = theta1
         self.start_theta2 = theta2
         self.start_err = front_ec.calculateError(startPoint)
@@ -56,7 +58,7 @@ class recalculatePath:
                 ((x,y),t1, t2, err, toterr, new_front_ec, new_back_ec) = self.toVisit.pop()
                 #round to make it faster, not having to visit as many nodes that are similar
 
-                ((round_x, round_y), round_theta1, round_theta2) = rounding(x, y, t1, t2)
+                ((round_x, round_y), round_theta1, round_theta2) = rounding(x, y, t1, t2, self.modPoint, self.modTheta)
                 prev_err = self.errorList[((round_x, round_y), round_theta1, round_theta2)]
                 if ((round_x,round_y),round_theta1, round_theta2) not in self.visited: #or prev_err>toterr:
                     break
@@ -89,7 +91,7 @@ class recalculatePath:
                 #we have not yet found a solution, search for new possible nodes
                 self.addPossiblePathes()
 
-                ((round_x, round_y), round_th1, round_th2) = rounding(self.pos.x, self.pos.y, self.theta1, self.theta2)
+                ((round_x, round_y), round_th1, round_th2) = rounding(self.pos.x, self.pos.y, self.theta1, self.theta2, self.modPoint, self.modTheta)
                 self.visited.add(((round_x, round_y),round_theta1, round_theta2))
 
     def addPossiblePathes(self):
@@ -181,5 +183,5 @@ class recalculatePath:
         #add the vector as an adjacent vector to the previous vector in the graph
         self.fromPoints[(point.x, point.y)] = ((self.pos.x, self.pos.y),self.theta1, self.theta2, error)
         self.toVisit.append(((point.x,point.y), th1, th2, error, self.totError + abs(error), self.front_ec.getCopy(), self.back_ec.getCopy()))
-        ((round_x, round_y), round_th1, round_th2) = rounding(point.x, point.y, th1, th2)
+        ((round_x, round_y), round_th1, round_th2) = rounding(point.x, point.y, th1, th2, self.modPoint, self.modTheta)
         self.errorList[((round_x, round_y), round_th1, round_th2)] = self.totError + abs(error)

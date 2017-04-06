@@ -37,28 +37,26 @@ def calculateNextState(theta1, theta2, pos, dd, steering_angle_rad):
 
     dt1 = (dd * tan(steering_angle_rad)) / HEADER_LENGTH
     next_theta1 = theta1 + dt1
-    
+
     r = 5.0
     x = sqrt(dd*dd + (r*dt1)**2)
-    
+
     t1_avg = (theta1 + next_theta1)/2
-    
+
     next_theta2 = theta2 + (x * sin((atan2(r*dt1, dd) + theta1 - theta2))) / TRAILER_LENGTH
-    
-    
-    
+
+
+
     dx = pos.x - HEADER_LENGTH * cos(theta1)
     dy = pos.y - HEADER_LENGTH * sin(theta1)
 
     next_x = dx + dd * cos(t1_avg) + HEADER_LENGTH * cos(next_theta1)
     next_y = dy + dd * sin(t1_avg) + HEADER_LENGTH * sin(next_theta1)
-    
-    
+
+
     return (Point(next_x,next_y), next_theta1, next_theta2)
 
-def rounding(x, y, th1, th2):
-    modPoint = 4.0#6.0
-    modTheta = 0.5#0.6
+def rounding(x, y, th1, th2, modPoint, modTheta):
 
     m_x = x % modPoint
     if m_x >= modPoint/2:   #round up

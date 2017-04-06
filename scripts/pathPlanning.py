@@ -16,7 +16,6 @@ from helper_functions import *
 
 
 
-MAX_EXECUTION_TIME = 8
 
 class PathPlanner:
     #TODO: Left and right are flipped in some parts, make them correct (only variables are wrong, functionality correct)
@@ -29,11 +28,11 @@ class PathPlanner:
         self.visited_pub = rospy.Publisher('visited_node', Position, queue_size=10)
         self.to_visit_pub = rospy.Publisher('to_visit_node', Position, queue_size=10)
 
-    def getPath(self, vs, endPoint, secondEndPoint):
+    def getPath(self, vs, endPoint, secondEndPoint, MAX_EXECUTION_TIME, modPoint, modTheta ):
 
 
         starttime = rospy.get_time()
-        
+
         endPoint = Point(*endPoint)
         secondEndPoint = Point(*secondEndPoint)
 
@@ -52,19 +51,19 @@ class PathPlanner:
 
         self.addPossiblePathes(True)
 
-        
+
         while len(self.toVisit)>0 and (not rospy.is_shutdown()) and rospy.get_time() - starttime < MAX_EXECUTION_TIME:
 
             count = count+1
             #loop until all possible nodes have been visited
             while True and not rospy.is_shutdown() and rospy.get_time() - starttime < MAX_EXECUTION_TIME:
-                
+
                 if len(self.toVisit) == 0:
                     break
                 ((x,y),t1, t2, err, new_front_ec, new_back_ec) = self.toVisit.pop()
                 self.visited_pub.publish(Position(x,y))
                 #round to not having to visit every mm, to make it faster
-                ((round_x, round_y), round_theta1, round_theta2) = rounding(x, y, t1, t2)
+                ((round_x, round_y), round_theta1, round_theta2) = rounding(x, y, t1, t2, modPoint, modTheta)
                 if ((round_x,round_y),round_theta1, round_theta2) not in self.visited:
                     break
             #found new node to visit
@@ -89,7 +88,7 @@ class PathPlanner:
                 ((nx,ny),_, _,_) = self.fromPoints[self.pos.x,self.pos.y]
                 fromPoint = Point(nx,ny)
                 #return self.gatherPath(Point(vs.x, vs.y), endPoint,self.theta1, self.theta2)
-                (fromP, part, nn_ec) = self.recalculate_path.calculate_path(Point(vs.x, vs.y), secondEndPoint, endPoint, self.dt, vs.theta1, vs.theta2, totError, error_calc.errorCalc(self.optimal_path))
+                (fromP, part, nn_ec) = self.recalculate_path.calculate_path(Point(vs.x, vs.y), secondEndPoint, endPoint, self.dt, vs.theta1, vs.theta2, totError, error_calc.errorCalc(self.optimal_path), modPoint, modTheta)
                 #part = self.recalculate_path.calculate_path(Point(vs.x, vs.y), secondEndPoint, endPoint, self.dt, vs.theta1, vs.theta2, totError, error_calc.errorCalc(self.optimal_path))
                 if part == []:
                     return self.gatherPath(Point(vs.x, vs.y), endPoint,self.theta1, self.theta2)
@@ -109,7 +108,7 @@ class PathPlanner:
                     self.addPossiblePathes(True)
 
                 #round to not having to visit every mm, for making it faster
-                ((round_x, round_y), round_theta1, round_theta2) = rounding(self.pos.x, self.pos.y, self.theta1, self.theta2)
+                ((round_x, round_y), round_theta1, round_theta2) = rounding(self.pos.x, self.pos.y, self.theta1, self.theta2, modPoint, modTheta)
                 #mark the previous node/state as visited
                 self.visited.add(((round_x, round_y),round_theta1, round_theta2))
         print "no soluton found"
