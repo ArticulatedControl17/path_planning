@@ -71,7 +71,7 @@ class PathPlanningNode:
             MOD_POINT = RPI_MOD_POINT
             MOD_THETA = RPI_MOD_THETA
         
-        
+        #index of approx where on the refpath the current startstate is
         self.current_start_index = 0
         self.done = False
 
@@ -97,6 +97,8 @@ class PathPlanningNode:
         self.latest_state = None
 
         self.current_start_state = None
+        
+        #path that truck is following at the moment. Also includes full vehicle state for each position
         self.current_path_states = []
 
         self.active = False
@@ -118,13 +120,14 @@ class PathPlanningNode:
 
 
     def initPoseCallback(self, data):
+        #called when setting initial pose in rviz, forgot why i put this here 
         self.current_path_states = self.current_path_states[:1]
 
     def isVehicleStateOK(self, state):
         return self.pathplanner.checkIfInTrack(state)
 
     def isCurrentPlanOK(self):
-        
+        #returns the index of the current path that collides with obstacle
         for i in range(len(self.current_path_states)-1):
             this_state = self.current_path_states[i]
             next_state = self.current_path_states[i+1]
@@ -140,12 +143,12 @@ class PathPlanningNode:
         return (True,0)
 
     def updateMap(self, obst):
-        print "update map", obst
+        #add/remove obstacle and update map
         added = self.map_obj.addObstacle(obst)
         if not added:
             removed = self.map_obj.removeObstacle(obst)
             if not removed:
-                print "can't add or remove obstacle"
+                print "Can't add or remove obstacle"
 
         self.map, _ = self.map_obj.getMapAndScale()
         if added:
@@ -163,16 +166,17 @@ class PathPlanningNode:
         self.pathplanner.setMap(self.map)
 
         if added_obst:
-            print "added obst"
+            print "Added obstacle:", data.data
 
             (ok, i) = self.isCurrentPlanOK()
 
             if ok:
-                print "cur path ok"
+                print "Current path OK"
 
 
             else:
-                print "cur path NOT ok"
+                print "Current path NOT ok"
+                #move back current start some distance before collision
                 if i-OBSTACLE_BACKTRACK_INDEX_DISTANCE < 0:
                     self.current_start_state = self.latest_state
                     self.current_path_states = []
@@ -182,19 +186,25 @@ class PathPlanningNode:
                     self.current_path_states = self.current_path_states[:i-OBSTACLE_BACKTRACK_INDEX_DISTANCE+1]
                     self.trailer_path = self.trailer_path[:i-OBSTACLE_BACKTRACK_INDEX_DISTANCE+1]
 
-                
+                #rework path in auto_master
                 self.publishReworkPath(self.current_path_states)
                 
                 self.done = False
-                self.current_start_index = getClosestIndex(self.refpath, (self.current_start_state.x, self.current_start_state.y))
-
+                
+                #match refpath startindex with startstate position
+                self.current_start_index = getClosestIndex(self.refpath, self.current_start_state.getPoint())
+                
 
                 self.active = True
 
             
 
         else:
+            
+            print "Removed obstacle:", data.data
             if (not self.active) and (not self.done):
+                
+                #if the last attempt failed (didn't find any path), try again
 
                 self.path_rework_publisher.publish(Path([]))
                 s = self.current_start_state = self.latest_state
@@ -209,12 +219,13 @@ class PathPlanningNode:
 
 
                 ci = getClosestIndex(self.refpath, (s.x, s.y))
-
+                
+                #we may have gone passed some goals last attempt, so filter out those with lower index than the current state
                 nbr_goals = len(filter(lambda i: i > ci, self.goal_indices))
 
                 rp, self.goal_indices = self.ref_obj.getRefPath(start, self.goals[-nbr_goals:])
                 if rp == [] or rp == None:
-                    print "Can't find a path"
+                    print "Can't find a refernce path"
                     self.active = False
                     return
 
@@ -281,7 +292,8 @@ class PathPlanningNode:
             if not self.active:
                 time.sleep(0.05)
             else:
-
+                
+                # ---------- Determine subgoal -------------
                 path_length = PATH_LENGTH_INDEX + path_extension
 
                 last_section = False
@@ -293,6 +305,7 @@ class PathPlanningNode:
                     goal_2, goal = self.refpath[goal_index-1], self.refpath[goal_index]
 
                     
+                    #Check if the subgoal is on or right after an obstacle. If so, move the subgoal further along refpath
                     last_point_on_obstacle = None
                     for j in range(self.current_start_index, self.current_start_index + path_length+1):
                         
@@ -328,11 +341,15 @@ class PathPlanningNode:
 
 
 
-                if self.wait_for_map_update: #map updated while planning
+                if self.wait_for_map_update: #map updated while planning, redo the same call
                     continue
+
 
                 if path == []:
                     
+                    # ------ COULDN'T FIND A PATH, TRY KTH SHORTEST
+                
+                    # Determine which sections of the current refpath is interesting to try alternative paths for
                     first_sub_goal_index = None
                     last_sub_goal_index = None
 
@@ -363,7 +380,8 @@ class PathPlanningNode:
                     while not rospy.is_shutdown():
                         found_alt_rp = False
                         found_feisable_path = False
-                        for i in range(first_sub_goal_index, last_sub_goal_index)[::-1]:
+                        # try each section with same k, starting from the last one. Increase k if no alt paths was feisable
+                        for i in range(first_sub_goal_index, last_sub_goal_index)[::-1]: 
 
                             starti = self.goal_indices[i]
                             stopi = self.goal_indices[i+1]
@@ -391,6 +409,7 @@ class PathPlanningNode:
                             
                             self.publishStartEnd(self.current_start_state.getPoint(), goal)
                             
+                            #check if this alt path is feisable or if we still can't find a path
                             self.wait_for_map_update = False
                             while not rospy.is_shutdown():
                                 is_feisable = self.checkIfPathFeisable(self.current_start_state, goal, goal_2)
@@ -399,7 +418,8 @@ class PathPlanningNode:
                             
                             if is_feisable:
                                 found_feisable_path = True
-
+                                
+                                # increase indices to account for difference in length with new refpath 
                                 for i in range(i+1, len(self.goal_indices)):
                                     self.goal_indices[i] += len_diff
 
@@ -408,7 +428,7 @@ class PathPlanningNode:
 
 
                         if found_feisable_path:
-                            print "found feisable alternate path"
+                            print "Found feisable alternate path"
                             break
                         if not found_alt_rp:
                             print "Cant find an alternate path"
@@ -426,7 +446,7 @@ class PathPlanningNode:
 
 
 
-
+                #cut off path unless final goal reached
                 if last_section:
                     self.done = True
                     cutoff_index = len(path)-1
