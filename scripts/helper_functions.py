@@ -161,3 +161,28 @@ def getClosestIndex(path, (x,y)):
     
 def getDistance((x1,y1), (x2, y2)):
     return sqrt((x2 - x1)**2 + (y2 - y1)**2)
+
+def traversePath(p, path):
+    path = list(path)
+
+
+    if len(path) < 2:
+        return path
+
+    l1 = path.pop(0)
+    l2 = path.pop(0)
+
+
+    while hasPassedLine(Point(*p), (Point(l1.x, l1.y), Point(l2.x, l2.y))):
+
+
+        if len(path) == 0:
+            return [l2]
+
+
+        l1 = l2
+        l2 = path.pop(0)
+
+    return [l1, l2] + path
+
+
