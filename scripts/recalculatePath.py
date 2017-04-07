@@ -42,18 +42,12 @@ class recalculatePath:
         #add all possible pathes for the first point before looping
         self.addPossiblePathes()
 
-        print len(self.toVisit)
         count = 0
         while len(self.toVisit)>=0 and not rospy.is_shutdown():
             count= count+1
             #loop until all possible nodes have been visited
             while True and not rospy.is_shutdown():
                 if len(self.toVisit)==0:
-                    print "reached End"
-                    print "lowest error: ", self.lowest_error
-                    print "start error: ", totError
-                    print "starPoint: ", startPoint.x, startPoint.y
-                    print "endPoint: ", endPoint.x, endPoint.y
                     return self.path
                 ((x,y),t1, t2, err, toterr, new_front_ec, new_back_ec) = self.toVisit.pop()
                 #round to make it faster, not having to visit as many nodes that are similar
@@ -75,13 +69,11 @@ class recalculatePath:
             if self.front_ec.isAboveEnd(snd_to_last_end, endPoint, self.pos) and dist <1*self.dt and self.front_ec.isAtEnd(): #checks if we are above a line of the two last points
                 #reached a sloution, gather the path if we are on the optimal path
                 count = count+1
-                print count
                 #rospy.sleep(0.2)
                 (new_point, nt1, nt2) = calculate_steering(radians(MAX_RIGHT_ANGLE), radians(MAX_LEFT_ANGLE), dd, 10, 0, self.pos, self.theta1, self.theta2, self.front_ec)
                 nerror= self.front_ec.calculateError(new_point)
                 self.path_pub.publish(Path(self.gather_x_y_path(startPoint, new_point, nt1, nt2, nerror)))
                 if abs(nerror)< 1 and toterr < self.lowest_error:
-                    print "found better solution"
                     self.path = self.gatherPath(startPoint, new_point, nt1, nt2, nerror, err)
                     self.lowest_error = toterr
                 #mark visited

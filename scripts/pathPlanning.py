@@ -22,13 +22,13 @@ class PathPlanner:
 
     def __init__(self, mapp):
         self.speed = 1
-        self.dt = 25 #the delta time used for kinematic model, basicly the path step size
+        self.dt = DT #the delta time used for kinematic model, basicly the path step size
         self.trackChecker = track_checker.trackChecker(mapp)
 
         self.visited_pub = rospy.Publisher('visited_node', Position, queue_size=10)
         self.to_visit_pub = rospy.Publisher('to_visit_node', Position, queue_size=10)
 
-    def getPath(self, vs, endPoint, secondEndPoint, MAX_EXECUTION_TIME, modPoint, modTheta, isPathPossible=False ):
+    def getPath(self, vs, endPoint, secondEndPoint, MAX_EXECUTION_TIME, modPoint, modTheta, returnsIfFeisable=False ):
 
 
         starttime = rospy.get_time()
@@ -83,7 +83,7 @@ class PathPlanner:
                 #reached end, gather the path
                 print "reached end, Gathering solution"
                 
-                if isPathPossible:
+                if returnsIfFeisable:
                     return True
                 
                 totError = self.gatherError(Point(vs.x, vs.y), self.pos, Point(vs.x, vs.y))
@@ -114,9 +114,9 @@ class PathPlanner:
                 ((round_x, round_y), round_theta1, round_theta2) = rounding(self.pos.x, self.pos.y, self.theta1, self.theta2, modPoint, modTheta)
                 #mark the previous node/state as visited
                 self.visited.add(((round_x, round_y),round_theta1, round_theta2))
-        print "no soluton found"
+        print "Pathplanner: no solution found"
         
-        if isPathPossible:
+        if returnsIfFeisable:
             return False
         return []
 
@@ -209,7 +209,6 @@ class PathPlanner:
         return path
 
     def gatherError(self, startPoint, endPoint, firstPoint):
-        print startPoint.x, startPoint.y
         prex = endPoint.x
         prey = endPoint.y
         totErr = 0
@@ -244,7 +243,6 @@ class PathPlanner:
         self.to_visit_pub.publish(Position(point.x, point.y))
 
     def setOptimalpath(self, path):
-        print "setoptpath", path
         path = [Point(x,y) for x,y in path]
         self.optimal_path = path
         self.front_ec = error_calc.errorCalc(path)
