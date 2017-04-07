@@ -19,6 +19,9 @@ class recalculatePath:
 
         self.modPoint = modPoint
         self.modTheta = modTheta
+        #GOOD values for revisiting nodes if error is less than previous visit.
+        #self.modPoint = 2
+        #self.modTheta = 0.5
         self.start_theta1 = theta1
         self.start_theta2 = theta2
         self.start_err = front_ec.calculateError(startPoint)
@@ -60,11 +63,10 @@ class recalculatePath:
 
                 ((round_x, round_y), round_theta1, round_theta2) = rounding(x, y, t1, t2, self.modPoint, self.modTheta)
                 prev_err = self.errorList[((round_x, round_y), round_theta1, round_theta2)]
-                if ((round_x,round_y),round_theta1, round_theta2) not in self.visited: #or prev_err>toterr:
+                if (((round_x,round_y),round_theta1, round_theta2) not in self.visited and toterr < self.lowest_error) or prev_err>toterr:
                     break
             #found new node to visit
             self.pos = Point(x,y) # get the toPoint
-            #print x,y,err, toterr
             self.front_ec = new_front_ec
             self.back_ec = new_back_ec
             self.theta1= t1
@@ -77,7 +79,7 @@ class recalculatePath:
                 count = count+1
                 print count
                 #rospy.sleep(0.2)
-                (new_point, nt1, nt2) = calculate_steering(radians(MAX_RIGHT_ANGLE), radians(MAX_LEFT_ANGLE), dd, 10, 0, self.pos, self.theta1, self.theta2, self.front_ec)
+                (new_point, nt1, nt2) = calculate_steering(radians(MAX_LEFT_ANGLE), radians(MAX_RIGHT_ANGLE), dd, 10, 0, self.pos, self.theta1, self.theta2, self.front_ec)
                 nerror= self.front_ec.calculateError(new_point)
                 self.path_pub.publish(Path(self.gather_x_y_path(startPoint, new_point, nt1, nt2, nerror)))
                 if abs(nerror)< 1 and toterr < self.lowest_error:
@@ -85,7 +87,8 @@ class recalculatePath:
                     self.path = self.gatherPath(startPoint, new_point, nt1, nt2, nerror, err)
                     self.lowest_error = toterr
                 #mark visited
-                self.visited.add(((self.pos.x, self.pos.y),self.theta1, self.theta2))
+                ((round_x, round_y), round_th1, round_th2) = rounding(self.pos.x, self.pos.y, self.theta1, self.theta2, self.modPoint, self.modTheta)
+                self.visited.add(((round_x, round_y),round_theta1, round_theta2))
 
             else:
                 #we have not yet found a solution, search for new possible nodes
@@ -102,24 +105,24 @@ class recalculatePath:
         (to_point_strait, strait_theta1, strait_theta2) = calculateNextState(self.theta1, self.theta2, self.pos, dd, steering_angle_rad)
 
         #going right
-        steering_angle_rad = radians(MAX_LEFT_ANGLE) #max right angle
+        steering_angle_rad = radians(MAX_RIGHT_ANGLE) #max right angle
 
         (to_point_right,right_theta1,right_theta2) = calculateNextState(self.theta1, self.theta2, self.pos, dd, steering_angle_rad)
 
         #going left
-        steering_angle_rad = radians(MAX_RIGHT_ANGLE) #max left angle
+        steering_angle_rad = radians(MAX_LEFT_ANGLE) #max left angle
 
         (to_point_left,left_theta1, left_theta2) = calculateNextState(self.theta1, self.theta2, self.pos, dd, steering_angle_rad)
 
         #finding optimal path
-        (to_point_optimal, optimal_theta1, optimal_theta2) = calculate_steering(radians(MAX_RIGHT_ANGLE), radians(MAX_LEFT_ANGLE), dd, 10, 0, self.pos, self.theta1, self.theta2, self.front_ec)
+        (to_point_optimal, optimal_theta1, optimal_theta2) = calculate_steering(radians(MAX_LEFT_ANGLE), radians(MAX_RIGHT_ANGLE), dd, 10, 0, self.pos, self.theta1, self.theta2, self.front_ec)
 
         #finding optimal outside turn path
         goingLeft = self.front_ec.is_next_Left()
         if goingLeft:
-            (to_point_optimal_outside, optimal_outside_theta1, optimal_outside_theta2) = calculate_steering(radians(MAX_RIGHT_ANGLE), radians(MAX_LEFT_ANGLE), dd, 10, OUTSIDE_TURN_ERROR, self.pos, self.theta1, self.theta2, self.front_ec)
+            (to_point_optimal_outside, optimal_outside_theta1, optimal_outside_theta2) = calculate_steering(radians(MAX_LEFT_ANGLE), radians(MAX_RIGHT_ANGLE), dd, 10, OUTSIDE_TURN_ERROR, self.pos, self.theta1, self.theta2, self.front_ec)
         else:
-            (to_point_optimal_outside, optimal_outside_theta1, optimal_outside_theta2) = calculate_steering(radians(MAX_RIGHT_ANGLE), radians(MAX_LEFT_ANGLE), dd, 10, -OUTSIDE_TURN_ERROR, self.pos, self.theta1, self.theta2, self.front_ec)
+            (to_point_optimal_outside, optimal_outside_theta1, optimal_outside_theta2) = calculate_steering(radians(MAX_LEFT_ANGLE), radians(MAX_RIGHT_ANGLE), dd, 10, -OUTSIDE_TURN_ERROR, self.pos, self.theta1, self.theta2, self.front_ec)
 
 
         #check if the nodes are within the allowed track and we haven't reached the maximum error
