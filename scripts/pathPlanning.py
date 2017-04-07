@@ -28,7 +28,7 @@ class PathPlanner:
         self.visited_pub = rospy.Publisher('visited_node', Position, queue_size=10)
         self.to_visit_pub = rospy.Publisher('to_visit_node', Position, queue_size=10)
 
-    def getPath(self, vs, endPoint, secondEndPoint, MAX_EXECUTION_TIME, modPoint, modTheta ):
+    def getPath(self, vs, endPoint, secondEndPoint, MAX_EXECUTION_TIME, modPoint, modTheta, isPathPossible=False ):
 
 
         starttime = rospy.get_time()
@@ -82,7 +82,10 @@ class PathPlanner:
             if self.front_ec.isAboveEnd(secondEndPoint,endPoint, self.pos) and dist <1*self.dt and self.front_ec.isAtEnd(): #checks if we are above a line of the two last points
                 #reached end, gather the path
                 print "reached end, Gathering solution"
-
+                
+                if isPathPossible:
+                    return True
+                
                 totError = self.gatherError(Point(vs.x, vs.y), self.pos, Point(vs.x, vs.y))
                 #Gather a new optimized path for the parts that go off the optimal path
                 ((nx,ny),_, _,_) = self.fromPoints[self.pos.x,self.pos.y]
@@ -112,6 +115,9 @@ class PathPlanner:
                 #mark the previous node/state as visited
                 self.visited.add(((round_x, round_y),round_theta1, round_theta2))
         print "no soluton found"
+        
+        if isPathPossible:
+            return False
         return []
 
     def addPossiblePathes(self, leftFirst):

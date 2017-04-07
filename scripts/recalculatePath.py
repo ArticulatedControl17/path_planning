@@ -44,10 +44,10 @@ class recalculatePath:
 
         print len(self.toVisit)
         count = 0
-        while len(self.toVisit)>=0:
+        while len(self.toVisit)>=0 and not rospy.is_shutdown():
             count= count+1
             #loop until all possible nodes have been visited
-            while True:
+            while True and not rospy.is_shutdown():
                 if len(self.toVisit)==0:
                     print "reached End"
                     print "lowest error: ", self.lowest_error
