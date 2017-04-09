@@ -1,24 +1,7 @@
 #include <iostream>
-#include <list>
-#include "Point.hpp"
 #include <stdlib.h>
 #include <math.h>
-
-class ErrorCalc {
-   private:
-      std::list<Point*> queue;
-      Point *pp1;
-      Point *pp2 ;
-    public:
-      ErrorCalc(std::list<Point*> startList);
-      double calculateError(Point *p0);
-      double getDirection();
-      double isAtEnd();
-      double getMaxDistPoint(Point *point);
-      bool isAboveEnd(Point *begin, Point *end, Point *p0);
-      bool is_next_left();
-      ErrorCalc getCopy();
-};
+#include "error_calc.hpp"
 
 ErrorCalc::ErrorCalc(std::list<Point*> startList){
   queue = startList;
@@ -28,15 +11,15 @@ ErrorCalc::ErrorCalc(std::list<Point*> startList){
   queue.pop_front();
 }
 
-double ErrorCalc::calculateError(Point *pp0){
-  while(ErrorCalc::isAboveEnd(pp1, pp2, pp0) && queue.size()>0){
+double ErrorCalc::calculateError(double x, double y){
+  while(ErrorCalc::isAboveEnd(pp1, pp2, x, y) && queue.size()>0){
     pp1 = pp2;
     pp2 = queue.front();
     queue.pop_front();
   }
   //decides if the error is to the left of centerline or not
-  bool isLeft = (((*pp2).getX() - (*pp1).getX()) * ((*pp0).getY() - (*pp1).getY()) - ((*pp2).getY() - (*pp1).getY()) * ((*pp0).getX() - (*pp1).getX())) >0;
-  double value = abs(((*pp2).getX() - (*pp1).getX())*((*pp1).getY()-(*pp0).getY()) - ((*pp1).getX()-(*pp0).getX())*((*pp2).getY()-(*pp1).getY()))
+  bool isLeft = (((*pp2).getX() - (*pp1).getX()) * (y - (*pp1).getY()) - ((*pp2).getY() - (*pp1).getY()) * (x - (*pp1).getX())) >0;
+  double value = abs(((*pp2).getX() - (*pp1).getX())*((*pp1).getY()-y ) - ((*pp1).getX()-x)*((*pp2).getY()-(*pp1).getY()))
     / (sqrt(((*pp2).getX()-(*pp1).getX())*((*pp2).getX()-(*pp1).getX()) + ((*pp2).getY()-(*pp1).getY())*((*pp2).getY()-(*pp1).getY())));
 
   if(isLeft){
@@ -46,7 +29,7 @@ double ErrorCalc::calculateError(Point *pp0){
   }
 }
 
-bool ErrorCalc::isAboveEnd(Point *pbegin, Point *pend, Point *pp0){
+bool ErrorCalc::isAboveEnd(Point *pbegin, Point *pend, double x, double y){
   //checks if a point is passed the end point of a line.
   if ((*pbegin).getX() - (*pend).getX() !=0 && (*pbegin).getY() - (*pend).getY() !=0){
     double slope = (*pbegin).getY() - (*pend).getY() / (*pbegin).getX() - (*pend).getX();
@@ -54,33 +37,33 @@ bool ErrorCalc::isAboveEnd(Point *pbegin, Point *pend, Point *pp0){
     double prependularM = (*pend).getY() - (*pend).getY()*prependularSlope;
     if((*pbegin).getY() < (*pend).getY()){
       //going up
-      return ((*pp0).getX()*prependularSlope + prependularM - (*pp0).getY()) < 0;
+      return (x*prependularSlope + prependularM - y) < 0;
     }
     else{
       //going down
-      return ((*pp0).getX()*prependularSlope + prependularM - (*pp0).getY()) > 0;
+      return (x*prependularSlope + prependularM - y) > 0;
     }
   }
   else if( (*pbegin).getX() - (*pend).getX()){
     //going straight in x direction
     if((*pbegin).getX() < (*pend).getX()){
       //going right
-      return (*pp0).getX() > (*pend).getX();
+      return x > (*pend).getX();
     }
     else{
       //going left
-      return (*pp0).getX() < (*pend).getX();
+      return x < (*pend).getX();
     }
   }
   else{
     //going straight in y direction
     if( (*pbegin).getY() < (*pend).getY()){
       //going up
-      return (*pp0).getY() > (*pend).getY();
+      return y > (*pend).getY();
     }
     else{
       //going down
-      return (*pp0).getY() < (*pend).getY();
+      return y < (*pend).getY();
     }
   }
 }
@@ -128,6 +111,7 @@ ErrorCalc ErrorCalc::getCopy(){
   return ErrorCalc(copy);
 }
 
+/*
 int main(){
   std::cout << "IN MAIN ";
   std::list<Point*> startList;
@@ -144,13 +128,14 @@ int main(){
   startList.push_back(point3);
   std::cout << "p3 : " << (*point3).getX() << " " << (*point3).getY() <<std::endl;
   ErrorCalc ec(startList);
-  Point *point0 = new Point(10, 0.0);
+  Point *point0 = new Point(10.0, 2.0);
   ErrorCalc ec_c = ec.getCopy();
   std::cout << "isLeft : " << ec.is_next_left() <<std::endl;
   std::cout << "maxDist : " << ec.getMaxDistPoint(point0) <<std::endl;
-  std::cout << "printing : " << ec.calculateError(point0) <<std::endl;
+  std::cout << "error : " << ec.calculateError(point0->getX(), point0->getY()) <<std::endl;
   std::cout << "direction : " << ec.getDirection() <<std::endl;
   std::cout << "atEnd? : " << ec.isAtEnd() <<std::endl;
   std::cout << "atEnd copy? : " << ec_c.isAtEnd() <<std::endl;
   return 0;
 }
+*/
