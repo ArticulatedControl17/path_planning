@@ -1,6 +1,10 @@
 #include "Point.hpp"
 #include <list>
 
+#ifndef ErrorCalc_H
+#define ErrorCalc_H
+
+
 class ErrorCalc {
     private:
         std::list<Point*> queue;
@@ -16,3 +20,6 @@ class ErrorCalc {
         bool is_next_left();
         ErrorCalc getCopy();
 };
+
+
+#endif

@@ -1,5 +1,6 @@
 #include "vehicleState.hpp"
 
+
 VehicleState::VehicleState(double nx, double ny, double nth1, double nth2){
     x = nx;
     y = ny;

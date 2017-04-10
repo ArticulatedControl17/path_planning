@@ -1,3 +1,7 @@
+#ifndef VehicleState_H
+#define VehicleState_H
+
+
 class VehicleState {
     public:
         VehicleState(double nx, double ny, double nth1, double nth2);
@@ -13,3 +17,6 @@ class VehicleState {
         double th1;
         double th2;
 };
+
+
+#endif

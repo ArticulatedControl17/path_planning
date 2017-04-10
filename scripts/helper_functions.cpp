@@ -1,24 +1,15 @@
 #include <stdlib.h>
 #include <iostream>
 #include <math.h>
+#include "helper_functions.hpp"
 #include "vehicleState.hpp"
 #include "error_calc.hpp"
 
-const double HEADER_LENGTH = 27.0;
-const double TRAILER_LENGTH = 44.5+10.25/2; //+2.5
-const double HL_FRONT = 9.5;
-const double TL_BACK = 10.25/2 + 8.5; //-2.5
 
-const int HEADER_WIDTH = 18;
-const int TRAILER_WIDTH = 18;
-
-const int MAX_LEFT_ANGLE = 16;
-const int MAX_RIGHT_ANGLE = -18;
-
-const int LANE_WIDTH = 19;
-const int OUTSIDE_TURN_ERROR = 9; //3
-const int OTHERLANE_WEIGHT = 10;
-const int PADDING_WEIGHT = 20;
+// Converting from degrees to radians
+float radians(float degrees) {
+    return degrees * M_PI / 180;
+}
 
 VehicleState *calculateNextState(VehicleState *vs, double dd, double steering_angle_rad){
 
@@ -100,7 +91,7 @@ void rounding(VehicleState *vs,double modPoint,double modTheta){
     }
 
     vs->setValues(x, y, th1, th2);
-    }
+}
 
 int main(){
     VehicleState * vs = new VehicleState(4.0, 7.5, 0.0, 0.0);
