@@ -1,171 +1,142 @@
 #include "track_checker.hpp"
+#include "helper_functions.hpp"
+#include <iostream>
+
+#define dt 25.0
+
+// g++ -o main track_checker.cpp model.cpp Point.cpp -std=gnu++11
+
+
+InTrack::InTrack(bool in_track, double error) {
+    in_track = in_track;
+    error = error;
+}
 
 
 TrackChecker::TrackChecker(int **map) {
-    model = new Truck();  // Model used to calculate error
+    truck = new Truck();  // Model used to calculate error
     map = map;            // Map with allowed/not allowed areas - an array of rows, where each row is an array of elements
 }
 
 
 TrackChecker::~TrackChecker() {
-    delete model;
+    delete truck;
+}
+
+
+// Returns false if the given Point is outside the map, or in a black area
+// Otherwise returns true
+bool TrackChecker::isAllowed(Point *point) {
+    // Outside the map
+    if (point->x < 0 or point->y < 0 or point->x >= MAP_WIDTH or point->y >= MAP_HEIGHT) {
+        return false;
+
+        // In black area
+        if (map[int(point->y)][int(point->x)] == 0) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 
 bool TrackChecker::checkIfInTrack2(Point *toPoint, double th1, double th2) {
-    // Check the range of the matrix with the allowed positions, to avoid index error
-    if (toPoint->x < 0 or toPoint->y < 0 or toPoint->x > 540 or toPoint->y > 950) {
+    if (not isAllowed(toPoint)) {
         return false;
     }
 
-    model->setCorners(toPoint, th1, th2);
+    truck->setCorners(toPoint, th1, th2);
 
+    // Check front wheels
+    if (not isAllowed(truck->right_front) or not isAllowed(truck->left_front)) {
+        return false;
+    }
+
+    // Check back wheels
+    if (not isAllowed(truck->right_back) or not isAllowed(truck->left_back)) {
+        return false;
+    }
+
+    return true;
 }
 
 
-bool TrackChecker::checkIfInTrack(Point *prevPoint, double prevth1, double prevth2, Point *toPoint, double th1, double th2, double dt, ErrorCalc *front_ec, ErrorCalc *back_ec) {
-    return false;
-}
+InTrack * TrackChecker::checkIfInTrack(Point *prevPoint, double prevth1, double prevth2, Point *toPoint, double th1, double th2, ErrorCalc *front_ec, ErrorCalc *back_ec) {
+    double totError = 0.0;
+    bool inPadding = false;
+        
+    // Used to avoid going wrong direction, optimal path should be close enugh that this restriction holds
+    if (front_ec->getMaxDistPoint(toPoint) > 80) {
+        return new InTrack(false, -1.0);
+    }
 
+    if (not isAllowed(toPoint)) {
+        return new InTrack(false, -1.0);
+    }
 
-Point ** TrackChecker::getPointsInBetween(Point *p1, Point *p2, int n) {
-    return {};
-}
+    Truck *prev = new Truck();
+    prev->setCorners(prevPoint, prevth1, prevth2);
+    truck->setCorners(toPoint, th1, th2);
 
+    Point **between_back_wheel_right = getPointsInBetween(truck->right_back_wheel, prev->right_back_wheel, dt/4);
+    Point **between_back_wheel_left = getPointsInBetween(truck->left_back_wheel, prev->left_back_wheel, dt/4);
 
-void TrackChecker::setMap(int **map) {
-    map = map;
-}
+    Point **between_front_wheel_right = getPointsInBetween(truck->right_front_wheel, prev->right_front_wheel, dt/4);
+    Point **between_front_wheel_left = getPointsInBetween(truck->left_front_wheel, prev->left_front_wheel, dt/4);
 
+    Point **between_front_right = getPointsInBetween(truck->right_front, prev->right_front, dt/4);
+    Point **between_front_left = getPointsInBetween(truck->left_front, prev->left_front, dt/4);
 
-int main() {
-    //int map** = {{1, 2}, {3, 4}};
-    //tc = new TrackChecker(map);
-}
+    Point **between_back_right = getPointsInBetween(truck->right_back, prev->right_back, dt/4);
+    Point **between_back_left = getPointsInBetween(truck->left_back, prev->left_back, dt/4);
 
-/*
+    bool right_front_inPadding = false;
+    bool left_front_inPadding = false;
+    bool right_back_inPadding = false;
+    bool left_back_inPadding = false;
 
-        #check the range of the matrix with the allowed positions, to avoid index error
-        if toPoint.x <0 or toPoint.y <0 or toPoint.x >540 or toPoint.y >950:
-            return False
-
-        points = self.model.calculateCorners(toPoint, th1, th2)
-
-        if self.map[int(toPoint.y)][int(toPoint.x)]==0:
-            return False
-
-
-        right_back_wheel = Point(points[5][0], points[5][1])
-        left_back_wheel = Point(points[4][0], points[4][1])
-        right_front_wheel = Point(points[1][0], points[1][1])
-        left_front_wheel = Point(points[0][0], points[0][1])
-
-        #check right front wheels
-        if right_front_wheel.x <0 or right_front_wheel.y <0 or right_front_wheel.x >540 or right_front_wheel.y >950:
-            return False
-        if self.map[int(right_front_wheel.y)][int(right_front_wheel.x)] ==0:
-            return False
-        #check left front wheels
-        if left_front_wheel.x <0 or left_front_wheel.y <0 or left_front_wheel.x >540 or left_front_wheel.y >950:
-            return False
-        if self.map[int(left_front_wheel.y)][int(left_front_wheel.x)] ==0:
-            return False
-
-
-        #check right front wheels
-        if right_back_wheel.x <0 or right_back_wheel.y <0 or right_back_wheel.x >540 or right_back_wheel.y >950:
-            return False
-        if self.map[int(right_back_wheel.y)][int(right_back_wheel.x)] ==0:
-            return False
-        #check left front wheels
-        if left_back_wheel.x <0 or left_back_wheel.y <0 or left_back_wheel.x >540 or left_back_wheel.y >950:
-            return False
-        if self.map[int(left_back_wheel.y)][int(left_back_wheel.x)] ==0:
-            return False
-
-        return True
-
-
-
-
-
-    def checkIfInTrack(self, prevPoint, prevth1, prevth2, toPoint, th1, th2, dt, front_ec, back_ec):
-        #TODO: Make between points for front and back header wheels
-        #check if point and key wheels are in the track
-
-        #used to avoid going wrong direction, optimal path should be close enugh that this restriction holds
-        if front_ec.getMaxDistPoint(toPoint) > 80:
-            return (False,True)
-
-        inPadding = False
-
-        #check the range of the matrix with the allowed positions, to avoid index error
-        if toPoint.x <0 or toPoint.y <0 or toPoint.x >540 or toPoint.y >950:
-            return (False, True)
-
-        if self.map[int(toPoint.y)][int(toPoint.x)]==0:
-            return (False, True)
-        #if self.map[int(toPoint.y)][int(toPoint.x)]==2:
-        #    inPadding = True
-
-        points = self.model.calculateCorners(toPoint, th1, th2)
-
-
-
-        #header
-        right_back_wheel = Point(points[5][0], points[5][1])
-        left_back_wheel = Point(points[4][0], points[4][1])
-        right_front_wheel = Point(points[1][0], points[1][1])
-        left_front_wheel = Point(points[0][0], points[0][1])
-
-        left_front = Point(points[6][0], points[6][1])
-        right_front = Point(points[7][0], points[7][1])
-        #trailer
-        left_back = Point(points[8][0], points[8][1])
-        right_back = Point(points[9][0], points[9][1])
-
-
-
-        prev_points = self.model.calculateCorners(prevPoint, prevth1, prevth2)
-        prev_right_back_wheel = Point(prev_points[5][0], prev_points[5][1])
-        prev_left_back_wheel = Point(prev_points[4][0], prev_points[4][1])
-        prev_right_front_wheel = Point(prev_points[1][0], prev_points[1][1])
-        prev_left_front_wheel = Point(prev_points[0][0], prev_points[0][1])
-
-        prev_left_front = Point(prev_points[6][0], prev_points[6][1])
-        prev_right_front = Point(prev_points[7][0], prev_points[7][1])
-        prev_left_back = Point(prev_points[8][0], prev_points[8][1])
-        prev_right_back = Point(prev_points[9][0], prev_points[9][1])
-
-        #TODO: affects performance quite a lot with dt amount of points
-        between_back_wheel_right = self.getPointsInBetween((right_back_wheel.x, right_back_wheel.y), (prev_right_back_wheel.x, prev_right_back_wheel.y), dt/4)
-        between_back_wheel_left = self.getPointsInBetween((left_back_wheel.x, left_back_wheel.y), (prev_left_back_wheel.x, prev_left_back_wheel.y), dt/4)
-
-        between_front_wheel_right = self.getPointsInBetween((right_front_wheel.x, right_front_wheel.y), (prev_right_front_wheel.x, prev_right_front_wheel.y), dt/4)
-        between_front_wheel_left = self.getPointsInBetween((left_front_wheel.x, left_front_wheel.y), (prev_left_front_wheel.x, prev_left_front_wheel.y), dt/4)
-
-
-        between_front_right = self.getPointsInBetween((right_front.x, right_front.y), (prev_right_front.x, prev_right_front.y), dt/4)
-        between_front_left = self.getPointsInBetween((left_front.x, left_front.y), (prev_left_front.x, prev_left_front.y), dt/4)
-
-
-        between_back_right = self.getPointsInBetween((right_back.x, right_back.y), (prev_right_back.x, prev_right_back.y), dt/4)
-        between_back_left = self.getPointsInBetween((left_back.x, left_back.y), (prev_left_back.x, prev_left_back.y), dt/4)
-
-
-        right_front_inPadding = False
-        left_front_inPadding = False
-        right_back_inPadding = False
-        left_back_inPadding = False
-
-        #check right back wheel
-        for (x,y) in between_back_wheel_right:
+    // Check right back wheel
+    /*for point in between_back_wheel_right:
             if x <0 or y <0 or x >540 or y >950:
                 return (False, True)
             if self.map[y][x] ==0:
                 return (False, True)
             if self.map[y][x] ==2:
                 right_front_inPadding = True
+*/
+    // Check left back wheel
+    // Check right front wheel
+    // Check left front wheel
+    // Check right front
+    // Check left front
+    // Check right back
+    // Check left back
+
+
+/*
+
+
+
+
+        #header
+        right_back_wheel = Point(points[5][0], points[5][1])    right_back_axis
+        left_back_wheel = Point(points[4][0], points[4][1])     left_back_axis
+        right_front_wheel = Point(points[1][0], points[1][1])   right_front_axis
+        left_front_wheel = Point(points[0][0], points[0][1])    left_front_axis
+
+        left_front = Point(points[6][0], points[6][1])      left_front
+        right_front = Point(points[7][0], points[7][1])     right_front
+
+        #trailer
+        left_back = Point(points[8][0], points[8][1])       left_back
+        right_back = Point(points[9][0], points[9][1])      right_back
+
+
+##########################################
+
+        #check right back wheel
+
         #Check left back wheel
         for (x,y) in between_back_wheel_left:
             if x <0 or y <0 or x >540 or y >950:
@@ -256,23 +227,42 @@ int main() {
         if left_back_inPadding:
             left_back_wheel_err = (abs(left_back_wheel_err)+20) * PADDING_WEIGHT
 
-#        inn = False
-
-#        if abs(right_front_wheel_err) > LANE_WIDTH/2:
-#            inn = True
-#        if abs(left_front_wheel_err) > LANE_WIDTH/2:
-#            inn = True
-#        if abs(right_back_wheel_err) > LANE_WIDTH/2:
-#            inn = True
-#        if abs(left_back_wheel_err) > LANE_WIDTH/2:
-#            inn = True
 
         totError = abs(right_front_wheel_err) + abs(left_front_wheel_err) + abs(right_back_wheel_err) + abs(left_back_wheel_err)
-#        if inn:
-#            totError = totError * OTHERLANE_WEIGHT
+*/
+    delete prev;
+    return new InTrack(true, totError);
+}
 
-        return (True, totError)
 
+Point ** TrackChecker::getPointsInBetween(Point *p1, Point *p2, double n) {
+    return {};
+}
+
+
+void TrackChecker::setMap(int **map) {
+    map = map;
+}
+
+
+int main() {
+    int **map;
+    map = new int*[10];
+    for (int i = 0; i < 10; i++) {
+        map[i] = new int[5];
+        for (int j = 0; j < 5; j++) {
+            map[i][j] = i+j;
+        }
+    }
+
+    std::cout << sizeof(**map) << std::endl;
+
+    TrackChecker *tc = new TrackChecker(map);
+}
+
+
+
+/*
     def getPointsInBetween(self, p1, p2, n):
         p1x, p1y = p1
         p2x, p2y = p2
