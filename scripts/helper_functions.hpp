@@ -5,7 +5,7 @@
 #define Helper_H
 
 #define speed   1
-#define dt      25
+#define dt      25.0
 
 #define HEADER_LENGTH   27.0
 #define TRAILER_LENGTH  44.5 + 10.25 / 2 // + 2.5

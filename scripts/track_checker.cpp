@@ -5,7 +5,6 @@
 #include <limits>
 #include <math.h>
 
-#define dt 25.0
 #define INF std::numeric_limits<double>::infinity()
 
 // g++ -o main track_checker.cpp model.cpp Point.cpp -std=gnu++11
@@ -183,7 +182,7 @@ double TrackChecker::getError(Point *truck_point, Point *prev_point, double erro
         if (abs(error) > LANE_WIDTH/2) {
             result = error * OTHERLANE_WEIGHT;
         }
-    
+
         if (in_padding) {
             result = (abs(error) + 20) * PADDING_WEIGHT;
         }
@@ -191,9 +190,4 @@ double TrackChecker::getError(Point *truck_point, Point *prev_point, double erro
 
     between.clear();
     return result;
-}
-
-
-int main() {
-
 }

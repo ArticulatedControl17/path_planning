@@ -92,6 +92,7 @@ VehicleState *rounding(VehicleState *vs,double modPoint,double modTheta){
     return new VehicleState(x, y, th1, th2);
 }
 
+/*
 int main(){
     VehicleState * vs = new VehicleState(4.0, 7.5, 0.0, 0.0);
     VehicleState *vs2 = calculateNextState(vs, 10, 0.0);
@@ -114,3 +115,5 @@ int main(){
     rounding(vs, 3.0, 0.3);
     std::cout << "rounding, x: " << vs->x << " y: " << vs->y << " th1: " << vs->th1 << "th2: " << vs->th2 <<std::endl;
 }
+
+*/

@@ -116,7 +116,7 @@ void PathPlanner::addPossiblePathes(bool leftFirst){
     }
     //Strait
     Point *strait_point = new Point(strait_vs->x, strait_vs->y);
-    Intrack * strait_it = track_checker->checkIfInTrack(pos, theta1, theta2, strait_point, strait_vs->th1, strait_vs->th2, dt, front_ec, back_ec);
+    InTrack * strait_it = track_checker->checkIfInTrack(pos, theta1, theta2, strait_point, strait_vs->th1, strait_vs->th2, front_ec, back_ec);
     if (strait_it->in_track){
         addState(strait_point, strait_vs->th1, strait_vs->th2, strait_it->error);
     }
@@ -124,36 +124,36 @@ void PathPlanner::addPossiblePathes(bool leftFirst){
     Point *left_point = new Point(left_vs->x, left_vs->y);
     if (leftFirst){
         //Right
-        Intrack *right_it = track_checker->checkIfInTrack(pos, theta1, theta2, right_point, right_vs->th1, right_vs->th2, dt, front_ec, back_ec);
+        InTrack *right_it = track_checker->checkIfInTrack(pos, theta1, theta2, right_point, right_vs->th1, right_vs->th2, front_ec, back_ec);
         if (right_it->in_track){
             addState(right_point, right_vs->th1, right_vs->th2, right_it->error);
         }
         //Left
-        Intrack * left_it = track_checker->checkIfInTrack(pos, theta1, theta2, left_point, left_vs->th1, left_vs->th2, dt, front_ec, back_ec);
+        InTrack * left_it = track_checker->checkIfInTrack(pos, theta1, theta2, left_point, left_vs->th1, left_vs->th2, front_ec, back_ec);
         if (left_it->in_track){
             addState(left_point, left_vs->th1, left_vs->th2, left_it->error);
         }
     } else {
         //Left
-        Intrack * left_it = track_checker->checkIfInTrack(pos, theta1, theta2, left_point, left_vs->th1, left_vs->th2, dt, front_ec, back_ec);
+        InTrack * left_it = track_checker->checkIfInTrack(pos, theta1, theta2, left_point, left_vs->th1, left_vs->th2, front_ec, back_ec);
         if(left_it->in_track){
             addState(left_point, left_vs->th1, left_vs->th2, left_it->error);
         }
         //Right
-        Intrack *right_it = track_checker->checkIfInTrack(pos, theta1, theta2, right_point, right_vs->th1, right_vs->th2, dt, front_ec, back_ec);
+        InTrack *right_it = track_checker->checkIfInTrack(pos, theta1, theta2, right_point, right_vs->th1, right_vs->th2, front_ec, back_ec);
         if(right_it->in_track){
             addState(right_point, right_vs->th1, right_vs->th2, right_it->error);
         }
     }
     //Optimal outside turn
     Point *optimal_outside_point = new Point(optimal_outside_vs->x, optimal_outside_vs->y);
-    Intrack * optimal_outside_it = track_checker->checkIfInTrack(pos, theta1, theta2, optimal_outside_point, optimal_outside_vs->th1, optimal_outside_vs->th2, dt, front_ec, back_ec);
+    InTrack * optimal_outside_it = track_checker->checkIfInTrack(pos, theta1, theta2, optimal_outside_point, optimal_outside_vs->th1, optimal_outside_vs->th2, front_ec, back_ec);
     if (optimal_outside_it->in_track){
         addState(optimal_outside_point, optimal_outside_vs->th1, optimal_outside_vs->th2, optimal_outside_it->error);
     }
     //Optimal
     Point *optimal_point = new Point(optimal_vs->x, optimal_vs->y);
-    Intrack * optimal_it = track_checker->checkIfInTrack(pos, theta1, theta2, optimal_point, optimal_vs->th1, optimal_vs->th2, dt, front_ec, back_ec);
+    InTrack * optimal_it = track_checker->checkIfInTrack(pos, theta1, theta2, optimal_point, optimal_vs->th1, optimal_vs->th2, front_ec, back_ec);
     if(optimal_it->in_track){
         addState(optimal_point, optimal_vs->th1, optimal_vs->th2, optimal_it->error);
     }
@@ -224,4 +224,37 @@ void PathPlanner::setMap(int **mat){
 
 bool PathPlanner::checkIfInTrack(VehicleState *vs){
     return track_checker->checkIfInTrack2(new Point(vs->x, vs->y), vs->th1, vs->th2);
+}
+
+
+
+int main(){
+    
+    VehicleState * vs = new VehicleState(4.0, 7.5, 0.0, 0.0);
+    Point *p_end = new Point(500,0);
+    Point *p_snd_end = new Point(450,0);
+
+
+
+    std::list<VehicleState*> getPath(vs, p_end, p_snd_end, 10, 3.0, 0.3)
+
+    VehicleState *vs2 = calculateNextState(vs, 10, 0.0);
+    std::cout << "next state vs2, x: " << vs2->x << " y: " << vs2->y << " th1: " << vs2->th1 << "th2: " << vs2->th2 <<std::endl;
+    std::cout << "next state vs, x: " << vs->x << " y: " << vs->y << " th1: " << vs->th1 << "th2: " << vs->th2 <<std::endl;
+
+    std::list<Point*> startList;
+
+    Point *point1 = new Point(0.0, 0.0);
+    startList.push_front(point1);
+    Point *point2 = new Point(5.0, 0.0);
+    startList.push_back(point2);
+    Point *point3 = new Point(100.0, 0.0);
+    startList.push_back(point3);
+    ErrorCalc *ec = new ErrorCalc(startList);
+
+    VehicleState *vs3 = calculate_steering(16, -18, 20, 10, 0, vs, ec);
+    std::cout << "calculate steering x: " << vs3->x << " y: " << vs3->y << " th1: " << vs3->th1 << "th2: " << vs3->th2 <<std::endl;
+
+    rounding(vs, 3.0, 0.3);
+    std::cout << "rounding, x: " << vs->x << " y: " << vs->y << " th1: " << vs->th1 << "th2: " << vs->th2 <<std::endl;
 }

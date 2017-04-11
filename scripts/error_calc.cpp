@@ -102,11 +102,11 @@ bool ErrorCalc::is_next_left(void){
     return isLeft;
 }
 
-ErrorCalc ErrorCalc::getCopy(){
+ErrorCalc *ErrorCalc::getCopy(){
     std::list<Point*> copy(queue);
     copy.push_front(pp2);
     copy.push_front(pp1);
-    return ErrorCalc(copy);
+    return new ErrorCalc(copy);
 }
 
 /*

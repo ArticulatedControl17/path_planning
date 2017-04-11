@@ -16,7 +16,7 @@ class ErrorCalc {
         double getMaxDistPoint(Point *point);
         bool isAboveEnd(Point *begin, Point *end, double x, double y);
         bool is_next_left();
-        ErrorCalc getCopy();
+        ErrorCalc *getCopy();
 };
 
 #endif
