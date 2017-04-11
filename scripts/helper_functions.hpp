@@ -4,6 +4,8 @@
 #ifndef Helper_H
 #define Helper_H
 
+#define speed   1
+#define dt      25
 
 #define HEADER_LENGTH   27.0
 #define TRAILER_LENGTH  44.5 + 10.25 / 2 // + 2.5
@@ -25,8 +27,8 @@
 float radians(float degrees);
 
 VehicleState *calculateNextState(VehicleState *vs, double dd, double steering_angle_rad);
-VehicleState *calculate_steering(double steering_min, double steering_max, double dd, int iters, double target_error, VehicleState *vs, ErrorCalc ec);
-void rounding(VehicleState *vs,double modPoint,double modTheta);
+VehicleState *calculate_steering(double steering_min, double steering_max, double dd, int iters, double target_error, VehicleState *vs, ErrorCalc *ec);
+VehicleState *rounding(VehicleState *vs,double modPoint,double modTheta);
 
 
 #endif

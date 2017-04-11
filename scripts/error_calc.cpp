@@ -18,9 +18,9 @@ double ErrorCalc::calculateError(double x, double y){
         queue.pop_front();
   }
     //decides if the error is to the left of centerline or not
-    bool isLeft = (((*pp2).getX() - (*pp1).getX()) * (y - (*pp1).getY()) - ((*pp2).getY() - (*pp1).getY()) * (x - (*pp1).getX())) >0;
-    double value = abs(((*pp2).getX() - (*pp1).getX())*((*pp1).getY()-y ) - ((*pp1).getX()-x)*((*pp2).getY()-(*pp1).getY()))
-        / (sqrt(((*pp2).getX()-(*pp1).getX())*((*pp2).getX()-(*pp1).getX()) + ((*pp2).getY()-(*pp1).getY())*((*pp2).getY()-(*pp1).getY())));
+    bool isLeft = ((pp2->x - pp1->x) * (y - pp1->y) - (pp2->y - pp1->y) * (x - pp1->x)) >0;
+    double value = abs((pp2->x - pp1->x)*(pp1->y - y ) - (pp1->x-x) * (pp2->y - pp1->y))
+        / (sqrt((pp2->x - pp1->x)*(pp2->x - pp1->x) + (pp2->y - pp1->y) * (pp2->y - pp1->y)));
 
     if(isLeft){
         return -value;
@@ -31,11 +31,11 @@ double ErrorCalc::calculateError(double x, double y){
 
 bool ErrorCalc::isAboveEnd(Point *pbegin, Point *pend, double x, double y){
     //checks if a point is passed the end point of a line.
-    if ((*pbegin).getX() - (*pend).getX() !=0 && (*pbegin).getY() - (*pend).getY() !=0){
-        double slope = (*pbegin).getY() - (*pend).getY() / (*pbegin).getX() - (*pend).getX();
+    if (pbegin->x - pend->x !=0 && pbegin->y - pend->y !=0){
+        double slope = pbegin->y - pend->y / pbegin->x - pend->x;
         double prependularSlope = (-1)/slope;
-        double prependularM = (*pend).getY() - (*pend).getY()*prependularSlope;
-        if((*pbegin).getY() < (*pend).getY()){
+        double prependularM = pend->y - pend->y * prependularSlope;
+        if(pbegin->y < pend->y){
             //going up
             return (x*prependularSlope + prependularM - y) < 0;
         }
@@ -43,32 +43,32 @@ bool ErrorCalc::isAboveEnd(Point *pbegin, Point *pend, double x, double y){
             //going down
             return (x*prependularSlope + prependularM - y) > 0;
         }
-    } else if( (*pbegin).getX() - (*pend).getX()){
+    } else if( pbegin->x - pend->x){
         //going straight in x direction
-        if((*pbegin).getX() < (*pend).getX()){
+        if(pbegin->x < pend->x){
             //going right
-            return x > (*pend).getX();
+            return x > pend->x;
         } else{
             //going left
-            return x < (*pend).getX();
+            return x < pend->x;
         }
     }
     else{
         //going straight in y direction
-        if( (*pbegin).getY() < (*pend).getY()){
+        if( pbegin->y < pend->y){
             //going up
-            return y > (*pend).getY();
+            return y > pend->y;
         }
         else{
             //going down
-            return y < (*pend).getY();
+            return y < pend->y;
         }
     }
 }
 
 double ErrorCalc::getDirection(void){
-    double dy = (*pp2).getY() - (*pp1).getY();
-    double dx = (*pp2).getX() - (*pp1).getX();
+    double dy = pp2->y - pp1->y;
+    double dx = pp2->x - pp1->x;
     double theta = atan2(dy, dx);
     return theta;
 }
@@ -83,10 +83,10 @@ double ErrorCalc::isAtEnd(){
 
 double ErrorCalc::getMaxDistPoint(Point *point){
     //TODO: Should this be max or min?
-    double d1 = sqrt( ((*point).getX() - (*pp2).getX()) * ((*point).getX() - (*pp2).getX())
-                + ((*point).getY() - (*pp2).getY()) * ((*point).getY() - (*pp2).getY()) );
-    double d0 = sqrt( ((*point).getX() - (*pp1).getX()) * ((*point).getX() - (*pp1).getX())
-                + ((*point).getY() - (*pp1).getY()) * ((*point).getY() - (*pp1).getY()) );
+    double d1 = sqrt( (point->x - pp2->x) * (point->x - pp2->x)
+                + (point->y - pp2->y) * (point->y - pp2->y) );
+    double d0 = sqrt( (point->x - pp1->x) * (point->x - pp1->x)
+                + (point->y - pp1->y) * (point->y - pp1->y) );
     return std::max(d1,d0);
 
 }
@@ -94,8 +94,8 @@ double ErrorCalc::getMaxDistPoint(Point *point){
 bool ErrorCalc::is_next_left(void){
     bool isLeft;
     if(queue.size()>0){
-        isLeft = (((*pp2).getX() - (*pp1).getX()) * ((*queue.front()).getY() - (*pp1).getY())
-            - ((*pp2).getY() - (*pp1).getY()) * ((*queue.front()).getX() - (*pp1).getX())) >0;
+        isLeft = ((pp2->x - pp1->x) * (queue.front()->y - pp1->y)
+            - (pp2->y - pp1->y) * (queue.front()->x - pp1->x)) >0;
     } else{
         isLeft=true;
     }

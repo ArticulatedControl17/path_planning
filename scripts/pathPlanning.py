@@ -84,8 +84,7 @@ class PathPlanner:
 
                 totError = self.gatherError(Point(vs.x, vs.y), self.pos, Point(vs.x, vs.y))
                 #Gather a new optimized path for the parts that go off the optimal path
-                ((nx,ny),_, _,_) = self.fromPoints[self.pos.x,self.pos.y]
-                fromPoint = Point(nx,ny)
+
                 #return self.gatherPath(Point(vs.x, vs.y), endPoint,self.theta1, self.theta2)
                 (fromP, part, nn_ec) = self.recalculate_path.calculate_path(Point(vs.x, vs.y), secondEndPoint, endPoint, self.dt, vs.theta1, vs.theta2, totError, error_calc.errorCalc(self.optimal_path), modPoint, modTheta)
                 #part = self.recalculate_path.calculate_path(Point(vs.x, vs.y), secondEndPoint, endPoint, self.dt, vs.theta1, vs.theta2, totError, error_calc.errorCalc(self.optimal_path))
@@ -183,24 +182,6 @@ class PathPlanner:
             pret2 = nt2
         return path[::-1]
 
-    def gatherPathMiddle(self, startPoint, endPoint, end_theta1, end_theta2, end_err):
-        path = []
-        prex = endPoint.x
-        prey = endPoint.y
-        pret1 = end_theta1
-        pret2 = end_theta2
-        prerr = end_err
-        while not (prex== startPoint.x and  prey == startPoint.y):
-            path.append(((prex,prey), pret1, pret2, prerr))
-            #TODO: Maybe add error to final path
-            ((nx,ny),nt1, nt2, err) = self.fromPoints[prex,prey]
-            prex=nx
-            prey=ny
-            pret1 = nt1
-            pret2 = nt2
-            prerr = err
-        return path
-
     def gatherError(self, startPoint, endPoint, firstPoint):
         print startPoint.x, startPoint.y
         prex = endPoint.x
@@ -215,20 +196,6 @@ class PathPlanner:
             ((nx,ny),_, _, err) = self.fromPoints[prex,prey]
             totErr= totErr + abs(err)
         return totErr
-
-
-    def gatherFromPoints(self, startPoint, endPoint):
-        prex = endPoint.x
-        prey = endPoint.y
-        fromPoints = []
-        while not (prex== startPoint.x and  prey == startPoint.y):
-            ((nx,ny), _, _, _) = self.fromPoints[prex,prey]
-            prex=nx
-            prey=ny
-            fromPoints.append((nx,ny))
-        fromPoints.append((nx,ny))
-        return fromPoints
-
 
     def addState(self, point, th1, th2, error):
         #add the vector as an adjacent vector to the previous vector in the graph

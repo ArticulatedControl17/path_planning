@@ -16,3 +16,7 @@ void VehicleState::setValues(double nx, double ny, double nth1, double nth2){
     th2 = nth2;
 
 }
+
+bool VehicleState::operator==(const VehicleState &other) const
+  { return (x == other.x && y == other.y && th1 == other.th1 && th2 == other.th2);
+  }

@@ -1,9 +1,7 @@
-#include "Point.hpp"
-#include <list>
-
 #ifndef ErrorCalc_H
 #define ErrorCalc_H
-
+#include "Point.hpp"
+#include <list>
 
 class ErrorCalc {
     private:
@@ -20,6 +18,5 @@ class ErrorCalc {
         bool is_next_left();
         ErrorCalc getCopy();
 };
-
 
 #endif

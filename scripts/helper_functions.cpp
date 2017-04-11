@@ -3,7 +3,6 @@
 #include <math.h>
 #include "helper_functions.hpp"
 #include "vehicleState.hpp"
-#include "error_calc.hpp"
 
 
 // Converting from degrees to radians
@@ -13,8 +12,8 @@ float radians(float degrees) {
 
 VehicleState *calculateNextState(VehicleState *vs, double dd, double steering_angle_rad){
 
-    double theta1 = vs->getTh1();
-    double theta2 = vs->getTh2();
+    double theta1 = vs->th1;
+    double theta2 = vs->th2;
     double dt1 = (dd * tan(steering_angle_rad)) / HEADER_LENGTH;
     double next_theta1 = theta1 + dt1;
 
@@ -25,8 +24,8 @@ VehicleState *calculateNextState(VehicleState *vs, double dd, double steering_an
 
     double next_theta2 = theta2 + (x * sin((atan2(r*dt1, dd) + theta1 - theta2))) / TRAILER_LENGTH;
 
-    double dx = vs->getX() - HEADER_LENGTH * cos(theta1);
-    double dy = vs->getY() - HEADER_LENGTH * sin(theta1);
+    double dx = vs->x - HEADER_LENGTH * cos(theta1);
+    double dy = vs->y - HEADER_LENGTH * sin(theta1);
 
     double next_x = dx + dd * cos(t1_avg) + HEADER_LENGTH * cos(next_theta1);
     double next_y = dy + dd * sin(t1_avg) + HEADER_LENGTH * sin(next_theta1);
@@ -35,12 +34,12 @@ VehicleState *calculateNextState(VehicleState *vs, double dd, double steering_an
 
 }
 
-VehicleState *calculate_steering(double steering_min, double steering_max, double dd, int iters, double target_error, VehicleState *vs, ErrorCalc ec){
+VehicleState *calculate_steering(double steering_min, double steering_max, double dd, int iters, double target_error, VehicleState *vs, ErrorCalc* ec){
     //TODO: might not be working properly?
     //Calculates a point within 1 unit of the optimal path, return the closest possibility if we cant find the optimal path
     double steering_new = (steering_min + steering_max)/2;
     VehicleState *new_vs = calculateNextState(vs, dd, steering_new);
-    double error = ec.calculateError(new_vs->getX(), new_vs->getY());
+    double error = ec->calculateError(new_vs->x, new_vs->y);
     if (abs(error-target_error)<0.1 || iters==0){
         return new_vs;
     }
@@ -55,9 +54,9 @@ VehicleState *calculate_steering(double steering_min, double steering_max, doubl
     }
 }
 
-void rounding(VehicleState *vs,double modPoint,double modTheta){
+VehicleState *rounding(VehicleState *vs,double modPoint,double modTheta){
 
-    double x = vs->getX();
+    double x = vs->x;
     double m_x = fmod(x, modPoint);
     std::cout << "fmod, x: " << m_x <<std::endl;
     if (m_x >= modPoint/2){   //round up
@@ -66,7 +65,7 @@ void rounding(VehicleState *vs,double modPoint,double modTheta){
         x = x - m_x;
     }
 
-    double y = vs->getY();
+    double y = vs->y;
     double m_y = fmod(y, modPoint);
     if (m_y >= modPoint/2){   //round up
         y = y - m_y + modPoint;
@@ -74,7 +73,7 @@ void rounding(VehicleState *vs,double modPoint,double modTheta){
         y = y - m_y;
     }
 
-    double th1 = round(vs->getTh1()*10)/10;
+    double th1 = round(vs->th1*10)/10;
     double m_t1 = round(fmod(th1, modTheta)*10)/10;
     if(m_t1 >= modTheta/2){   //round up
         th1 = th1-m_t1 + modTheta;
@@ -82,7 +81,7 @@ void rounding(VehicleState *vs,double modPoint,double modTheta){
         th1 = th1 - m_t1;
     }
 
-    double th2 = round(vs->getTh2()*10)/10;
+    double th2 = round(vs->th2*10)/10;
     double m_t2 = round(fmod(th2, modTheta)*10)/10;
     if(m_t2 >= modTheta/2){   //round up
         th2 = th2-m_t2 + modTheta;
@@ -90,14 +89,14 @@ void rounding(VehicleState *vs,double modPoint,double modTheta){
         th2 = th2 - m_t2;
     }
 
-    vs->setValues(x, y, th1, th2);
+    return new VehicleState(x, y, th1, th2);
 }
 
 int main(){
     VehicleState * vs = new VehicleState(4.0, 7.5, 0.0, 0.0);
     VehicleState *vs2 = calculateNextState(vs, 10, 0.0);
-    std::cout << "next state vs2, x: " << vs2->getX() << " y: " << vs2->getY() << " th1: " << vs2->getTh1() << "th2: " << vs2->getTh2() <<std::endl;
-    std::cout << "next state vs, x: " << vs->getX() << " y: " << vs->getY() << " th1: " << vs->getTh1() << "th2: " << vs->getTh2() <<std::endl;
+    std::cout << "next state vs2, x: " << vs2->x << " y: " << vs2->y << " th1: " << vs2->th1 << "th2: " << vs2->th2 <<std::endl;
+    std::cout << "next state vs, x: " << vs->x << " y: " << vs->y << " th1: " << vs->th1 << "th2: " << vs->th2 <<std::endl;
 
     std::list<Point*> startList;
 
@@ -107,11 +106,11 @@ int main(){
     startList.push_back(point2);
     Point *point3 = new Point(100.0, 0.0);
     startList.push_back(point3);
-    ErrorCalc ec(startList);
+    ErrorCalc *ec = new ErrorCalc(startList);
 
-    VehicleState *vs3 = calculate_steering(16, -18, 20, 10, 20, vs, ec);
-    std::cout << "calculate steering x: " << vs3->getX() << " y: " << vs3->getY() << " th1: " << vs3->getTh1() << "th2: " << vs3->getTh2() <<std::endl;
+    VehicleState *vs3 = calculate_steering(16, -18, 20, 10, 0, vs, ec);
+    std::cout << "calculate steering x: " << vs3->x << " y: " << vs3->y << " th1: " << vs3->th1 << "th2: " << vs3->th2 <<std::endl;
 
     rounding(vs, 3.0, 0.3);
-    std::cout << "rounding, x: " << vs->getX() << " y: " << vs->getY() << " th1: " << vs->getTh1() << "th2: " << vs->getTh2() <<std::endl;
+    std::cout << "rounding, x: " << vs->x << " y: " << vs->y << " th1: " << vs->th1 << "th2: " << vs->th2 <<std::endl;
 }
