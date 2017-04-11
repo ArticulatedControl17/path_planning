@@ -23,6 +23,9 @@
 #define OTHERLANE_WEIGHT    10
 #define PADDING_WEIGHT      20
 
+#define MAP_WIDTH	490
+#define MAP_HEIGHT	965
+
 
 float radians(float degrees);
 

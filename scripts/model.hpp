@@ -1,4 +1,3 @@
-#include <list>
 #include "Point.hpp"
 
 #ifndef Model_H
@@ -6,7 +5,6 @@
 
 
 class Truck {
-
     public:
         Truck();
         ~Truck();
@@ -18,13 +16,10 @@ class Truck {
         Point *left_back;
         Point *right_back;
 
-        Point *left_front_axis;
-        Point *right_front_axis;
-        Point *left_back_axis;
-        Point *right_back_axis;
-
-        Point *left_joint_wheel;
-        Point *right_joint_wheel;
+        Point *left_front_wheel;
+        Point *right_front_wheel;
+        Point *left_back_wheel;
+        Point *right_back_wheel;
 };
 
 
