@@ -5,7 +5,6 @@
 
 
 class Truck {
-
     public:
         Truck();
         ~Truck();
