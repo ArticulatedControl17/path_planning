@@ -64,6 +64,7 @@ extern "C" {
 
         delete vs;
         return path;
+
     }
 }
 
@@ -71,10 +72,15 @@ extern "C" {
 int main() {}
 
 
-/* Compiling into shared Library
+/* --- Compiling into shared Library ---------------------------------------------------------------------------------------------------------------------------------------------
 
-g++ -c -std=gnu++11 -fPIC pp_wrapper.cpp pathPlanning.cpp Point.cpp track_checker.cpp vehicleState.cpp vehicleState_error.cpp helper_functions.cpp error_calc.cpp model.cpp
-g++ -std=gnu++11 -fPIC pp_wrapper.cpp pathPlanning.cpp Point.cpp track_checker.cpp vehicleState.cpp vehicleState_error.cpp helper_functions.cpp error_calc.cpp model.cpp
-g++ -shared -Wl,-soname,libpp.so -o libpp.so  pp_wrapper.o pathPlanning.o Point.o track_checker.o vehicleState.o vehicleState_error.o helper_functions.o error_calc.o model.o
+1. Recompile any changed C++-files:
+
+    g++ -c -std=gnu++11 -fPIC NAME_OF_UPDATED_FILE.cpp
+
+2. Build the library:
+
+    g++ -std=gnu++11 -fPIC pp_wrapper.cpp pathPlanning.cpp Point.cpp track_checker.cpp vehicleState.cpp vehicleState_error.cpp helper_functions.cpp error_calc.cpp model.cpp
+    g++ -shared -Wl,-soname,libpp.so -o libpp.so  pp_wrapper.o pathPlanning.o Point.o track_checker.o vehicleState.o vehicleState_error.o helper_functions.o error_calc.o model.o
 
 */
