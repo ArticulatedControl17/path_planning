@@ -1,5 +1,6 @@
 #include "track_checker.hpp"
 #include "helper_functions.hpp"
+
 #include <iostream>
 #include <vector>
 #include <limits>
@@ -10,25 +11,58 @@
 // g++ -o main track_checker.cpp model.cpp Point.cpp -std=gnu++11
 
 
-InTrack::InTrack(bool in_track, double error) {
-    in_track = in_track;
-    error = error;
+InTrack::InTrack(bool in_track_, double error_) {
+    in_track = in_track_;
+    error = error_;
 }
 
 
-TrackChecker::TrackChecker(int **map) {
-    truck = new Truck();  // Model used to calculate error
-    map = map;            // Map with allowed/not allowed areas - an array of rows, where each row is an array of elements
+TrackChecker::TrackChecker(int *map_) {
+    truck = new Truck();         // Model used to calculate error
+    map = new int*[MAP_HEIGHT];  // Map with allowed/not allowed areas - an array of rows, where each row is an array of elements
+
+    for (int i = 0; i < MAP_HEIGHT; i++) {
+        map[i] = new int[MAP_WIDTH];
+
+        for (int j = 0; j < MAP_WIDTH; j++) {
+            map[i][j] = map_[i*MAP_WIDTH+j];
+        }
+    }
+
+// REMOVE ------------------------------------------------------------ ->
+    /*
+    std::cout << "[200][200]: " << map[200][200] << std::endl;
+    std::cout << "[400][200]: " << map[400][200] << std::endl;
+    */
+// <- ------------------------------------------------------------ REMOVE
 }
 
 
 TrackChecker::~TrackChecker() {
     delete truck;
+
+    for (int i = 0; i < MAP_HEIGHT; i++) {
+        free(map[i]);
+    }
+
+    free(map);
 }
 
 
-void TrackChecker::setMap(int **map) {
-    map = map;
+void TrackChecker::setMap(int *map_) {
+    for (int i = 0; i < MAP_HEIGHT; i++) {
+
+        for (int j = 0; j < MAP_WIDTH; j++) {
+            map[i][j] = map_[i*MAP_WIDTH+j];
+        }
+    }
+
+// REMOVE ------------------------------------------------------------ ->
+    /*
+    std::cout << "[200][200]: " << map[200][200] << std::endl;
+    std::cout << "[400][200]: " << map[400][200] << std::endl;
+    */
+// <- ------------------------------------------------------------ REMOVE
 }
 
 
