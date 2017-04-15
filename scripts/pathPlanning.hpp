@@ -9,6 +9,8 @@
 #include <list>
 #include <iostream>
 #include <math.h>
+//#include "ros/ros.h"
+//#include "custom_msgs/Position.h"
 
 namespace std {
 
@@ -53,6 +55,11 @@ namespace std {
 
 class PathPlanner {
     private:
+        //ros::NodeHandle n;
+        //custom_msgs::Poisition msg;
+        //ros::Publisher visited_pub;
+        //ros::Publisher to_visit_pub;
+
         TrackChecker * track_checker;
         double theta1;
         double theta2;
