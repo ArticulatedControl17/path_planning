@@ -4,7 +4,8 @@
 #include <list>
 
 class ErrorCalc {
-    private:
+//    private:
+    public:
         std::list<Point*> queue;
         Point *pp1;
         Point *pp2 ;

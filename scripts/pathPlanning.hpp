@@ -54,12 +54,14 @@ namespace std {
 
 
 class PathPlanner {
-    private:
+    //private:
         //ros::NodeHandle n;
         //custom_msgs::Poisition msg;
         //ros::Publisher visited_pub;
         //ros::Publisher to_visit_pub;
 
+    public:
+//    private:
         TrackChecker * track_checker;
         double theta1;
         double theta2;
@@ -75,10 +77,10 @@ class PathPlanner {
         double gatherError(Point *startPoint, Point *endPoint);
         void addState(Point *point, double th1, double th2, double error);
     public:
-        PathPlanner(int** mat);
+        PathPlanner(int *mat);
         std::list<VehicleState*> getPath(VehicleState *startVs, Point *endPoint, Point *secondEndPoint
             , double MAX_EXECUTION_TIME, double modPoint, double modTheta);
         void setOptimalpath( std::list<Point*> path);
-        void setMap(int** mat);
+        void setMap(int *mat);
         bool checkIfInTrack(VehicleState *vs);
 };

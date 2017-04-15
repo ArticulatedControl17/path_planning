@@ -1,7 +1,7 @@
 #include "pathPlanning.hpp"
 
 
-PathPlanner::PathPlanner(int **map){
+PathPlanner::PathPlanner(int *map){
     track_checker = new TrackChecker(map);
     //visited_pub = n.advertise<custom_msgs::Position>("visited_node", 1000);
     //to_visit_pub = n.advertise<custom_msgs::Position>("to_visit_node", 1000);
@@ -241,7 +241,7 @@ void PathPlanner::setOptimalpath(std::list<Point*> path){
     back_ec = new ErrorCalc(path);
 }
 
-void PathPlanner::setMap(int **mat){
+void PathPlanner::setMap(int *mat){
     track_checker->setMap(mat);
 }
 
@@ -252,9 +252,44 @@ bool PathPlanner::checkIfInTrack(VehicleState *vs){
 
 
 
-int main(){
+/*
+int main() {
 
-    /*
+    int **map;
+    map = new int*[10];
+
+    for (int i = 0; i < 10; i++) {
+        map[i] = new int[5];
+
+        for (int j = 0; j < 5; j++) {
+            map[i][j] = i+j;
+        }
+    }
+
+    PathPlanner *pp = new PathPlanner(map);
+    std::cout << "Created PathPlanner" << std::endl;
+    std::cout << "Map: " << **(pp->track_checker->map) << std::endl;
+    int **matrix = pp->track_checker->map;
+
+    std::string s = "";
+    std::cout << "Map: ";
+
+    for (int i = 0; i < 10; i++) {
+        for (int j = 0; j < 5; j++) {
+            std::cout << matrix[i][j];
+        }
+    }
+
+    std::cout << std::endl;
+
+}
+*/
+
+
+// g++ -o main -std=gnu++11 pathPlanning.cpp Point.cpp track_checker.cpp vehicleState.cpp vehicleState_error.cpp helper_functions.cpp error_calc.cpp model.cpp
+
+/*
+int main(){
     VehicleState * vs = new VehicleState(4.0, 7.5, 0.0, 0.0);
     Point *p_end = new Point(500,0);
     Point *p_snd_end = new Point(450,0);
@@ -284,4 +319,3 @@ int main(){
     std::cout << "rounding, x: " << vs->x << " y: " << vs->y << " th1: " << vs->th1 << "th2: " << vs->th2 <<std::endl;
 
     */
-}

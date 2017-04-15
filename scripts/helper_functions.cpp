@@ -117,3 +117,9 @@ int main(){
 }
 
 */
+
+
+// int main() {}
+
+// g++ -o main helper_functions.cpp track_checker.cpp vehicleState.cpp model.cpp error_calc.cpp Point.cpp -std=gnu++11
+
