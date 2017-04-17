@@ -12,6 +12,7 @@ lib.PP_checkIfInTrack.restype = c_bool
 
 lib.PP_setOptimalPath.argtypes = [c_int, POINTER(POINTER(c_double)), c_int]
 lib.PP_getPath.argtypes =[c_int, POINTER(c_double), POINTER(c_double), POINTER(c_double), c_double, c_double, c_double]
+lib.PP_getPath.restype = POINTER(POINTER(c_double))
 
 
 class PathPlannerCPP(object):
