@@ -53,9 +53,19 @@ extern "C" {
         Point *sep = new Point(sep_arr[0], sep_arr[1]);
 
         std::list<VehicleState *> result = pp->getPath(vs, ep, sep, max_time, pm, tm);
-        int size = result.size();
 
-        double **path= new double*[size];
+// REMOVE ------------------------------------------------------------ ->
+        /*
+        std::list<VehicleState *> result = {};
+        result.push_back(new VehicleState(0.0, 0.0, 0.0, 0.0));
+        result.push_back(new VehicleState(1.0, 1.0, 1.0, 1.0));
+        result.push_back(new VehicleState(2.0, 2.0, 2.0, 2.0));
+        result.push_back(new VehicleState(3.0, 3.0, 3.0, 3.0));
+        */
+// <- ------------------------------------------------------------ REMOVE
+
+        int size = result.size();
+        double **path = new double*[size];
 
         for (int i = 0; i < size; i++) {
             path[i] = new double[4];
@@ -66,11 +76,14 @@ extern "C" {
             path[i][1] = vs->y;
             path[i][2] = vs->th1;
             path[i][3] = vs->th2;
+
+// REMOVE ------------------------------------------------------------ ->
+            //std::cout << "Path " << i << ": " << path[i][0] << " " << path[i][1] << " " << path[i][2] << " " << path[i][3] << " " << path[i][4] << std::endl;
+// <- ------------------------------------------------------------ REMOVE
         }
 
         delete vs;
         return path;
-
     }
 }
 

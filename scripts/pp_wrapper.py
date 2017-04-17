@@ -1,6 +1,7 @@
 # Python wrapper for pathplanner
 from ctypes import *
 import numpy as np
+from vehicleState import *
 
 lib = cdll.LoadLibrary('./libpp.so')
 
@@ -44,7 +45,17 @@ class PathPlannerCPP(object):
 
         result = lib.PP_getPath(self.obj, vs_array, ep_array, sep_array, max_exec_time, point_mod, theta_mod)
         path = []
+
         for i, vs in enumerate(result):
+            # REMOVE ------------------------------------------------------------ ->   Fortsatt felsoka har!
+            """
+            print vs[i]
+            print vs[i+1]
+            print vs[i+2]
+            print vs[i+3]
+            """
+            # <- ------------------------------------------------------------ REMOVE
             path.append(VehicleState(vs[i][0], vs[i][1], vs[i][2], vs[i][3]))
 
+        print "test"
         return path
