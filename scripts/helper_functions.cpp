@@ -58,7 +58,6 @@ VehicleState *rounding(VehicleState *vs,double modPoint,double modTheta){
 
     double x = vs->x;
     double m_x = fmod(x, modPoint);
-    std::cout << "fmod, x: " << m_x <<std::endl;
     if (m_x >= modPoint/2){   //round up
         x = x - m_x + modPoint;
     } else{                   //round down
@@ -122,4 +121,3 @@ int main(){
 // int main() {}
 
 // g++ -o main helper_functions.cpp track_checker.cpp vehicleState.cpp model.cpp error_calc.cpp Point.cpp -std=gnu++11
-

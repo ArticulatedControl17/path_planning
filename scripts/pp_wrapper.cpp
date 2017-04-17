@@ -4,15 +4,20 @@
 
 extern "C" {
 
-    PathPlanner * PP_new(int *matrix) { return new PathPlanner(matrix); }
-    void PP_setMap(PathPlanner * pp, int *matrix) { pp->setMap(matrix); }
+    PathPlanner * PP_new(int *matrix) {
+        std::cout << "CONSTRUCTOR" << std::endl;
+        return new PathPlanner(matrix);
+    }
+    void PP_setMap(PathPlanner * pp, int *matrix) { std::cout << "SET MAP" << std::endl; pp->setMap(matrix); }
 
     bool PP_checkIfInTrack(PathPlanner * pp, double *vs_arr) {
+        std::cout << "CHECK IF IN TRACK" << std::endl;
         VehicleState *vs = new VehicleState(vs_arr[0], vs_arr[1], vs_arr[2], vs_arr[3]);
-        return pp->checkIfInTrack(vs); 
+        return pp->checkIfInTrack(vs);
     }
 
     void PP_setOptimalPath(PathPlanner * pp, double *path_arr, int n) {
+        std::cout << "SET OPT PP" << std::endl;
         std::list<Point *> path = {};
 
         for (int i = 0; i < n; i++) {
@@ -42,10 +47,11 @@ extern "C" {
     }
 
     double ** PP_getPath(PathPlanner * pp, double *vs_arr, double *ep_arr, double *sep_arr, double max_time, double pm, double tm) {
+        std::cout << "GET PATH PP" << std::endl;
         VehicleState *vs = new VehicleState(vs_arr[0], vs_arr[1], vs_arr[2], vs_arr[3]);
         Point *ep = new Point(ep_arr[0], ep_arr[1]);
         Point *sep = new Point(sep_arr[0], sep_arr[1]);
-        
+
         std::list<VehicleState *> result = pp->getPath(vs, ep, sep, max_time, pm, tm);
         int size = result.size();
 

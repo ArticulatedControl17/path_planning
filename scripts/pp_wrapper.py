@@ -47,4 +47,3 @@ class PathPlannerCPP(object):
             path.append(VehicleState(vs[i][0], vs[i][1], vs[i][2], vs[i][3]))
 
         return path
-

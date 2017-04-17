@@ -2,13 +2,16 @@
 
 
 PathPlanner::PathPlanner(int *map){
+    std::cout << "in constructor" << std::endl;
     track_checker = new TrackChecker(map);
+    std::cout << "end constructor" << std::endl;
     //visited_pub = n.advertise<custom_msgs::Position>("visited_node", 1000);
     //to_visit_pub = n.advertise<custom_msgs::Position>("to_visit_node", 1000);
 }
 
 std::list<VehicleState*> PathPlanner::getPath(VehicleState *startVs, Point *endPoint, Point *secondEndPoint
     , double MAX_EXECUTION_TIME, double modPoint, double modTheta){
+    std::cout << "in getPath" << std::endl;
 
     //TODO: add recalculate_path
     theta1 = startVs->th1;
@@ -17,6 +20,7 @@ std::list<VehicleState*> PathPlanner::getPath(VehicleState *startVs, Point *endP
     back_ec = new ErrorCalc(optimalPath);
     pos = new Point(startVs->x, startVs->y);
     Point * startPoint = new Point(startVs->x, startVs->y);
+
 
     addPossiblePathes(true);
 
@@ -52,6 +56,8 @@ std::list<VehicleState*> PathPlanner::getPath(VehicleState *startVs, Point *endP
         front_ec = new_visit->front_ec;
         back_ec = new_visit->back_ec;
         delete new_visit;
+
+        std::cout << "visiting x: " << pos->x << "y: " << pos->y << std::endl;
 
         double dist = sqrt((endPoint->x - pos->x)*(endPoint->x - pos->x) + (endPoint->y - pos->y)*(endPoint->y - pos->y));
         if(front_ec->isAboveEnd(secondEndPoint,endPoint, pos->x, pos->y) && dist <1*dt && front_ec->isAtEnd()){ //checks if we are above a line of the two last points
@@ -100,8 +106,7 @@ std::list<VehicleState*> PathPlanner::getPath(VehicleState *startVs, Point *endP
 }
 
 void PathPlanner::addPossiblePathes(bool leftFirst){
-    //TODO: Deconstruct created objects
-
+    //TODO: Crashing in this method somewhere, segmation fault
 
     double dd = speed * dt;
     //add all possible pathes from pos, theta1 and theta2
@@ -140,12 +145,16 @@ void PathPlanner::addPossiblePathes(bool leftFirst){
         InTrack *right_it = track_checker->checkIfInTrack(pos, theta1, theta2, right_point, right_vs->th1, right_vs->th2, front_ec, back_ec);
         if (right_it->in_track){
             addState(right_point, right_vs->th1, right_vs->th2, right_it->error);
-        } else {delete right_point;}
+        } else {
+            delete right_point;
+        }
         //Left
         InTrack * left_it = track_checker->checkIfInTrack(pos, theta1, theta2, left_point, left_vs->th1, left_vs->th2, front_ec, back_ec);
         if (left_it->in_track){
             addState(left_point, left_vs->th1, left_vs->th2, left_it->error);
-        } else {delete left_point;}
+        } else {
+            delete left_point;
+        }
     } else {
         //Left
         InTrack * left_it = track_checker->checkIfInTrack(pos, theta1, theta2, left_point, left_vs->th1, left_vs->th2, front_ec, back_ec);
@@ -234,11 +243,13 @@ void PathPlanner::addState(Point *point, double th1, double th2, double error){
 }
 
 void PathPlanner::setOptimalpath(std::list<Point*> path){
+    //std::cout << "SET OPTIMAL PATH C++" << std::endl;
     optimalPath = path;
-    delete front_ec;
-    delete back_ec;
+    //delete front_ec;
+    //delete back_ec;
     front_ec = new ErrorCalc(path);
     back_ec = new ErrorCalc(path);
+    //std::cout << "END SET OPTIMAL PATH C++" << std::endl;
 }
 
 void PathPlanner::setMap(int *mat){

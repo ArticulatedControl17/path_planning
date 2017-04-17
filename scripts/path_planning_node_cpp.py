@@ -127,7 +127,7 @@ class PathPlanningNode:
 
         coords = [(101, 765), (358, 535)]
         vehicle_state = VehicleState(237, 869, radians(180), 0)
-    
+
         path, indexes = refpath_obj.getRefPath(vehicle_state, coords)
         self.pathplanner.setOptimalPath(path)
 
@@ -445,7 +445,9 @@ class PathPlanningNode:
                 s = self.current_start_state
                 print s.x, s.y, s.theta1, s.theta2
                 self.wait_for_map_update = False
-                self.pathplanner.setOptimalpath(self.refpath[self.i:self.i + sub_target])
+                print "Before setOptimalPath"
+                self.pathplanner.setOptimalPath(self.refpath[self.i:self.i + sub_target])
+                print "After setOptimalPath"
 
 
                 if self.first:
@@ -491,7 +493,7 @@ class PathPlanningNode:
                             op = self.refpath[k-25: self.i + sub_target]
                             if len(op) < 3:
                                 op = self.refpath
-                        self.pathplanner.setOptimalpath(op)
+                        self.pathplanner.setOptimalPath(op)
 
                         sp = Position(self.current_start_state.x * self.scale, self.current_start_state.y * self.scale)
 
@@ -586,7 +588,7 @@ class PathPlanningNode:
 
                                 diff = len(newref) - len(self.refpath)
 
-                                self.pathplanner.setOptimalpath(newref[self.i:self.i + sub_target + diff])
+                                self.pathplanner.setOptimalPath(newref[self.i:self.i + sub_target + diff])
                                 #self.pathplanner.setOptimalpath(newref)
 
 

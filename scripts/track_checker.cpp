@@ -203,12 +203,11 @@ double TrackChecker::getError(Point *truck_point, Point *prev_point, double erro
     for(std::vector<Point *>::iterator it = between.begin(); it != between.end(); ++it) {
         if (not isAllowed(*it)) {
             result = INF;
+        }else {
+            if (map[int((*it)->y)][int((*it)->x)] == 2) {
+                in_padding = true;
+            }
         }
-
-        if (map[int((*it)->y)][int((*it)->x)] == 2) {
-            in_padding = true;
-        }
-
         delete (*it);
     }
 
