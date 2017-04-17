@@ -65,17 +65,22 @@ class PathPlanner {
         TrackChecker * track_checker;
         double theta1;
         double theta2;
+
         ErrorCalc *front_ec;
         ErrorCalc *back_ec;
         Point *pos;
+        int path_size;
+
         std::list<Point*> optimalPath;
         std::stack<VehicleState_error*> toVisit;//stack of toVisit points
         std::unordered_set<VehicleState> visited;
         std::unordered_map<Point , VehicleState_error> fromPoints; //Map of fromPoints
+
         void addPossiblePathes(bool leftFirst);
         std::list<VehicleState*> gatherPath(Point *startPoint, Point *endPoint, double end_theta1, double end_theta2);
         double gatherError(Point *startPoint, Point *endPoint);
         void addState(Point *point, double th1, double th2, double error);
+
     public:
         PathPlanner(int *mat);
         std::list<VehicleState*> getPath(VehicleState *startVs, Point *endPoint, Point *secondEndPoint

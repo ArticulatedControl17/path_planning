@@ -43,19 +43,11 @@ class PathPlannerCPP(object):
         ep_array = np.array([end_point[0], end_point[1]]).astype(c_double).ctypes.data_as(POINTER(c_double))
         sep_array = np.array([snd_end_point[0], snd_end_point[1]]).astype(c_double).ctypes.data_as(POINTER(c_double))
 
-        result = lib.PP_getPath(self.obj, vs_array, ep_array, sep_array, max_exec_time, point_mod, theta_mod)
+        res = lib.PP_getPath(self.obj, vs_array, ep_array, sep_array, max_exec_time, point_mod, theta_mod)
+        res_size = lib.PP_getPathSize(self.obj)
         path = []
 
-        for i, vs in enumerate(result):
-            # REMOVE ------------------------------------------------------------ ->   Fortsatt felsoka har!
-            """
-            print vs[i]
-            print vs[i+1]
-            print vs[i+2]
-            print vs[i+3]
-            """
-            # <- ------------------------------------------------------------ REMOVE
-            path.append(VehicleState(vs[i][0], vs[i][1], vs[i][2], vs[i][3]))
+        for i in range (res_size):
+            path.append(VehicleState(res[i][0], res[i][1], res[i][2], res[i][3]))
 
-        print "test"
         return path

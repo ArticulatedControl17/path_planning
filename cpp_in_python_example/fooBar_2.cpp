@@ -64,9 +64,9 @@ extern "C" {
 
 /*
 
-g++ -c -std=c++11 -fPIC fooBar.cpp
-g++ -std=c++11 -fPIC fooBar.cpp
-g++ -shared -Wl,-soname,libfb.so -o libfb.so fooBar.o
-./test_fb.py
+g++ -c -std=c++11 -fPIC fooBar_2.cpp
+g++ -std=c++11 -fPIC fooBar_2.cpp
+g++ -shared -Wl,-soname,libfb.so -o libfb.so fooBar_2.o
+./test_fb_2.py
 
 */

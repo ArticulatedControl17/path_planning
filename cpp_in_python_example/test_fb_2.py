@@ -14,9 +14,12 @@ if __name__ == '__main__':
     print matr_ret[0][0]
     print matr_ret[0][1]
     print matr_ret[0][2]
-    print matr_ret[0][3]
-    print matr_ret[0][4]
-    print matr_ret[0][5]
+    print matr_ret[1][0]
+    print matr_ret[1][1]
+    print matr_ret[1][2]
+    print matr_ret[2][0]
+    print matr_ret[2][1]
+    print matr_ret[2][2]
 
 
 

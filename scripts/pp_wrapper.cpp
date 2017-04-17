@@ -8,15 +8,15 @@ extern "C" {
         std::cout << "CONSTRUCTOR" << std::endl;
         return new PathPlanner(matrix);
     }
-    void PP_setMap(PathPlanner * pp, int *matrix) { std::cout << "SET MAP" << std::endl; pp->setMap(matrix); }
+    void PP_setMap(PathPlanner *pp, int *matrix) { std::cout << "SET MAP" << std::endl; pp->setMap(matrix); }
 
-    bool PP_checkIfInTrack(PathPlanner * pp, double *vs_arr) {
+    bool PP_checkIfInTrack(PathPlanner *pp, double *vs_arr) {
         std::cout << "CHECK IF IN TRACK" << std::endl;
         VehicleState *vs = new VehicleState(vs_arr[0], vs_arr[1], vs_arr[2], vs_arr[3]);
         return pp->checkIfInTrack(vs);
     }
 
-    void PP_setOptimalPath(PathPlanner * pp, double *path_arr, int n) {
+    void PP_setOptimalPath(PathPlanner *pp, double *path_arr, int n) {
         std::cout << "SET OPT PP" << std::endl;
         std::list<Point *> path = {};
 
@@ -46,7 +46,7 @@ extern "C" {
 // <- ------------------------------------------------------------ REMOVE
     }
 
-    double ** PP_getPath(PathPlanner * pp, double *vs_arr, double *ep_arr, double *sep_arr, double max_time, double pm, double tm) {
+    double ** PP_getPath(PathPlanner *pp, double *vs_arr, double *ep_arr, double *sep_arr, double max_time, double pm, double tm) {
         std::cout << "GET PATH PP" << std::endl;
         VehicleState *vs = new VehicleState(vs_arr[0], vs_arr[1], vs_arr[2], vs_arr[3]);
         Point *ep = new Point(ep_arr[0], ep_arr[1]);
@@ -76,15 +76,14 @@ extern "C" {
             path[i][1] = vs->y;
             path[i][2] = vs->th1;
             path[i][3] = vs->th2;
-
-// REMOVE ------------------------------------------------------------ ->
-            //std::cout << "Path " << i << ": " << path[i][0] << " " << path[i][1] << " " << path[i][2] << " " << path[i][3] << " " << path[i][4] << std::endl;
-// <- ------------------------------------------------------------ REMOVE
         }
 
         delete vs;
+        pp->path_size = size;
         return path;
     }
+
+    int PP_getPathSize(PathPlanner *pp) { return pp->path_size; }
 }
 
 

@@ -104,8 +104,8 @@ class PathPlanningNode:
 
         # REMOVE ------------------------------------------------------------ ->
         """
-        print "[200][200]:", self.map[200][200]
-        print "[400][200]:", self.map[400][200]
+        print "[0][0]: ", self.map[0][0]
+        print "[964][489]: ", self.map[964][489]
 
         self.map[200][200] = 5
         self.pathplanner.setMap(self.map)
@@ -132,6 +132,9 @@ class PathPlanningNode:
         self.pathplanner.setOptimalPath(path)
 
         path = self.pathplanner.getPath(vehicle_state, path[:-1], path[:-2], 6, 6, 0.6)
+
+        for vs in path:
+            print vs.x, vs.y, vs.theta1, vs.theta2
         """
         # <- ------------------------------------------------------------ REMOVE
 
