@@ -32,9 +32,9 @@ double ErrorCalc::calculateError(double x, double y){
 bool ErrorCalc::isAboveEnd(Point *pbegin, Point *pend, double x, double y){
     //checks if a point is passed the end point of a line.
     if (pbegin->x - pend->x !=0 && pbegin->y - pend->y !=0){
-        double slope = pbegin->y - pend->y / pbegin->x - pend->x;
+        double slope = (pbegin->y - pend->y) / (pbegin->x - pend->x);
         double prependularSlope = (-1)/slope;
-        double prependularM = pend->y - pend->y * prependularSlope;
+        double prependularM = pend->y - pend->x * prependularSlope;
         if(pbegin->y < pend->y){
             //going up
             return (x*prependularSlope + prependularM - y) < 0;
@@ -87,7 +87,7 @@ double ErrorCalc::getMaxDistPoint(Point *point){
                 + (point->y - pp2->y) * (point->y - pp2->y) );
     double d0 = sqrt( (point->x - pp1->x) * (point->x - pp1->x)
                 + (point->y - pp1->y) * (point->y - pp1->y) );
-    return std::max(d1,d0);
+    return std::min(d1,d0);
 
 }
 

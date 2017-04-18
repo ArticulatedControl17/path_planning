@@ -30,7 +30,10 @@ std::list<VehicleState*> PathPlanner::getPath(VehicleState *startVs, Point *endP
         //loop until all possible nodes have been visited
         while(1){
             if(toVisit.size()== 0){
-                break;
+                //No solution found
+                std::cout << "no soluton found" << std::endl;
+                std::list<VehicleState*> *ret = new std::list<VehicleState*>();
+                return *ret;
             }
             new_visit = toVisit.top();
             toVisit.pop();
