@@ -30,6 +30,7 @@ TrackChecker::TrackChecker(int *map_) {
     }
 
 // REMOVE ------------------------------------------------------------ ->
+    std::cout << "CPP [447][143]: " << map[447][143] << std::endl;
     /*
     std::cout << "[0][0]: " << map[0][0] << std::endl;
     std::cout << "[964][489]: " << map[964][489] << std::endl;
@@ -203,7 +204,7 @@ double TrackChecker::getError(Point *truck_point, Point *prev_point, double erro
     for(std::vector<Point *>::iterator it = between.begin(); it != between.end(); ++it) {
         if (not isAllowed(*it)) {
             result = INF;
-        }else {
+        } else {
             if (map[int((*it)->y)][int((*it)->x)] == 2) {
                 in_padding = true;
             }

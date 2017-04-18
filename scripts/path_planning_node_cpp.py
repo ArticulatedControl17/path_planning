@@ -104,10 +104,10 @@ class PathPlanningNode:
 
         # REMOVE ------------------------------------------------------------ ->
         """
-        print "[0][0]: ", self.map[0][0]
-        print "[964][489]: ", self.map[964][489]
+        #print "[0][0]: ", self.map[0][0]
+        #print "[964][489]: ", self.map[964][489]
 
-        self.map[200][200] = 5
+        #self.map[200][200] = 5
         self.pathplanner.setMap(self.map)
 
         vs = VehicleState(200, 200, 0, 0)

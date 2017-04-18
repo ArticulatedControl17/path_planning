@@ -6,7 +6,7 @@
 
 
 // Converting from degrees to radians
-float radians(float degrees) {
+double radians(double degrees) {
     return degrees * M_PI / 180;
 }
 
