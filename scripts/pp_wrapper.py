@@ -43,18 +43,10 @@ class PathPlannerCPP(object):
         ep_array = [end_point[0], end_point[1]]
         sep_array = [snd_end_point[0], snd_end_point[1]]
         data_array = np.array(vs_array + ep_array + sep_array).astype(c_double).ctypes.data_as(POINTER(c_double))
-        
+
         # REMOVE ------------------------------------------------------------ ->
         """
-        print "== vehicle state:", str(vs.x) + ",", str(vs.y) + ",", str(vs.theta1) + ",", vs.theta2 
-        print "== end point:", end_point
-        print "== second end point:", snd_end_point
-        evs_array = np.array([vs.x + 1, vs.y + 1, vs.theta1 + 1, vs.theta2 + 1]).astype(c_double).ctypes.data_as(POINTER(c_double))
-        print "== vehicle state2:", str(evs_array[0]) + ",", str(evs_array[1]) + ",", str(evs_array[2]) + ",", evs_array[3] 
-        print "== ", str(ep_array[0]) + ", ", ep_array[1]
-        print "== ", str(sep_array[0]) + ", ", sep_array[1]
-        print "== end point:", end_point, "==", end_point[0], end_point[1]
-        print "== second end point:", snd_end_point, "==", snd_end_point[0], snd_end_point[1]
+        test = np.array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]).astype(c_double).ctypes.data_as(POINTER(c_double))
         """
         # <- ------------------------------------------------------------ REMOVE
 
