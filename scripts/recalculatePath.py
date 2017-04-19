@@ -22,9 +22,6 @@ class recalculatePath:
         #GOOD values for revisiting nodes if error is less than previous visit.
         #self.modPoint = 2
         #self.modTheta = 0.5
-        self.start_theta1 = theta1
-        self.start_theta2 = theta2
-        self.start_err = front_ec.calculateError(startPoint)
         self.errorList = {}
 
         self.theta1 = theta1 #start angle for header
@@ -42,6 +39,7 @@ class recalculatePath:
         self.fromPoints = {}
         self.toVisit = []
         self.visited = set([]) #the points we have visited
+
         #add all possible pathes for the first point before looping
         self.addPossiblePathes()
 

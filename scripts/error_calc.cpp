@@ -16,7 +16,7 @@ double ErrorCalc::calculateError(double x, double y){
         pp1 = pp2;
         pp2 = queue.front();
         queue.pop_front();
-  }
+    }
     //decides if the error is to the left of centerline or not
     bool isLeft = ((pp2->x - pp1->x) * (y - pp1->y) - (pp2->y - pp1->y) * (x - pp1->x)) >0;
     double value = abs((pp2->x - pp1->x)*(pp1->y - y ) - (pp1->x-x) * (pp2->y - pp1->y))

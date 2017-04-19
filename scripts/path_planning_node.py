@@ -417,7 +417,7 @@ class PathPlanningNode:
 
 
                 if self.first:
-                    path = self.pathplanner.getPath(self.current_start_state, g, g2, 6, 6, 0.6)
+                    path = self.pathplanner.getPath(self.current_start_state, g, g2, 6, 3, 0.3)
 
 
                 else:
@@ -565,10 +565,10 @@ class PathPlanningNode:
 
 
                                 self.wait_for_map_update = False
-                                newpath = self.pathplanner.getPath(self.current_start_state, g, g2, 1.5, 8, 0.5)
+                                newpath = self.pathplanner.getPath(self.current_start_state, g, g2, 1.5, 3, 0.3)
                                 while self.wait_for_map_update:
                                     self.wait_for_map_update = False
-                                    newpath = self.pathplanner.getPath(self.current_start_state, g, g2, 1.5, 8, 0.5)
+                                    newpath = self.pathplanner.getPath(self.current_start_state, g, g2, 1.5, 3, 0.3)
 
 
                                 if newpath != []:

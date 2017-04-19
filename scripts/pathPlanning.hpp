@@ -1,7 +1,9 @@
+#include "recalculatePath.hpp"
+
+//#include "vehicleState_error.hpp"
 #include "Point.hpp"
 #include "track_checker.hpp"
 #include "vehicleState.hpp"
-#include "vehicleState_error.hpp"
 #include "helper_functions.hpp"
 #include <unordered_map>
 #include <stack>
@@ -11,46 +13,6 @@
 #include <math.h>
 //#include "ros/ros.h"
 //#include "custom_msgs/Position.h"
-
-namespace std {
-
-    template <>
-    struct hash<Point>
-    {
-      std::size_t operator()(const Point& k) const
-      {
-        using std::size_t;
-        using std::hash;
-
-        // Compute individual hash values for first,
-        // second and third and combine them using XOR
-        // and bit shifting:
-
-        return (hash<double>()(k.x)
-                 ^ (hash<double>()(k.y) << 1));
-      }
-    };
-}
-namespace std {
-    template <>
-    struct hash<VehicleState>
-    {
-      std::size_t operator()(const VehicleState& k) const
-      {
-        using std::size_t;
-        using std::hash;
-
-        // Compute individual hash values for first,
-        // second and third and combine them using XOR
-        // and bit shifting:
-
-        return (((hash<double>()(k.x)
-                 ^ (hash<double>()(k.y) << 1)
-                 ^ hash<double>()(k.th1) << 1)
-                 ^ hash<double>()(k.th2) << 1));
-      }
-    };
-}
 
 
 class PathPlanner {
@@ -72,9 +34,9 @@ class PathPlanner {
         int path_size;
 
         std::list<Point*> optimalPath;
-        std::stack<VehicleState_error*> toVisit;//stack of toVisit points
-        std::unordered_set<VehicleState> visited;
-        std::unordered_map<Point , VehicleState_error> fromPoints; //Map of fromPoints
+        std::stack<VehicleState_error*>* toVisit;//stack of toVisit points
+        std::unordered_set<VehicleState>* visited;
+        std::unordered_map<Point , VehicleState_error>* fromPoints; //Map of fromPoints
 
         void addPossiblePathes(bool leftFirst);
         std::list<VehicleState*> gatherPath(Point *startPoint, Point *endPoint, double end_theta1, double end_theta2);

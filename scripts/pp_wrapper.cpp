@@ -8,6 +8,7 @@ extern "C" {
         std::cout << "CONSTRUCTOR" << std::endl;
         return new PathPlanner(matrix);
     }
+    
     void PP_setMap(PathPlanner *pp, int *matrix) { std::cout << "SET MAP" << std::endl; pp->setMap(matrix); }
 
     bool PP_checkIfInTrack(PathPlanner *pp, double *vs_arr) {

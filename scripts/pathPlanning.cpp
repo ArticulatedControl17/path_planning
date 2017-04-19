@@ -13,7 +13,6 @@ std::list<VehicleState*> PathPlanner::getPath(VehicleState *startVs, Point *endP
     , double MAX_EXECUTION_TIME, double modPoint, double modTheta){
     std::cout << "in getPath" << std::endl;
 
-    //TODO: add recalculate_path
     theta1 = startVs->th1;
     theta2 = startVs->th2;
     front_ec = new ErrorCalc(optimalPath);
@@ -21,30 +20,35 @@ std::list<VehicleState*> PathPlanner::getPath(VehicleState *startVs, Point *endP
     pos = new Point(startVs->x, startVs->y);
     Point * startPoint = new Point(startVs->x, startVs->y);
 
+    //Reset path's
+    //TODO: Remove before finishing
+    toVisit = new std::stack<VehicleState_error*>();
+    visited = new std::unordered_set<VehicleState>();
+    fromPoints = new std::unordered_map<Point , VehicleState_error>();
 
     addPossiblePathes(true);
 
     //TODO: add rospy and time condition
-    while(toVisit.size()>0){
+    while(toVisit->size()>0){
         VehicleState_error *new_visit;
         //loop until all possible nodes have been visited
         while(1){
-            if(toVisit.size()== 0){
+            if(toVisit->size()== 0){
                 //No solution found
                 std::cout << "no soluton found" << std::endl;
                 std::list<VehicleState*> *ret = new std::list<VehicleState*>();
                 return *ret;
             }
-            new_visit = toVisit.top();
-            toVisit.pop();
+            new_visit = toVisit->top();
+            toVisit->pop();
             //msg.x = new_visit->vs->x;
             //msg.y = new_visit->vs->y;
             //visited_pub.publish(msg);
             //round to not having to visit every mm, to make it faster
             VehicleState *rounded_vs = rounding(new_visit->vs, modPoint, modTheta);
             //TODO: probably gonna compare on the reference, not the values
-            auto iter = visited.find(*rounded_vs);
-            if( iter == visited.end()){
+            auto iter = visited->find(*rounded_vs);
+            if( iter == visited->end()){
                 break;
             }
             else{
@@ -60,7 +64,7 @@ std::list<VehicleState*> PathPlanner::getPath(VehicleState *startVs, Point *endP
         back_ec = new_visit->back_ec;
         delete new_visit;
 
-        std::cout << "visiting x: " << pos->x << "y: " << pos->y << std::endl;
+        //std::cout << "visiting x: " << pos->x << "y: " << pos->y << std::endl;
 
         double dist = sqrt((endPoint->x - pos->x)*(endPoint->x - pos->x) + (endPoint->y - pos->y)*(endPoint->y - pos->y));
         if(front_ec->isAboveEnd(secondEndPoint,endPoint, pos->x, pos->y) && dist <1*dt && front_ec->isAtEnd()){ //checks if we are above a line of the two last points
@@ -70,14 +74,13 @@ std::list<VehicleState*> PathPlanner::getPath(VehicleState *startVs, Point *endP
             double totError = gatherError(startPoint, pos);
             //Gather a new optimized path
             //return self.gatherPath(Point(vs.x, vs.y), endPoint,self.theta1, self.theta2)
-            //TODO: add recalcpath
-            //std::list<Point*> path = recalculate_path->calculate_path(new Point(vs->x, vs->y), secondEndPoint, endPoint, dt, vs->theta1, vs->theta2, totError, new ErrorCalc(optimal_path), modPoint, modTheta);
-            //part = self.recalculate_path.calculate_path(Point(vs.x, vs.y), secondEndPoint, endPoint, self.dt, vs.theta1, vs.theta2, totError, error_calc.errorCalc(self.optimal_path))
-            //if part == []{
-            return gatherPath( startPoint, endPoint, theta1, theta2);
-            //} else {
-            //    return part;
-            //}
+            RecalculatePath *recalculate_path = new RecalculatePath(track_checker);
+            std::list<VehicleState*> path = recalculate_path->calculate_path(startVs, endPoint, secondEndPoint, totError, new ErrorCalc(optimalPath), modPoint, modTheta);
+            if(path.size()==0){
+                return gatherPath( startPoint, endPoint, theta1, theta2);
+            } else {
+                return path;
+            }
             //TODO: Destoy all created objects before return?
         } else {
             //we have not yet found a solution, search for new possible nodes
@@ -99,7 +102,7 @@ std::list<VehicleState*> PathPlanner::getPath(VehicleState *startVs, Point *endP
             delete in_r_vs;
             //mark the previous node/state as visited
             //TODO: add the pointer? will that work?
-            visited.insert(*rounded_vs);
+            visited->insert(*rounded_vs);
         }
     }
     std::cout << "no soluton found" << std::endl;
@@ -109,7 +112,6 @@ std::list<VehicleState*> PathPlanner::getPath(VehicleState *startVs, Point *endP
 }
 
 void PathPlanner::addPossiblePathes(bool leftFirst){
-    //TODO: Crashing in this method somewhere, segmation fault
 
     double dd = speed * dt;
     //add all possible pathes from pos, theta1 and theta2
@@ -139,7 +141,9 @@ void PathPlanner::addPossiblePathes(bool leftFirst){
     InTrack * strait_it = track_checker->checkIfInTrack(pos, theta1, theta2, strait_point, strait_vs->th1, strait_vs->th2, front_ec, back_ec);
     if (strait_it->in_track){
         addState(strait_point, strait_vs->th1, strait_vs->th2, strait_it->error);
-    }else { delete strait_point;}
+    }else {
+        delete strait_point;
+    }
     delete strait_vs;
     Point *right_point = new Point(right_vs->x, right_vs->y);
     Point *left_point = new Point(left_vs->x, left_vs->y);
@@ -183,6 +187,7 @@ void PathPlanner::addPossiblePathes(bool leftFirst){
     Point *optimal_point = new Point(optimal_vs->x, optimal_vs->y);
     InTrack * optimal_it = track_checker->checkIfInTrack(pos, theta1, theta2, optimal_point, optimal_vs->th1, optimal_vs->th2, front_ec, back_ec);
     if(optimal_it->in_track){
+        std::cout << "optimal error: " << optimal_it->error << std::endl;
         addState(optimal_point, optimal_vs->th1, optimal_vs->th2, optimal_it->error);
     } else {delete optimal_point;}
     delete optimal_vs;
@@ -190,8 +195,6 @@ void PathPlanner::addPossiblePathes(bool leftFirst){
 
 std::list<VehicleState*> PathPlanner::gatherPath(Point *startPoint, Point *endPoint, double end_theta1, double end_theta2){
     std::list<VehicleState*> path;
-    //TODO: fix lookuptables
-    //TODO: not needed?
     //fromPoints.insert({*endPoint, new VehicleState(pos->x, pos->y, theta1, theta2)});
     double prex = pos->x;
     double prey = pos->y;
@@ -202,7 +205,7 @@ std::list<VehicleState*> PathPlanner::gatherPath(Point *startPoint, Point *endPo
         path.push_front(new VehicleState(prex, prey, pret1, pret2));
         //TODO: fix lookuptables
         f_point = new Point(prex,prey);
-        auto iter = fromPoints.find(*f_point);
+        auto iter = fromPoints->find(*f_point);
         VehicleState_error vs_er = iter->second;
         prex=vs_er.vs->x;
         prey=vs_er.vs->y;
@@ -220,7 +223,7 @@ double PathPlanner::gatherError(Point *startPoint, Point *endPoint){
     Point *f_point;
     while (!(prex== startPoint->x && prey == startPoint->y)){
         f_point = new Point(prex,prey);
-        auto iter = fromPoints.find(*f_point);
+        auto iter = fromPoints->find(*f_point);
         VehicleState_error vs_er = iter->second;
         prex=vs_er.vs->x;
         prey=vs_er.vs->y;
@@ -232,13 +235,11 @@ double PathPlanner::gatherError(Point *startPoint, Point *endPoint){
 
 void PathPlanner::addState(Point *point, double th1, double th2, double error){
     //add the vector as an adjacent vector to the previous vector in the graph
-    //TODO: fix dict function
     //TODO: shuld not be same error for fromPoint and toVisit?
-    //TODO: errorcalc copys not needed in fromPoints
     VehicleState_error * vs = new VehicleState_error(new VehicleState(pos->x, pos->y, theta1, theta2), error, front_ec->getCopy(), back_ec->getCopy());
-    fromPoints.insert({*point, *vs});
+    fromPoints->insert({*point, *vs});
     VehicleState_error * vs_to = new VehicleState_error(new VehicleState(point->x, point->y, th1, th2), error, front_ec->getCopy(), back_ec->getCopy());
-    toVisit.push(vs_to);
+    toVisit->push(vs_to);
 
     //msg.x = point->x;
     //msg.y = point->y;

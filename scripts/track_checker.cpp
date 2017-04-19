@@ -30,6 +30,7 @@ TrackChecker::TrackChecker(int *map_) {
     }
 
 // REMOVE ------------------------------------------------------------ ->
+    std::cout << "CPP [447][143]: " << map[447][143] << std::endl;
     /*
     std::cout << "[0][0]: " << map[0][0] << std::endl;
     std::cout << "[964][489]: " << map[964][489] << std::endl;
@@ -97,7 +98,6 @@ InTrack * TrackChecker::checkIfInTrack(Point *prevPoint, double prevth1, double 
     if (not isAllowed(toPoint)) {
         return new InTrack(false, -1.0);
     }
-
     Truck *prev = new Truck();
     prev->setCorners(prevPoint, prevth1, prevth2);
     truck->setCorners(toPoint, th1, th2);
@@ -155,6 +155,8 @@ InTrack * TrackChecker::checkIfInTrack(Point *prevPoint, double prevth1, double 
     double tot_error = abs(right_front_err) + abs(left_front_err) + abs(right_back_wheel_err) + abs(left_back_wheel_err);
     delete prev;
     return new InTrack(true, tot_error);
+
+    std::cout << "17" << std::endl;
 }
 
 
@@ -183,11 +185,10 @@ bool TrackChecker::isAllowed(Point *point) {
     // Outside the map
     if (point->x < 0 or point->y < 0 or point->x >= MAP_WIDTH or point->y >= MAP_HEIGHT) {
         return false;
-
-        // In black area
-        if (map[int(point->y)][int(point->x)] == 0) {
-            return false;
-        }
+    }
+    // In black area
+    if (map[int(point->y)][int(point->x)] == 0) {
+        return false;
     }
 
     return true;
@@ -203,7 +204,7 @@ double TrackChecker::getError(Point *truck_point, Point *prev_point, double erro
     for(std::vector<Point *>::iterator it = between.begin(); it != between.end(); ++it) {
         if (not isAllowed(*it)) {
             result = INF;
-        }else {
+        } else {
             if (map[int((*it)->y)][int((*it)->x)] == 2) {
                 in_padding = true;
             }
