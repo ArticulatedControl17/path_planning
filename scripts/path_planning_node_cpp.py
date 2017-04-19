@@ -104,21 +104,7 @@ class PathPlanningNode:
 
         # REMOVE ------------------------------------------------------------ ->
         """
-        #print "[0][0]: ", self.map[0][0]
-        #print "[964][489]: ", self.map[964][489]
-
-        #self.map[200][200] = 5
         self.pathplanner.setMap(self.map)
-
-        vs = VehicleState(200, 200, 0, 0)
-        res = self.pathplanner.checkIfInTrack(vs)
-        print '\n', "(200, 200, 0, 0):", res
-
-        if (res):
-            print "proper bool"
-
-        vs = VehicleState(10, 10, 0, 0)
-        print "(10, 10, 0, 0):", self.pathplanner.checkIfInTrack(vs), '\n'
 
         path = [(20, 20), (30, 30), (40, 40), (50, 50)]
         self.pathplanner.setOptimalPath(path)
@@ -131,10 +117,7 @@ class PathPlanningNode:
         path, indexes = refpath_obj.getRefPath(vehicle_state, coords)
         self.pathplanner.setOptimalPath(path)
 
-        path = self.pathplanner.getPath(vehicle_state, path[:-1], path[:-2], 6, 6, 0.6)
-
-        for vs in path:
-            print vs.x, vs.y, vs.theta1, vs.theta2
+        path = self.pathplanner.getPath(vehicle_state, path[-1], path[-2], 6, 6, 0.6)
         """
         # <- ------------------------------------------------------------ REMOVE
 
