@@ -80,7 +80,7 @@ std::list<VehicleState*> RecalculatePath::calculate_path(VehicleState *startVs, 
             VehicleState *check_vs = calculate_steering(radians(MAX_LEFT_ANGLE), radians(MAX_RIGHT_ANGLE), dd, 10, 0, cur_vs, front_ec);
             delete cur_vs;
             double nerror = front_ec->calculateError(check_vs->x, check_vs->y);
-            if(abs(nerror)< 1 && totError < lowest_error){
+            if(fabs(nerror)< 1 && totError < lowest_error){
                 std::cout << "Found better solution, error: " << totError << std::endl;
                 Point *new_point = new Point(check_vs->x, check_vs->y);
                 Point *startPoint = new Point(startVs->x, startVs->y);
@@ -205,7 +205,7 @@ void RecalculatePath::addState(Point *point, double th1, double th2, double erro
     VehicleState *vs = new VehicleState(pos->x, pos->y, theta1, theta2);
     fromPoints->insert({*point, *vs});
     VehicleState_error *vs_to = new VehicleState_error(new VehicleState(point->x, point->y, th1, th2), error, front_ec->getCopy(), back_ec->getCopy());
-    double total_error = totError + abs(error);
+    double total_error = totError + fabs(error);
     vs_to->totError = total_error;
     toVisit->push(vs_to);
 

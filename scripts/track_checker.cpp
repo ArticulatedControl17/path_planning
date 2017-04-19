@@ -152,11 +152,10 @@ InTrack * TrackChecker::checkIfInTrack(Point *prevPoint, double prevth1, double 
         return new InTrack(false, -1.0);
     }
 
-    double tot_error = abs(right_front_err) + abs(left_front_err) + abs(right_back_wheel_err) + abs(left_back_wheel_err);
+    double tot_error = fabs(right_front_err) + fabs(left_front_err) + fabs(right_back_wheel_err) + fabs(left_back_wheel_err);
     delete prev;
     return new InTrack(true, tot_error);
 
-    std::cout << "17" << std::endl;
 }
 
 
@@ -213,12 +212,15 @@ double TrackChecker::getError(Point *truck_point, Point *prev_point, double erro
     }
 
     if (result != INF) {
-        if (abs(error) > LANE_WIDTH/2) {
+        if (fabs(error) > LANE_WIDTH/2) {
             result = error * OTHERLANE_WEIGHT;
         }
 
-        if (in_padding) {
-            result = (abs(error) + 20) * PADDING_WEIGHT;
+        else if (in_padding) {
+            result = (fabs(error) + 20) * PADDING_WEIGHT;
+        }
+        else{
+            result = error;
         }
     }
 
