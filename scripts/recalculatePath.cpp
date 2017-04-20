@@ -30,7 +30,11 @@ std::list<VehicleState*> RecalculatePath::calculate_path(VehicleState *startVs, 
     //add all possible pathes for the first point before looping
     addPossiblePathes();
 
+    int count =0;
+
     while(toVisit->size()>0){
+        count = count +1;
+        std::cout << "count" << count << std::endl;
         VehicleState_error *new_visit;
         //loop until all possible nodes have been visited
         while(1){
@@ -52,7 +56,7 @@ std::list<VehicleState*> RecalculatePath::calculate_path(VehicleState *startVs, 
 
             //visit the node if we haven't visited it before and we have not reached the upper bound, or visit if we reached same grid with lower error
             auto iter_visited = visited->find(*rounded_vs);
-            if((iter_visited == visited->end() && new_visit->totError < lowest_error) || prev_err > new_visit->totError){
+            if((iter_visited == visited->end() && new_visit->totError < lowest_error)){ //|| prev_err > new_visit->totError){
                 break;
             }
             else{
@@ -138,7 +142,7 @@ void RecalculatePath::addPossiblePathes(){
     //Left
     Point *left_point = new Point(left_vs->x, left_vs->y);
     InTrack * left_it = track_checker->checkIfInTrack(pos, theta1, theta2, left_point, left_vs->th1, left_vs->th2, front_ec, back_ec);
-    if(left_it->in_track && totError + left_it->error <= lowest_error){
+    if(left_it->in_track && totError + fabs(left_it->error) <= lowest_error){
         addState(left_point, left_vs->th1, left_vs->th2, left_it->error);
     } else {delete left_point;}
     delete left_vs;
@@ -146,7 +150,7 @@ void RecalculatePath::addPossiblePathes(){
     //Strait
     Point *strait_point = new Point(strait_vs->x, strait_vs->y);
     InTrack * strait_it = track_checker->checkIfInTrack(pos, theta1, theta2, strait_point, strait_vs->th1, strait_vs->th2, front_ec, back_ec);
-    if (strait_it->in_track && totError + strait_it->error <= lowest_error){
+    if (strait_it->in_track && totError + fabs(strait_it->error) <= lowest_error){
         addState(strait_point, strait_vs->th1, strait_vs->th2, strait_it->error);
     }else { delete strait_point;}
     delete strait_vs;
@@ -154,7 +158,7 @@ void RecalculatePath::addPossiblePathes(){
     //Right
     Point *right_point = new Point(right_vs->x, right_vs->y);
     InTrack *right_it = track_checker->checkIfInTrack(pos, theta1, theta2, right_point, right_vs->th1, right_vs->th2, front_ec, back_ec);
-    if(right_it->in_track && totError + right_it->error <= lowest_error){
+    if(right_it->in_track && totError + fabs(right_it->error) <= lowest_error){
         addState(right_point, right_vs->th1, right_vs->th2, right_it->error);
     }else {delete right_point;}
     delete right_vs;
@@ -162,7 +166,7 @@ void RecalculatePath::addPossiblePathes(){
     //Optimal outside turn
     Point *optimal_outside_point = new Point(optimal_outside_vs->x, optimal_outside_vs->y);
     InTrack * optimal_outside_it = track_checker->checkIfInTrack(pos, theta1, theta2, optimal_outside_point, optimal_outside_vs->th1, optimal_outside_vs->th2, front_ec, back_ec);
-    if (optimal_outside_it->in_track && totError + optimal_outside_it->error <= lowest_error){
+    if (optimal_outside_it->in_track && totError + fabs(optimal_outside_it->error) <= lowest_error){
         addState(optimal_outside_point, optimal_outside_vs->th1, optimal_outside_vs->th2, optimal_outside_it->error);
     } else {delete optimal_outside_point;}
     delete optimal_outside_vs;

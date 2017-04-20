@@ -51,6 +51,7 @@ class recalculatePath:
             while True:
                 if len(self.toVisit)==0:
                     print "reached End"
+                    print "end Count", count
                     print "lowest error: ", self.lowest_error
                     print "start error: ", totError
                     print "starPoint: ", startPoint.x, startPoint.y
@@ -61,7 +62,7 @@ class recalculatePath:
 
                 ((round_x, round_y), round_theta1, round_theta2) = rounding(x, y, t1, t2, self.modPoint, self.modTheta)
                 prev_err = self.errorList[((round_x, round_y), round_theta1, round_theta2)]
-                if (((round_x,round_y),round_theta1, round_theta2) not in self.visited and toterr < self.lowest_error) or prev_err>toterr:
+                if (((round_x,round_y),round_theta1, round_theta2) not in self.visited and toterr < self.lowest_error): #or prev_err>toterr:
                     break
             #found new node to visit
             self.pos = Point(x,y) # get the toPoint

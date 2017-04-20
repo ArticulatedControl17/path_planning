@@ -12,7 +12,7 @@ lib.PP_checkIfInTrack.argtypes = [c_int, POINTER(c_double)]
 lib.PP_checkIfInTrack.restype = c_bool
 
 lib.PP_setOptimalPath.argtypes = [c_int, POINTER(POINTER(c_double)), c_int]
-lib.PP_getPath.argtypes =[c_int, POINTER(c_double), POINTER(c_double), POINTER(c_double), c_double, c_double, c_double]
+lib.PP_getPath.argtypes =[c_int, POINTER(c_double), c_double, c_double, c_double]
 lib.PP_getPath.restype = POINTER(POINTER(c_double))
 
 
@@ -39,11 +39,18 @@ class PathPlannerCPP(object):
         lib.PP_setOptimalPath(self.obj, path_array_, len(path))
 
     def getPath(self, vs, end_point, snd_end_point, max_exec_time, point_mod, theta_mod):
-        vs_array = np.array([vs.x, vs.y, vs.theta1, vs.theta2]).astype(c_double).ctypes.data_as(POINTER(c_double))
-        ep_array = np.array([end_point[0], end_point[1]]).astype(c_double).ctypes.data_as(POINTER(c_double))
-        sep_array = np.array([snd_end_point[0], snd_end_point[1]]).astype(c_double).ctypes.data_as(POINTER(c_double))
+        vs_array = [vs.x, vs.y, vs.theta1, vs.theta2]
+        ep_array = [end_point[0], end_point[1]]
+        sep_array = [snd_end_point[0], snd_end_point[1]]
+        data_array = np.array(vs_array + ep_array + sep_array).astype(c_double).ctypes.data_as(POINTER(c_double))
 
-        res = lib.PP_getPath(self.obj, vs_array, ep_array, sep_array, max_exec_time, point_mod, theta_mod)
+        # REMOVE ------------------------------------------------------------ ->
+        """
+        test = np.array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]).astype(c_double).ctypes.data_as(POINTER(c_double))
+        """
+        # <- ------------------------------------------------------------ REMOVE
+
+        res = lib.PP_getPath(self.obj, data_array, max_exec_time, point_mod, theta_mod)
         res_size = lib.PP_getPathSize(self.obj)
         path = []
 

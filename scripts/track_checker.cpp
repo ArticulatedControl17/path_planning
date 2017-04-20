@@ -105,8 +105,8 @@ InTrack * TrackChecker::checkIfInTrack(Point *prevPoint, double prevth1, double 
     // Calculate average error for key wheels
     double right_front_err = front_ec->calculateError(truck->right_front->x, truck->right_front->y) - HEADER_WIDTH/2;
     double left_front_err = front_ec->calculateError(truck->left_front->x, truck->left_front->y) + HEADER_WIDTH/2;
-    double right_back_wheel_err = back_ec->calculateError(truck->right_back_wheel->x, truck->right_back_wheel->x) - TRAILER_WIDTH/2;
-    double left_back_wheel_err = back_ec->calculateError(truck->left_back_wheel->x, truck->left_back_wheel->x) + TRAILER_WIDTH/2;
+    double right_back_wheel_err = back_ec->calculateError(truck->right_back_wheel->x, truck->right_back_wheel->y) - TRAILER_WIDTH/2;
+    double left_back_wheel_err = back_ec->calculateError(truck->left_back_wheel->x, truck->left_back_wheel->y) + TRAILER_WIDTH/2;
 
     // Check right front
     right_front_err = getError(truck->right_front, prev->right_front, right_front_err);

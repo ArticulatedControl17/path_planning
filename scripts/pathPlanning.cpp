@@ -67,20 +67,13 @@ std::list<VehicleState*> PathPlanner::getPath(VehicleState *startVs, Point *endP
         //std::cout << "visiting x: " << pos->x << "y: " << pos->y << std::endl;
 
         double dist = sqrt((endPoint->x - pos->x)*(endPoint->x - pos->x) + (endPoint->y - pos->y)*(endPoint->y - pos->y));
-        std::cout << "secondEndPoint, x: " << secondEndPoint->x << "y: " << secondEndPoint->y << std::endl;
-        std::cout << "EndPoint, x: " << endPoint->x << "y: " << endPoint->y << std::endl;
-        std::cout << "dist: " << dist << std::endl;
-        std::cout << "isAbove end, snd->end: " << front_ec->isAboveEnd(secondEndPoint, endPoint, pos->x, pos->y) << std::endl;
-        std::cout << "isAbove end, end->snd: " << front_ec->isAboveEnd(endPoint, secondEndPoint, pos->x, pos->y) << std::endl;
-        std::cout << "isAtEnd: " << front_ec->isAtEnd() << std::endl;
         if(front_ec->isAboveEnd(secondEndPoint, endPoint, pos->x, pos->y) && dist <1*dt && front_ec->isAtEnd()){ //checks if we are above a line of the two last points
             //reached end, gather the path
             std::cout << "reached end, Gathering solution" << std::endl;
 
             double totError = gatherError(startPoint, pos);
-            std::cout << "totError" << totError << std::endl;
             //Gather a new optimized path
-            return gatherPath( startPoint, endPoint, theta1, theta2);
+            //return gatherPath( startPoint, endPoint, theta1, theta2);
             RecalculatePath *recalculate_path = new RecalculatePath(track_checker);
             std::list<VehicleState*> path = recalculate_path->calculate_path(startVs, endPoint, secondEndPoint, totError, new ErrorCalc(optimalPath), modPoint, modTheta);
             if(path.size()==0){
@@ -194,11 +187,8 @@ void PathPlanner::addPossiblePathes(bool leftFirst){
     Point *optimal_point = new Point(optimal_vs->x, optimal_vs->y);
     InTrack * optimal_it = track_checker->checkIfInTrack(pos, theta1, theta2, optimal_point, optimal_vs->th1, optimal_vs->th2, front_ec, back_ec);
     if(optimal_it->in_track){
-        std::cout << "optimal point: "  << optimal_point->x << "y: " << optimal_point->y << std::endl;
-        std::cout << "optimal error: " << optimal_it->error << std::endl;
         addState(optimal_point, optimal_vs->th1, optimal_vs->th2, optimal_it->error);
     } else {
-        std::cout << "optimal NOT in track, x: " << optimal_point->x << "y: " << optimal_point->y << std::endl;
         delete optimal_point;
     }
     delete optimal_vs;

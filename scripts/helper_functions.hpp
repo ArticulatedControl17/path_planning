@@ -19,7 +19,7 @@
 #define MAX_RIGHT_ANGLE -18
 
 #define LANE_WIDTH          19
-#define OUTSIDE_TURN_ERROR  3 // 3
+#define OUTSIDE_TURN_ERROR  9 // 3
 #define OTHERLANE_WEIGHT    10
 #define PADDING_WEIGHT      20
 
