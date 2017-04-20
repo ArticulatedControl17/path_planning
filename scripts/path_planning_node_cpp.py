@@ -103,7 +103,7 @@ class PathPlanningNode:
         self.pathplanner = PathPlannerCPP(self.map)
 
         # REMOVE ------------------------------------------------------------ ->
-        """
+        
         self.pathplanner.setMap(self.map)
 
         path = [(20, 20), (30, 30), (40, 40), (50, 50)]
@@ -118,7 +118,7 @@ class PathPlanningNode:
         self.pathplanner.setOptimalPath(path)
 
         path = self.pathplanner.getPath(vehicle_state, path[-1], path[-2], 6, 6, 0.6)
-        """
+        
         # <- ------------------------------------------------------------ REMOVE
 
         self.refpath = None

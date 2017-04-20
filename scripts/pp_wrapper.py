@@ -44,16 +44,10 @@ class PathPlannerCPP(object):
         sep_array = [snd_end_point[0], snd_end_point[1]]
         data_array = np.array(vs_array + ep_array + sep_array).astype(c_double).ctypes.data_as(POINTER(c_double))
 
-        # REMOVE ------------------------------------------------------------ ->
-        """
-        test = np.array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]).astype(c_double).ctypes.data_as(POINTER(c_double))
-        """
-        # <- ------------------------------------------------------------ REMOVE
-
         res = lib.PP_getPath(self.obj, data_array, max_exec_time, point_mod, theta_mod)
         res_size = lib.PP_getPathSize(self.obj)
-        path = []
 
+        path = []
         for i in range (res_size):
             path.append(VehicleState(res[i][0], res[i][1], res[i][2], res[i][3]))
 
