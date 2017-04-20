@@ -9,13 +9,19 @@ extern "C" {
         return new PathPlanner(matrix);
     }
     
-    void PP_setMap(PathPlanner *pp, int *matrix) { std::cout << "SET MAP" << std::endl; pp->setMap(matrix); }
+
+    void PP_setMap(PathPlanner *pp, int *matrix) {
+        std::cout << "SET MAP" << std::endl;
+        pp->setMap(matrix);
+    }
+
 
     bool PP_checkIfInTrack(PathPlanner *pp, double *vs_arr) {
         std::cout << "CHECK IF IN TRACK" << std::endl;
         VehicleState *vs = new VehicleState(vs_arr[0], vs_arr[1], vs_arr[2], vs_arr[3]);
         return pp->checkIfInTrack(vs);
     }
+
 
     void PP_setOptimalPath(PathPlanner *pp, double *path_arr, int n) {
         std::cout << "SET OPT PP" << std::endl;
@@ -29,30 +35,14 @@ extern "C" {
         pp->setOptimalpath(path);
     }
 
+
     double ** PP_getPath(PathPlanner *pp, double *data_array, double max_time, double pm, double tm) {
         std::cout << "GET PATH PP" << std::endl;
         VehicleState *vs = new VehicleState(data_array[0], data_array[1], data_array[2], data_array[3]);
         Point *ep = new Point(data_array[4], data_array[5]);
         Point *sep = new Point(data_array[6], data_array[7]);
-// REMOVE ------------------------------------------------------------ ->
-        /*
-        std::cout << "== vehicle state: " << vs->x << ", " << vs->y << ", " << vs->th1 << ", " << vs->th2 << std::endl;
-        std::cout << "== end point: " << ep->x << ", " << ep->y << std::endl;
-        std::cout << "== second end point: " << sep->x << ", " << sep->y << std::endl;
-        */
-// <- ------------------------------------------------------------ REMOVE
 
         std::list<VehicleState *> result = pp->getPath(vs, ep, sep, max_time, pm, tm);
-
-// REMOVE ------------------------------------------------------------ ->
-        /*
-        std::list<VehicleState *> result = {};
-        result.push_back(new VehicleState(0.0, 0.0, 0.0, 0.0));
-        result.push_back(new VehicleState(1.0, 1.0, 1.0, 1.0));
-        result.push_back(new VehicleState(2.0, 2.0, 2.0, 2.0));
-        result.push_back(new VehicleState(3.0, 3.0, 3.0, 3.0));
-        */
-// <- ------------------------------------------------------------ REMOVE
 
         int size = result.size();
         double **path = new double*[size];
@@ -73,7 +63,10 @@ extern "C" {
         return path;
     }
 
-    int PP_getPathSize(PathPlanner *pp) { return pp->path_size; }
+
+    int PP_getPathSize(PathPlanner *pp) {
+        return pp->path_size;
+    }
 }
 
 
