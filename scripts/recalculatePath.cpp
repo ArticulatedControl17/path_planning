@@ -31,16 +31,17 @@ std::list<VehicleState*> RecalculatePath::calculate_path(VehicleState *startVs, 
     addPossiblePathes();
 
     int count =0;
+    int reachedEndCount = 0;
 
     while(toVisit->size()>0){
         count = count +1;
-        std::cout << "count" << count << std::endl;
         VehicleState_error *new_visit;
         //loop until all possible nodes have been visited
         while(1){
             if(toVisit->size()== 0){
                 //reached end
                 std::cout << "reached end" << std::endl;
+                std::cout << "end count " << count << std::endl;
                 return *path;
             }
             new_visit = toVisit->top();
@@ -56,9 +57,13 @@ std::list<VehicleState*> RecalculatePath::calculate_path(VehicleState *startVs, 
 
             //visit the node if we haven't visited it before and we have not reached the upper bound, or visit if we reached same grid with lower error
             auto iter_visited = visited->find(*rounded_vs);
-            if((iter_visited == visited->end() && new_visit->totError < lowest_error)){ //|| prev_err > new_visit->totError){
+            if((iter_visited == visited->end() && new_visit->totError < lowest_error)){
                 break;
             }
+            //if(prev_err > new_visit->totError){
+            //    std::cout << "count " << count << "prev_err " << prev_err << "totErr: " << new_visit->totError << std::endl;
+            //    break;
+            //}
             else{
                 delete new_visit;
             }

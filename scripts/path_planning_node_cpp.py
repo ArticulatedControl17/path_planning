@@ -103,7 +103,7 @@ class PathPlanningNode:
         self.pathplanner = PathPlannerCPP(self.map)
 
         # REMOVE ------------------------------------------------------------ ->
-        
+
         self.pathplanner.setMap(self.map)
 
         path = [(20, 20), (30, 30), (40, 40), (50, 50)]
@@ -117,8 +117,8 @@ class PathPlanningNode:
         path, indexes = refpath_obj.getRefPath(vehicle_state, coords)
         self.pathplanner.setOptimalPath(path)
 
-        path = self.pathplanner.getPath(vehicle_state, path[-1], path[-2], 6, 6, 0.6)
-        
+        path = self.pathplanner.getPath(vehicle_state, path[-1], path[-2], 6, 3, 0.3)
+
         # <- ------------------------------------------------------------ REMOVE
 
         self.refpath = None
@@ -437,11 +437,11 @@ class PathPlanningNode:
 
 
                 if self.first:
-                    path = self.pathplanner.getPath(self.current_start_state, g, g2, 6, 1, 0.1)
+                    path = self.pathplanner.getPath(self.current_start_state, g, g2, 6, 3, 0.3)
 
 
                 else:
-                    path = self.pathplanner.getPath(self.current_start_state, g, g2, 4, 1, 0.1)
+                    path = self.pathplanner.getPath(self.current_start_state, g, g2, 4, 3, 0.3)
 
 
                 self.first = False
@@ -487,10 +487,10 @@ class PathPlanningNode:
                         self.startend_publisher.publish(Path([sp, ep]))
 
                         self.wait_for_map_update = False
-                        p2 = self.pathplanner.getPath(self.current_start_state, g, g2, 3, 1, 0.1)
+                        p2 = self.pathplanner.getPath(self.current_start_state, g, g2, 3, 3, 0.3)
                         while self.wait_for_map_update:
                             self.wait_for_map_update = False
-                            p2 = self.pathplanner.getPath(self.current_start_state, g, g2, 3, 1, 0.1)
+                            p2 = self.pathplanner.getPath(self.current_start_state, g, g2, 3, 3, 0.3)
 
                         if p2 != []:
                             path = p2
@@ -585,10 +585,10 @@ class PathPlanningNode:
 
 
                                 self.wait_for_map_update = False
-                                newpath = self.pathplanner.getPath(self.current_start_state, g, g2, 1.5, 1, 0.1)
+                                newpath = self.pathplanner.getPath(self.current_start_state, g, g2, 1.5, 3, 0.3)
                                 while self.wait_for_map_update:
                                     self.wait_for_map_update = False
-                                    newpath = self.pathplanner.getPath(self.current_start_state, g, g2, 1.5, 1, 0.1)
+                                    newpath = self.pathplanner.getPath(self.current_start_state, g, g2, 1.5, 3, 0.3)
 
 
                                 if newpath != []:
