@@ -41,7 +41,9 @@ std::list<VehicleState*> RecalculatePath::calculate_path(VehicleState *startVs, 
             if(toVisit->size()== 0){
                 //reached end
                 std::cout << "reached end" << std::endl;
-                std::cout << "end count " << count << std::endl;
+                std::cout << "end count: " << count << std::endl;
+                std::cout << "start error: " << totError_ << std::endl;
+                std::cout << "lowest error: " << lowest_error << std::endl;
                 return *path;
             }
             new_visit = toVisit->top();
@@ -60,10 +62,9 @@ std::list<VehicleState*> RecalculatePath::calculate_path(VehicleState *startVs, 
             if((iter_visited == visited->end() && new_visit->totError < lowest_error)){
                 break;
             }
-            //if(prev_err > new_visit->totError){
-            //    std::cout << "count " << count << "prev_err " << prev_err << "totErr: " << new_visit->totError << std::endl;
-            //    break;
-            //}
+            if(prev_err > new_visit->totError){
+                break;
+            }
             else{
                 delete new_visit;
             }
@@ -116,6 +117,9 @@ std::list<VehicleState*> RecalculatePath::calculate_path(VehicleState *startVs, 
     }
     //reached end
     std::cout << "reached end" << std::endl;
+    std::cout << "end count: " << count << std::endl;
+    std::cout << "start error: " << totError_ << std::endl;
+    std::cout << "lowest error: " << lowest_error << std::endl;
     return *path;
 }
 
@@ -147,7 +151,7 @@ void RecalculatePath::addPossiblePathes(){
     //Left
     Point *left_point = new Point(left_vs->x, left_vs->y);
     InTrack * left_it = track_checker->checkIfInTrack(pos, theta1, theta2, left_point, left_vs->th1, left_vs->th2, front_ec, back_ec);
-    if(left_it->in_track && totError + fabs(left_it->error) <= lowest_error){
+    if(left_it->in_track && totError + left_it->error <= lowest_error){
         addState(left_point, left_vs->th1, left_vs->th2, left_it->error);
     } else {delete left_point;}
     delete left_vs;
@@ -220,7 +224,8 @@ void RecalculatePath::addState(Point *point, double th1, double th2, double erro
 
     VehicleState *in_r_vs = new VehicleState(point->x, point->y, th1, th2);
     VehicleState *rounded_vs = rounding(in_r_vs, modPoint, modTheta);
-    errorList->insert({*rounded_vs, total_error});
+    //errorList->insert_or_assign({*rounded_vs, total_error});
+    (*errorList)[*rounded_vs] = total_error;
     delete in_r_vs;
 
 }
