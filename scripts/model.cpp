@@ -65,30 +65,30 @@ void Truck::setCorners(Point *pointFront, double th1, double th2) {
     double y7 = y2 - sin(M_PI/2 - th1) * HEADER_WIDTH/2;
 
     // Left front axis
-    double x8 = x6 + (HEADER_LENGTH-5.0) * cos(th1);
-    double y8 = y6 + (HEADER_LENGTH-5.0) * sin(th1);
+    double x8 = x6 + HEADER_FRONTAXIS_TO_JOINT * cos(th1);
+    double y8 = y6 + HEADER_FRONTAXIS_TO_JOINT * sin(th1);
     left_front_wheel->setValues(x8, y8);
 
     // Right front axis
-    double x9 = x7 + (HEADER_LENGTH-5.0) * cos(th1);
-    double y9 = y7 + (HEADER_LENGTH-5.0) * sin(th1);
+    double x9 = x7 + HEADER_FRONTAXIS_TO_JOINT * cos(th1);
+    double y9 = y7 + HEADER_FRONTAXIS_TO_JOINT * sin(th1);
     right_front_wheel->setValues(x9, y9);
 
     // Left front
-    double x10 = x6 + ((HEADER_LENGTH-5.0) + HL_FRONT) * cos(th1);
-    double y10 = y6 + ((HEADER_LENGTH-5.0) + HL_FRONT) * sin(th1);
+    double x10 = x6 + (HEADER_FRONTAXIS_TO_JOINT + HL_FRONT) * cos(th1);
+    double y10 = y6 + (HEADER_FRONTAXIS_TO_JOINT + HL_FRONT) * sin(th1);
     left_front->setValues(x10, y10);
 
     // Right front
-    double x11 = x7 + ((HEADER_LENGTH-5.0) + HL_FRONT) * cos(th1);
-    double y11 = y7 + ((HEADER_LENGTH-5.0) + HL_FRONT) * sin(th1);
+    double x11 = x7 + (HEADER_FRONTAXIS_TO_JOINT + HL_FRONT) * cos(th1);
+    double y11 = y7 + (HEADER_FRONTAXIS_TO_JOINT + HL_FRONT) * sin(th1);
     right_front->setValues(x11, y11);
 }
 
 
 Point * Truck::backMiddleTrailer(Point *pointFront, double th1, double th2) {
-    double jpx = pointFront->x - cos(th1) * (HEADER_LENGTH-5.0);
-    double jpy = pointFront->y - sin(th1) * (HEADER_LENGTH-5.0);
+    double jpx = pointFront->x - cos(th1) * HEADER_FRONTAXIS_TO_JOINT;
+    double jpy = pointFront->y - sin(th1) * HEADER_FRONTAXIS_TO_JOINT;
 
     double px = jpx - cos(th2) * (TRAILER_LENGTH + TL_BACK);
     double py = jpy - sin(th2) * (TRAILER_LENGTH + TL_BACK);

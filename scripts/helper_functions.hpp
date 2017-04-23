@@ -7,19 +7,22 @@
 #define speed   1
 #define dt      25.0
 
+#define HEADER_FRONTAXIS_TO_JOINT 22.0
+#define HEADER_BACKAXIS_TO_JOINT 5.0
+
 #define HEADER_LENGTH   27.0
-#define TRAILER_LENGTH  49.625 //44.5 + 10.25 / 2 // + 2.5
+#define TRAILER_LENGTH  49.625
 #define HL_FRONT        9.5
-#define TL_BACK         13.625 //10.25 / 2 + 8.5 // - 2.5
+#define TL_BACK         13.625
 
 #define HEADER_WIDTH    18
 #define TRAILER_WIDTH   18
 
 #define MAX_LEFT_ANGLE  16
-#define MAX_RIGHT_ANGLE -18
+#define MAX_RIGHT_ANGLE -19
 
 #define LANE_WIDTH          19
-#define OUTSIDE_TURN_ERROR  9 // 3
+#define OUTSIDE_TURN_ERROR  9
 #define OTHERLANE_WEIGHT    10
 #define PADDING_WEIGHT      20
 

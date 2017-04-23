@@ -11,8 +11,6 @@
 #include <list>
 #include <iostream>
 #include <math.h>
-//#include "ros/ros.h"
-//#include "custom_msgs/Position.h"
 
 
 class PathPlanner {
@@ -45,8 +43,8 @@ class PathPlanner {
 
     public:
         PathPlanner(int *mat);
-        std::list<VehicleState*> getPath(VehicleState *startVs, Point *endPoint, Point *secondEndPoint
-            , double MAX_EXECUTION_TIME, double modPoint, double modTheta);
+        std::list<VehicleState*> getPath(VehicleState *startVs, Point *endPoint, Point *secondEndPoint, 
+                double MAX_EXECUTION_TIME, double modPoint, double modTheta, bool returnsIfFeasible = false);
         void setOptimalpath( std::list<Point*> path);
         void setMap(int *mat);
         bool checkIfInTrack(VehicleState *vs);
