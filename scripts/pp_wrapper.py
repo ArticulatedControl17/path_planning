@@ -50,7 +50,7 @@ class PathPlannerCPP(object):
         # If flag 'returnsIfFeasible' is set,
         # getPath() returns [[1, 1, 1, 1]] for True, and [[0, 0, 0, 0]] for False
         if returnsIfFeasible:
-            return res[0][0]
+            return round(res[0][0])
 
         else:
             path = []
