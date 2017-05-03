@@ -184,7 +184,9 @@ bool TrackChecker::isAllowed(Point *point) {
 double TrackChecker::getError(Point *truck_point, Point *prev_point, double error) {
     double result = 0.0;
     bool in_padding = false;
-    std::vector<Point *> between = getPointsInBetween(truck_point, prev_point, dt/4);
+
+    double nbr_points = dt/4;
+    std::vector<Point *> between = getPointsInBetween(truck_point, prev_point, nbr_points);
 
     for(std::vector<Point *>::iterator it = between.begin(); it != between.end(); ++it) {
         if (not isAllowed(*it)) {

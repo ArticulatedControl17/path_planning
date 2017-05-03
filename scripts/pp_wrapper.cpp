@@ -36,13 +36,13 @@ extern "C" {
     }
 
 
-    double ** PP_getPath(PathPlanner *pp, double *data_array, double max_time, double pm, double tm) {
+    double ** PP_getPath(PathPlanner *pp, double *data_array, double max_time, double pm, double tm, bool returnsIfFeasible) {
         std::cout << "GET PATH PP" << std::endl;
         VehicleState *vs = new VehicleState(data_array[0], data_array[1], data_array[2], data_array[3]);
         Point *ep = new Point(data_array[4], data_array[5]);
         Point *sep = new Point(data_array[6], data_array[7]);
 
-        std::list<VehicleState *> result = pp->getPath(vs, ep, sep, max_time, pm, tm);
+        std::list<VehicleState *> result = pp->getPath(vs, ep, sep, max_time, pm, tm, returnsIfFeasible);
 
         int size = result.size();
         double **path = new double*[size];

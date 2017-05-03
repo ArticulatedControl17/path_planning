@@ -22,13 +22,13 @@ class PathPlanner:
 
     def __init__(self, mapp):
         self.speed = 1
-        self.dt = 25 #the delta time used for kinematic model, basicly the path step size
+        self.dt = DT #the delta time used for kinematic model, basicly the path step size
         self.trackChecker = track_checker.trackChecker(mapp)
 
         self.visited_pub = rospy.Publisher('visited_node', Position, queue_size=10)
         self.to_visit_pub = rospy.Publisher('to_visit_node', Position, queue_size=10)
 
-    def getPath(self, vs, endPoint, secondEndPoint, MAX_EXECUTION_TIME, modPoint, modTheta ):
+    def getPath(self, vs, endPoint, secondEndPoint, MAX_EXECUTION_TIME, modPoint, modTheta, returnsIfFeisable=False ):
 
         print "start vehicleState", vs.x, vs.y, vs.theta1, vs.theta2
         #starttime = rospy.get_time()
@@ -78,13 +78,16 @@ class PathPlanner:
 
             #check if we have reached the end
             dist = sqrt( (endPoint.x - x)**2 + (endPoint.y - y)**2 )
+            #TODO: Add so that we can get the second to last point from error calc
             if self.front_ec.isAboveEnd(secondEndPoint,endPoint, self.pos) and dist <1*self.dt and self.front_ec.isAtEnd(): #checks if we are above a line of the two last points
                 #reached end, gather the path
                 print "reached end, Gathering solution"
 
+                if returnsIfFeisable:
+                    return True
+
                 totError = self.gatherError(Point(vs.x, vs.y), self.pos, Point(vs.x, vs.y))
                 #Gather a new optimized path for the parts that go off the optimal path
-
                 print "end visited size", len(self.visited), "totError: ", totError
                 #return self.gatherPath(Point(vs.x, vs.y), endPoint,self.theta1, self.theta2)
                 (fromP, part, nn_ec) = self.recalculate_path.calculate_path(Point(vs.x, vs.y), secondEndPoint, endPoint, self.dt, vs.theta1, vs.theta2, totError, error_calc.errorCalc(self.optimal_path), modPoint, modTheta)
@@ -110,7 +113,10 @@ class PathPlanner:
                 ((round_x, round_y), round_theta1, round_theta2) = rounding(self.pos.x, self.pos.y, self.theta1, self.theta2, modPoint, modTheta)
                 #mark the previous node/state as visited
                 self.visited.add(((round_x, round_y),round_theta1, round_theta2))
-        print "no soluton found"
+        print "Pathplanner: no solution found"
+
+        if returnsIfFeisable:
+            return False
         return []
 
     def addPossiblePathes(self, leftFirst):
@@ -120,19 +126,19 @@ class PathPlanner:
         steering_angle_rad = radians(0)
         (to_point_strait, strait_theta1, strait_theta2) = calculateNextState(self.theta1, self.theta2, self.pos, dd, steering_angle_rad)
         #going right
-        steering_angle_rad = radians(MAX_RIGHT_ANGLE) #max right angle
+        steering_angle_rad = radians(MAX_LEFT_ANGLE) #max right angle
         (to_point_right,right_theta1,right_theta2) = calculateNextState(self.theta1, self.theta2, self.pos, dd, steering_angle_rad)
         #going left
-        steering_angle_rad = radians(MAX_LEFT_ANGLE) #max left angle
+        steering_angle_rad = radians(MAX_RIGHT_ANGLE) #max left angle
         (to_point_left,left_theta1, left_theta2) = calculateNextState(self.theta1, self.theta2, self.pos, dd, steering_angle_rad)
         #finding optimal path
-        (to_point_optimal, optimal_theta1, optimal_theta2) = calculate_steering(radians(MAX_LEFT_ANGLE), radians(MAX_RIGHT_ANGLE), dd, 10, 0, self.pos, self.theta1, self.theta2, self.front_ec)
+        (to_point_optimal, optimal_theta1, optimal_theta2) = calculate_steering(radians(MAX_RIGHT_ANGLE), radians(MAX_LEFT_ANGLE), dd, 10, 0, self.pos, self.theta1, self.theta2, self.front_ec)
         #Optimal outside turn
         goingLeft = self.front_ec.is_next_Left()
         if goingLeft:
-            (to_point_optimal_outside, optimal_outside_theta1, optimal_outside_theta2) = calculate_steering(radians(MAX_LEFT_ANGLE), radians(MAX_RIGHT_ANGLE), dd, 10, OUTSIDE_TURN_ERROR, self.pos, self.theta1, self.theta2, self.front_ec)
+            (to_point_optimal_outside, optimal_outside_theta1, optimal_outside_theta2) = calculate_steering(radians(MAX_RIGHT_ANGLE), radians(MAX_LEFT_ANGLE), dd, 10, OUTSIDE_TURN_ERROR, self.pos, self.theta1, self.theta2, self.front_ec)
         else:
-            (to_point_optimal_outside, optimal_outside_theta1, optimal_outside_theta2) = calculate_steering(radians(MAX_LEFT_ANGLE), radians(MAX_RIGHT_ANGLE), dd, 10, -OUTSIDE_TURN_ERROR, self.pos, self.theta1, self.theta2, self.front_ec)
+            (to_point_optimal_outside, optimal_outside_theta1, optimal_outside_theta2) = calculate_steering(radians(MAX_RIGHT_ANGLE), radians(MAX_LEFT_ANGLE), dd, 10, -OUTSIDE_TURN_ERROR, self.pos, self.theta1, self.theta2, self.front_ec)
 
         #Strait
         (inTrack, tot_error) =self.trackChecker.checkIfInTrack(self.pos, self.theta1, self.theta2, to_point_strait, strait_theta1, strait_theta2, self.dt, self.front_ec, self.back_ec)
@@ -183,6 +189,24 @@ class PathPlanner:
             pret2 = nt2
         return path[::-1]
 
+    def gatherPathMiddle(self, startPoint, endPoint, end_theta1, end_theta2, end_err):
+        path = []
+        prex = endPoint.x
+        prey = endPoint.y
+        pret1 = end_theta1
+        pret2 = end_theta2
+        prerr = end_err
+        while not (prex== startPoint.x and  prey == startPoint.y):
+            path.append(((prex,prey), pret1, pret2, prerr))
+            #TODO: Maybe add error to final path
+            ((nx,ny),nt1, nt2, err) = self.fromPoints[prex,prey]
+            prex=nx
+            prey=ny
+            pret1 = nt1
+            pret2 = nt2
+            prerr = err
+        return path
+
     def gatherError(self, startPoint, endPoint, firstPoint):
         prex = endPoint.x
         prey = endPoint.y
@@ -194,6 +218,20 @@ class PathPlanner:
             totErr= totErr+ abs(err)
         return totErr
 
+
+    def gatherFromPoints(self, startPoint, endPoint):
+        prex = endPoint.x
+        prey = endPoint.y
+        fromPoints = []
+        while not (prex== startPoint.x and  prey == startPoint.y):
+            ((nx,ny), _, _, _) = self.fromPoints[prex,prey]
+            prex=nx
+            prey=ny
+            fromPoints.append((nx,ny))
+        fromPoints.append((nx,ny))
+        return fromPoints
+
+
     def addState(self, point, th1, th2, error):
         #add the vector as an adjacent vector to the previous vector in the graph
         self.fromPoints[(point.x, point.y)] = ((self.pos.x, self.pos.y),self.theta1, self.theta2, error)
@@ -201,7 +239,6 @@ class PathPlanner:
         #self.to_visit_pub.publish(Position(point.x, point.y))
 
     def setOptimalpath(self, path):
-        print "setoptpath", path
         path = [Point(x,y) for x,y in path]
         self.optimal_path = path
         self.front_ec = error_calc.errorCalc(path)

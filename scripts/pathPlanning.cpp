@@ -10,7 +10,7 @@ PathPlanner::PathPlanner(int *map){
 }
 
 std::list<VehicleState*> PathPlanner::getPath(VehicleState *startVs, Point *endPoint, Point *secondEndPoint
-    , double MAX_EXECUTION_TIME, double modPoint, double modTheta){
+            , double MAX_EXECUTION_TIME, double modPoint, double modTheta, bool returnsIfFeasible){
     std::cout << "in getPath" << std::endl;
 
     theta1 = startVs->th1;
@@ -87,6 +87,14 @@ std::list<VehicleState*> PathPlanner::getPath(VehicleState *startVs, Point *endP
             //reached end, gather the path
             std::cout << "reached end, Gathering solution" << std::endl;
 
+            // If flag 'returnsIfFeasible' is set,
+            // Returns list that translates to true
+            if (returnsIfFeasible) {
+                std::list<VehicleState*> *ret = new std::list<VehicleState*>();
+                ret->push_back(new VehicleState(1, 1, 1, 1));
+                return *ret;
+            }
+
             double totError = gatherError(startPoint, pos);
             //Gather a new optimized path
             std::cout << "end visited size " << visited->size() << " toError: " << totError << std::endl;
@@ -124,6 +132,13 @@ std::list<VehicleState*> PathPlanner::getPath(VehicleState *startVs, Point *endP
     }
     std::cout << "no soluton found" << std::endl;
     std::list<VehicleState*> *ret = new std::list<VehicleState*>();
+
+    // If flag 'returnsIfFeasible' is set,
+    // Returns list that translates to false
+    if (returnsIfFeasible) {
+        ret->push_back(new VehicleState(0, 0, 0, 0));
+    }
+
     return *ret;
 
 }

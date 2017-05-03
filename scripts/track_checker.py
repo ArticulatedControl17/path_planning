@@ -3,13 +3,14 @@ import numpy as np
 import cv2
 from Point import Point
 from math import radians
-from helper_functions import LANE_WIDTH, OTHERLANE_WEIGHT, HEADER_WIDTH, TRAILER_WIDTH, PADDING_WEIGHT
+from helper_functions import *
 
 class trackChecker:
 
     def __init__(self, mapp):
         self.model = model.truck() #model used to calculate error
         self.map = mapp #map with allowed/not allowed areas
+
 
     def checkIfInTrack2(self, toPoint, th1, th2):
 
@@ -59,8 +60,6 @@ class trackChecker:
 
 
     def checkIfInTrack(self, prevPoint, prevth1, prevth2, toPoint, th1, th2, dt, front_ec, back_ec):
-        #TODO: Make between points for front and back header wheels
-        #check if point and key wheels are in the track
 
         #used to avoid going wrong direction, optimal path should be close enugh that this restriction holds
         if front_ec.getMaxDistPoint(toPoint) > 80:
@@ -104,20 +103,21 @@ class trackChecker:
         prev_left_back = Point(prev_points[8][0], prev_points[8][1])
         prev_right_back = Point(prev_points[9][0], prev_points[9][1])
 
+        nbr_points = dt/4
         #TODO: affects performance quite a lot with dt amount of points
-        between_back_wheel_right = self.getPointsInBetween((right_back_wheel.x, right_back_wheel.y), (prev_right_back_wheel.x, prev_right_back_wheel.y), dt/4)
-        between_back_wheel_left = self.getPointsInBetween((left_back_wheel.x, left_back_wheel.y), (prev_left_back_wheel.x, prev_left_back_wheel.y), dt/4)
+        between_back_wheel_right = getPointsInBetween((right_back_wheel.x, right_back_wheel.y), (prev_right_back_wheel.x, prev_right_back_wheel.y), nbr_points)
+        between_back_wheel_left = getPointsInBetween((left_back_wheel.x, left_back_wheel.y), (prev_left_back_wheel.x, prev_left_back_wheel.y), nbr_points)
 
-        between_front_wheel_right = self.getPointsInBetween((right_front_wheel.x, right_front_wheel.y), (prev_right_front_wheel.x, prev_right_front_wheel.y), dt/4)
-        between_front_wheel_left = self.getPointsInBetween((left_front_wheel.x, left_front_wheel.y), (prev_left_front_wheel.x, prev_left_front_wheel.y), dt/4)
-
-
-        between_front_right = self.getPointsInBetween((right_front.x, right_front.y), (prev_right_front.x, prev_right_front.y), dt/4)
-        between_front_left = self.getPointsInBetween((left_front.x, left_front.y), (prev_left_front.x, prev_left_front.y), dt/4)
+        between_front_wheel_right = getPointsInBetween((right_front_wheel.x, right_front_wheel.y), (prev_right_front_wheel.x, prev_right_front_wheel.y), nbr_points)
+        between_front_wheel_left = getPointsInBetween((left_front_wheel.x, left_front_wheel.y), (prev_left_front_wheel.x, prev_left_front_wheel.y), nbr_points)
 
 
-        between_back_right = self.getPointsInBetween((right_back.x, right_back.y), (prev_right_back.x, prev_right_back.y), dt/4)
-        between_back_left = self.getPointsInBetween((left_back.x, left_back.y), (prev_left_back.x, prev_left_back.y), dt/4)
+        between_front_right = getPointsInBetween((right_front.x, right_front.y), (prev_right_front.x, prev_right_front.y), nbr_points)
+        between_front_left = getPointsInBetween((left_front.x, left_front.y), (prev_left_front.x, prev_left_front.y), nbr_points)
+
+
+        between_back_right = getPointsInBetween((right_back.x, right_back.y), (prev_right_back.x, prev_right_back.y), nbr_points)
+        between_back_left = getPointsInBetween((left_back.x, left_back.y), (prev_left_back.x, prev_left_back.y), nbr_points)
 
 
         right_front_inPadding = False
