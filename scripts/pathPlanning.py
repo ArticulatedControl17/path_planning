@@ -30,8 +30,8 @@ class PathPlanner:
 
     def getPath(self, vs, endPoint, secondEndPoint, MAX_EXECUTION_TIME, modPoint, modTheta ):
 
-
-        starttime = rospy.get_time()
+        print "start vehicleState", vs.x, vs.y, vs.theta1, vs.theta2
+        #starttime = rospy.get_time()
 
         endPoint = Point(*endPoint)
         secondEndPoint = Point(*secondEndPoint)
@@ -46,22 +46,22 @@ class PathPlanner:
         self.toVisit = []
         self.visited = set([]) #the points we have visited
 
-        count = 0
+        self.count = 0
 
 
         self.addPossiblePathes(True)
 
 
-        while len(self.toVisit)>0 and (not rospy.is_shutdown()) and rospy.get_time() - starttime < MAX_EXECUTION_TIME:
+        while len(self.toVisit)>0: #and (not rospy.is_shutdown()) and rospy.get_time() - starttime < MAX_EXECUTION_TIME:
 
-            count = count+1
+            self.count = self.count+1
             #loop until all possible nodes have been visited
-            while True and not rospy.is_shutdown() and rospy.get_time() - starttime < MAX_EXECUTION_TIME:
+            while True: #and not rospy.is_shutdown() and rospy.get_time() - starttime < MAX_EXECUTION_TIME:
 
                 if len(self.toVisit) == 0:
                     break
                 ((x,y),t1, t2, err, new_front_ec, new_back_ec) = self.toVisit.pop()
-                self.visited_pub.publish(Position(x,y))
+                #self.visited_pub.publish(Position(x,y))
                 #round to not having to visit every mm, to make it faster
                 ((round_x, round_y), round_theta1, round_theta2) = rounding(x, y, t1, t2, modPoint, modTheta)
                 if ((round_x,round_y),round_theta1, round_theta2) not in self.visited:
@@ -85,6 +85,7 @@ class PathPlanner:
                 totError = self.gatherError(Point(vs.x, vs.y), self.pos, Point(vs.x, vs.y))
                 #Gather a new optimized path for the parts that go off the optimal path
 
+                print "end visited size", len(self.visited), "totError: ", totError
                 #return self.gatherPath(Point(vs.x, vs.y), endPoint,self.theta1, self.theta2)
                 (fromP, part, nn_ec) = self.recalculate_path.calculate_path(Point(vs.x, vs.y), secondEndPoint, endPoint, self.dt, vs.theta1, vs.theta2, totError, error_calc.errorCalc(self.optimal_path), modPoint, modTheta)
                 #part = self.recalculate_path.calculate_path(Point(vs.x, vs.y), secondEndPoint, endPoint, self.dt, vs.theta1, vs.theta2, totError, error_calc.errorCalc(self.optimal_path))
@@ -168,7 +169,7 @@ class PathPlanner:
     def gatherPath(self, startPoint, endPoint, end_theta1, end_theta2):
         path = []
         #path.append(vehicleState(endPoint.x, endPoint.y, end_theta1, end_theta2))
-        self.fromPoints[(endPoint.x, endPoint.y)] = ((self.pos.x, self.pos.y),self.theta1, self.theta2)
+        #self.fromPoints[(endPoint.x, endPoint.y)] = ((self.pos.x, self.pos.y),self.theta1, self.theta2)
         prex = self.pos.x
         prey = self.pos.y
         pret1 = self.theta1
@@ -183,7 +184,6 @@ class PathPlanner:
         return path[::-1]
 
     def gatherError(self, startPoint, endPoint, firstPoint):
-        print startPoint.x, startPoint.y
         prex = endPoint.x
         prey = endPoint.y
         totErr = 0
@@ -192,16 +192,13 @@ class PathPlanner:
             prex=nx
             prey=ny
             totErr= totErr+ abs(err)
-        if not prex == firstPoint.x and not prey == firstPoint.y:
-            ((nx,ny),_, _, err) = self.fromPoints[prex,prey]
-            totErr= totErr + abs(err)
         return totErr
 
     def addState(self, point, th1, th2, error):
         #add the vector as an adjacent vector to the previous vector in the graph
         self.fromPoints[(point.x, point.y)] = ((self.pos.x, self.pos.y),self.theta1, self.theta2, error)
         self.toVisit.append(((point.x,point.y), th1, th2, error, self.front_ec.getCopy(), self.back_ec.getCopy()))
-        self.to_visit_pub.publish(Position(point.x, point.y))
+        #self.to_visit_pub.publish(Position(point.x, point.y))
 
     def setOptimalpath(self, path):
         print "setoptpath", path

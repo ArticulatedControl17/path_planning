@@ -18,10 +18,15 @@ double ErrorCalc::calculateError(double x, double y){
         queue.pop_front();
     }
     //decides if the error is to the left of centerline or not
+
+    //std::cout << "p0: " << x << " " << y << " p1: " << pp1->x << " " << pp1->y << " p2: " << pp2->x << " " << pp2->y <<std::endl;
+
     bool isLeft = ((pp2->x - pp1->x) * (y - pp1->y) - (pp2->y - pp1->y) * (x - pp1->x)) >0;
     double value = fabs((pp2->x - pp1->x)*(pp1->y - y ) - (pp1->x-x) * (pp2->y - pp1->y))
         / (sqrt((pp2->x - pp1->x)*(pp2->x - pp1->x) + (pp2->y - pp1->y) * (pp2->y - pp1->y)));
-
+    //std::cout << "first: " << fabs((pp2->x - pp1->x)*(pp1->y - y ) - (pp1->x-x) * (pp2->y - pp1->y)) <<std::endl;
+    //std::cout << "Second: " << (sqrt((pp2->x - pp1->x)*(pp2->x - pp1->x) + (pp2->y - pp1->y) * (pp2->y - pp1->y))) <<std::endl;
+    //std::cout << "value: " << value <<std::endl;
     if(isLeft){
         return -value;
     }else{
@@ -32,6 +37,7 @@ double ErrorCalc::calculateError(double x, double y){
 bool ErrorCalc::isAboveEnd(Point *pbegin, Point *pend, double x, double y){
     //checks if a point is passed the end point of a line.
     if (pbegin->x - pend->x !=0 && pbegin->y - pend->y !=0){
+        //std::cout << "in isAboveEnd, p0: " << x << " " << y << " begin: " << pbegin->x << " " << pbegin->y << " end: " << pend->x << " " << pend->y <<std::endl;
         double slope = (pbegin->y - pend->y) / (pbegin->x - pend->x);
         double prependularSlope = (-1)/slope;
         double prependularM = pend->y - pend->x * prependularSlope;
@@ -87,7 +93,7 @@ double ErrorCalc::getMaxDistPoint(Point *point){
                 + (point->y - pp2->y) * (point->y - pp2->y) );
     double d0 = sqrt( (point->x - pp1->x) * (point->x - pp1->x)
                 + (point->y - pp1->y) * (point->y - pp1->y) );
-    return std::min(d1,d0);
+    return std::max(d1,d0);
 
 }
 

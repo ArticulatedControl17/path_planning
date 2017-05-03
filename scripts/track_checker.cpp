@@ -145,6 +145,8 @@ InTrack * TrackChecker::checkIfInTrack(Point *prevPoint, double prevth1, double 
 
 
 std::vector<Point *> TrackChecker::getPointsInBetween(Point *p1, Point *p2, double n) {
+
+    n = floor(n);
     std::vector<Point *> points = {};
 
     double dx = p2->x - p1->x;
@@ -158,7 +160,6 @@ std::vector<Point *> TrackChecker::getPointsInBetween(Point *p1, Point *p2, doub
         double y = round(p1->y + i * stepY);
         points.push_back(new Point(x, y));
     }
-
     return points;
 }
 

@@ -20,17 +20,33 @@ std::list<VehicleState*> PathPlanner::getPath(VehicleState *startVs, Point *endP
     pos = new Point(startVs->x, startVs->y);
     Point * startPoint = new Point(startVs->x, startVs->y);
 
+    //PYT
+    //Point *prevP = new Point(280.509200403, 861.881921437);
+    //Point *toP = new Point(264.941785224, 881.443706631);
+    //InTrack * check_it = track_checker->checkIfInTrack(prevP, 2.24816212895, 1.89760528503, toP, 2.24487952257, 2.07030263795, front_ec, back_ec);
+    //CPP
+
+    //Point *prevP = new Point(280.509, 861.882);
+    //Point *toP = new Point(264.942, 881.444);
+    //InTrack * check_it = track_checker->checkIfInTrack(prevP, 2.24816, 1.89761, toP, 2.24488, 2.0703, front_ec, back_ec);
+    //std::cout << "test in track? " << check_it->in_track << std::endl;
+
     //Reset path's
     //TODO: Remove before finishing
     toVisit = new std::stack<VehicleState_error*>();
     visited = new std::unordered_set<VehicleState>();
     fromPoints = new std::unordered_map<Point , VehicleState_error>();
 
-    addPossiblePathes(true);
+    int count =0;
+
+    addPossiblePathes(true, count);
 
     //TODO: add rospy and time condition
     while(toVisit->size()>0){
         VehicleState_error *new_visit;
+
+        count = count +1;
+
         //loop until all possible nodes have been visited
         while(1){
             if(toVisit->size()== 0){
@@ -64,7 +80,7 @@ std::list<VehicleState*> PathPlanner::getPath(VehicleState *startVs, Point *endP
         back_ec = new_visit->back_ec;
         delete new_visit;
 
-        //std::cout << "visiting x: " << pos->x << "y: " << pos->y << std::endl;
+        //std::cout << "visiting x: " << pos->x << "y: " << pos->y << "th1: " << theta1 << "th2: " << theta2 << count << std::endl;
 
         double dist = sqrt((endPoint->x - pos->x)*(endPoint->x - pos->x) + (endPoint->y - pos->y)*(endPoint->y - pos->y));
         if(front_ec->isAboveEnd(secondEndPoint, endPoint, pos->x, pos->y) && dist <1*dt && front_ec->isAtEnd()){ //checks if we are above a line of the two last points
@@ -73,6 +89,7 @@ std::list<VehicleState*> PathPlanner::getPath(VehicleState *startVs, Point *endP
 
             double totError = gatherError(startPoint, pos);
             //Gather a new optimized path
+            std::cout << "end visited size " << visited->size() << " toError: " << totError << std::endl;
             //return gatherPath( startPoint, endPoint, theta1, theta2);
             RecalculatePath *recalculate_path = new RecalculatePath(track_checker);
             std::list<VehicleState*> path = recalculate_path->calculate_path(startVs, endPoint, secondEndPoint, totError, new ErrorCalc(optimalPath), modPoint, modTheta);
@@ -89,11 +106,11 @@ std::list<VehicleState*> PathPlanner::getPath(VehicleState *startVs, Point *endP
             if (currentError<0){
                 //Go right
                 //check if the nodes are within the allowed track
-                addPossiblePathes(false);
+                addPossiblePathes(false, count);
             } else {
                 //Go left
                 //check if the nodes are within the allowed track
-                addPossiblePathes(true);
+                addPossiblePathes(true, count);
             }
 
             //round to not having to visit every mm, for making it faster
@@ -111,7 +128,7 @@ std::list<VehicleState*> PathPlanner::getPath(VehicleState *startVs, Point *endP
 
 }
 
-void PathPlanner::addPossiblePathes(bool leftFirst){
+void PathPlanner::addPossiblePathes(bool leftFirst, int count){
 
     double dd = speed * dt;
     //add all possible pathes from pos, theta1 and theta2
@@ -181,7 +198,10 @@ void PathPlanner::addPossiblePathes(bool leftFirst){
     InTrack * optimal_outside_it = track_checker->checkIfInTrack(pos, theta1, theta2, optimal_outside_point, optimal_outside_vs->th1, optimal_outside_vs->th2, front_ec, back_ec);
     if (optimal_outside_it->in_track){
         addState(optimal_outside_point, optimal_outside_vs->th1, optimal_outside_vs->th2, optimal_outside_it->error);
-    } else {delete optimal_outside_point;}
+    } else {
+        delete optimal_outside_point;
+
+    }
     delete optimal_outside_vs;
     //Optimal
     Point *optimal_point = new Point(optimal_vs->x, optimal_vs->y);
@@ -204,7 +224,6 @@ std::list<VehicleState*> PathPlanner::gatherPath(Point *startPoint, Point *endPo
     Point *f_point;
     while (!(prex== startPoint->x && prey == startPoint->y)){
         path.push_front(new VehicleState(prex, prey, pret1, pret2));
-        //TODO: fix lookuptables
         f_point = new Point(prex,prey);
         auto iter = fromPoints->find(*f_point);
         VehicleState_error vs_er = iter->second;

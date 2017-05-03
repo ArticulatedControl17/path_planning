@@ -31,7 +31,6 @@ std::list<VehicleState*> RecalculatePath::calculate_path(VehicleState *startVs, 
     addPossiblePathes();
 
     int count =0;
-    int reachedEndCount = 0;
 
     while(toVisit->size()>0){
         count = count +1;
@@ -44,6 +43,7 @@ std::list<VehicleState*> RecalculatePath::calculate_path(VehicleState *startVs, 
                 std::cout << "end count: " << count << std::endl;
                 std::cout << "start error: " << totError_ << std::endl;
                 std::cout << "lowest error: " << lowest_error << std::endl;
+                std::cout << "visited, size: " << visited->size() << std::endl;
                 return *path;
             }
             new_visit = toVisit->top();

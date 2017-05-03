@@ -3,9 +3,9 @@ from math import *
 
 
 HEADER_LENGTH = 27.0
-TRAILER_LENGTH = 44.5+10.25/2#+2.5
+TRAILER_LENGTH = 49.625 #44.5+10.25/2#+2.5
 HL_FRONT = 9.5
-TL_BACK = (10.25/2) + 8.5#-2.5
+TL_BACK = 13.625 #(10.25/2) + 8.5#-2.5
 
 HEADER_WIDTH = 18;
 TRAILER_WIDTH = 18
@@ -59,27 +59,27 @@ def calculateNextState(theta1, theta2, pos, dd, steering_angle_rad):
 def rounding(x, y, th1, th2, modPoint, modTheta):
 
     m_x = x % modPoint
-    if m_x >= modPoint/2:   #round up
+    if m_x >= (modPoint/float(2)):   #round up
         x = x-m_x + modPoint
     else:                   #round down
         x = x - m_x
 
     m_y = y % modPoint
-    if m_y >= modPoint/2:   #round up
+    if m_y >= (modPoint/float(2)):   #round up
         y = y-m_y + modPoint
     else:                   #round down
         y = y - m_y
 
     th1 = round(th1, 1)
     m_t1 = round(th1 % modTheta, 1)
-    if m_t1 >= modTheta/2:   #round up
+    if m_t1 >= (modTheta/float(2)):   #round up
         th1 = th1-m_t1 + modTheta
     else:                   #round down
         th1 = th1 - m_t1
 
     th2 = round(th2, 1)
     m_t2 = round(th2 % modTheta, 1)
-    if m_t2 >= modTheta/2:   #round up
+    if m_t2 >= (modTheta/float(2)):   #round up
         th2 = th2-m_t2 + modTheta
     else:                   #round down
         th2 = th2 - m_t2

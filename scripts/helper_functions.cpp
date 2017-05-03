@@ -40,7 +40,7 @@ VehicleState *calculate_steering(double steering_min, double steering_max, doubl
     double steering_new = (steering_min + steering_max)/2;
     VehicleState *new_vs = calculateNextState(vs, dd, steering_new);
     double error = ec->calculateError(new_vs->x, new_vs->y);
-    if (abs(error-target_error)<0.1 || iters==0){
+    if (fabs(error-target_error)<0.1 || iters==0){
         return new_vs;
     }
     else if (error<target_error){
@@ -58,7 +58,7 @@ VehicleState *rounding(VehicleState *vs,double modPoint,double modTheta){
 
     double x = vs->x;
     double m_x = fmod(x, modPoint);
-    if (m_x >= modPoint/2){   //round up
+    if (m_x >= (modPoint/2)){   //round up
         x = x - m_x + modPoint;
     } else{                   //round down
         x = x - m_x;
@@ -66,7 +66,7 @@ VehicleState *rounding(VehicleState *vs,double modPoint,double modTheta){
 
     double y = vs->y;
     double m_y = fmod(y, modPoint);
-    if (m_y >= modPoint/2){   //round up
+    if (m_y >= (modPoint/2)){   //round up
         y = y - m_y + modPoint;
     } else {                   //round down
         y = y - m_y;
@@ -74,7 +74,7 @@ VehicleState *rounding(VehicleState *vs,double modPoint,double modTheta){
 
     double th1 = round(vs->th1*10)/10;
     double m_t1 = round(fmod(th1, modTheta)*10)/10;
-    if(m_t1 >= modTheta/2){   //round up
+    if(m_t1 >= (modTheta/2)){   //round up
         th1 = th1-m_t1 + modTheta;
     } else{                   //round down
         th1 = th1 - m_t1;
@@ -82,7 +82,7 @@ VehicleState *rounding(VehicleState *vs,double modPoint,double modTheta){
 
     double th2 = round(vs->th2*10)/10;
     double m_t2 = round(fmod(th2, modTheta)*10)/10;
-    if(m_t2 >= modTheta/2){   //round up
+    if(m_t2 >= (modTheta/2)){   //round up
         th2 = th2-m_t2 + modTheta;
     } else{                   //round down
         th2 = th2 - m_t2;

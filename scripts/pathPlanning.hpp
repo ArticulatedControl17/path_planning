@@ -38,7 +38,7 @@ class PathPlanner {
         std::unordered_set<VehicleState>* visited;
         std::unordered_map<Point , VehicleState_error>* fromPoints; //Map of fromPoints
 
-        void addPossiblePathes(bool leftFirst);
+        void addPossiblePathes(bool leftFirst, int count);
         std::list<VehicleState*> gatherPath(Point *startPoint, Point *endPoint, double end_theta1, double end_theta2);
         double gatherError(Point *startPoint, Point *endPoint);
         void addState(Point *point, double th1, double th2, double error);
